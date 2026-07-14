@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plataforma interactiva de preparación del examen de Sistemas Operativos">
+  <title>Sistemas Operativos · Preparación de examen</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Saltar al contenido</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">SO</div>
+        <div>
+          <strong>Sistemas Operativos</strong>
+          <span>Preparación de examen</span>
+        </div>
+      </div>
+
+      <nav class="main-nav" id="mainNav">
+        <button class="nav-btn active" data-section="roadmap" aria-current="page"><span>01</span>Roadmap</button>
+        <button class="nav-btn" data-section="plan"><span>02</span>Plan diario</button>
+        <button class="nav-btn" data-section="topics"><span>03</span>Temas</button>
+        <button class="nav-btn" data-section="bank"><span>04</span>Banco de examen</button>
+        <button class="nav-btn" data-section="simulation"><span>05</span>Simulacro</button>
+        <button class="nav-btn" data-section="guide"><span>06</span>Piques y patrones</button>
+        <button class="nav-btn" data-section="notes"><span>07</span>Notas</button>
+        <button class="nav-btn" data-section="sources"><span>08</span>Fuentes</button>
+      </nav>
+
+      <div class="sidebar-summary" aria-live="polite">
+        <div class="grade-orb" id="sidebarGrade">—</div>
+        <div>
+          <strong id="sidebarPercent">0 %</strong>
+          <span id="sidebarQualification">Sin iniciar</span>
+        </div>
+      </div>
+
+      <div class="sidebar-actions">
+        <button class="text-btn" id="exportProgressBtn">Exportar progreso</button>
+        <button class="text-btn" id="importProgressBtn">Importar progreso</button>
+        <button class="text-btn danger" id="resetProgressBtn">Reiniciar progreso</button>
+        <input type="file" id="importProgressInput" accept="application/json" hidden>
+      </div>
+    </aside>
+
+    <div class="content-shell">
+      <header class="mobile-header">
+        <button class="icon-btn" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+        <div>
+          <strong>Sistemas Operativos</strong>
+          <span id="mobileSectionTitle">Roadmap</span>
+        </div>
+        <div class="mini-grade" id="mobileGrade">—</div>
+      </header>
+
+      <main id="mainContent">
+        <section class="app-section roadmap-section active" id="section-roadmap" data-title="Roadmap">
+          <div class="roadmap-header">
+            <div>
+              <p class="eyebrow">Portada · recorrido integrado</p>
+              <h1>Roadmap de preparación</h1>
+            </div>
+            <div class="roadmap-stats" id="roadmapStats"></div>
+          </div>
+
+          <div class="roadmap-layout">
+            <div class="roadmap-stage-wrap">
+              <div class="graph-toolbar" aria-label="Controles del roadmap">
+                <button class="icon-btn" id="zoomInBtn" aria-label="Acercar">＋</button>
+                <button class="icon-btn" id="zoomOutBtn" aria-label="Alejar">−</button>
+                <button class="icon-btn" id="centerGraphBtn" aria-label="Centrar grafo">⌾</button>
+                <button class="icon-btn" id="fitGraphBtn" aria-label="Ajustar grafo">⛶</button>
+                <select id="roadmapTopicJump" aria-label="Centrar un tema"></select>
+              </div>
+              <div class="roadmap-viewport" id="roadmapViewport" tabindex="0" aria-label="Roadmap interactivo. Use la rueda para zoom y arrastre para desplazarse.">
+                <div class="roadmap-world" id="roadmapWorld">
+                  <svg class="roadmap-edges" id="roadmapEdges" aria-hidden="true"></svg>
+                  <div class="roadmap-nodes" id="roadmapNodes"></div>
+                </div>
+              </div>
+            </div>
+
+            <aside class="roadmap-side" id="roadmapSide">
+              <div class="side-tabs" role="tablist">
+                <button class="side-tab active" data-side-tab="node" role="tab">Nodo</button>
+                <button class="side-tab" data-side-tab="today" role="tab">Hoy</button>
+                <button class="side-tab" data-side-tab="notes" role="tab">Anotaciones</button>
+              </div>
+              <div id="roadmapSideContent"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="app-section" id="section-plan" data-title="Plan diario">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Plan adaptativo sincronizado</p>
+              <h1>Plan diario</h1>
+              <p>La finalización se deriva de los mismos nodos que usa el roadmap.</p>
+            </div>
+            <button class="primary-btn" id="regeneratePlanBtn">Reorganizar plan</button>
+          </div>
+          <div class="plan-settings card" id="planSettings"></div>
+          <div class="plan-summary" id="planSummary"></div>
+          <div class="plan-days" id="planDays"></div>
+        </section>
+
+        <section class="app-section" id="section-topics" data-title="Temas">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Vista general y detalle</p>
+              <h1>Temas</h1>
+              <p>Frecuencia histórica, habilidades, progreso y material relacionado.</p>
+            </div>
+          </div>
+          <div class="topics-selector card">
+            <label class="field topic-selector-field">
+              <span>Seleccionar tema</span>
+              <select id="topicSelector"></select>
+            </label>
+            <div class="selected-topic-heading" id="selectedTopicHeading"></div>
+          </div>
+          <div class="topics-layout">
+            <section class="topic-detail card" id="topicDetail"></section>
+            <aside class="topics-overview card" id="topicsOverview" aria-label="Ejercicios por tema"></aside>
+          </div>
+        </section>
+
+        <section class="app-section" id="section-bank" data-title="Banco de examen">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Enunciados y soluciones completos</p>
+              <h1>Banco de examen</h1>
+            </div>
+            <div class="result-count" id="bankCount"></div>
+          </div>
+
+          <div class="bank-layout">
+            <aside class="filters-panel card" id="bankFilters">
+              <label class="field full">
+                <span>Buscar</span>
+                <input type="search" id="bankSearch" placeholder="Texto, año, tema o habilidad">
+              </label>
+              <div class="filter-grid">
+                <label class="field"><span>Año</span><select id="filterYear"></select></label>
+                <label class="field"><span>Instancia</span><select id="filterPeriod"></select></label>
+                <label class="field"><span>Tema</span><select id="filterTopic"></select></label>
+                <label class="field"><span>Subtema</span><select id="filterSubtopic"></select></label>
+                <label class="field"><span>Habilidad</span><select id="filterSkill"></select></label>
+                <label class="field"><span>Dificultad</span><select id="filterDifficulty"></select></label>
+                <label class="field"><span>Resultado</span><select id="filterStatus"></select></label>
+                <label class="field"><span>Solución</span><select id="filterSolution"></select></label>
+                <label class="field"><span>Marcas</span><select id="filterMark"></select></label>
+              </div>
+              <button class="secondary-btn full" id="clearBankFiltersBtn">Limpiar filtros</button>
+            </aside>
+
+            <div class="bank-results" id="bankResults" aria-live="polite"></div>
+            <article class="exercise-detail card" id="exerciseDetail"></article>
+          </div>
+        </section>
+
+        <section class="app-section" id="section-simulation" data-title="Simulacro">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Práctica configurable</p>
+              <h1>Simulacro</h1>
+              <p>Los ejercicios guardados para repaso usan la misma colección que el banco.</p>
+            </div>
+          </div>
+          <div id="simulationRoot"></div>
+        </section>
+
+        <section class="app-section" id="section-guide" data-title="Piques y patrones">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Resolución y repaso activo</p>
+              <h1>Piques y patrones</h1>
+            </div>
+          </div>
+          <div class="guide-tabs" role="tablist">
+            <button class="guide-tab active" data-guide-tab="guide">Guía por temas</button>
+            <button class="guide-tab" data-guide-tab="flashcards">Tarjetas de repaso</button>
+            <button class="guide-tab" data-guide-tab="errors">Errores frecuentes</button>
+          </div>
+          <div id="guideRoot"></div>
+        </section>
+
+        <section class="app-section" id="section-notes" data-title="Notas">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Anotaciones conectadas</p>
+              <h1>Notas</h1>
+              <p>Notas generales, por tema, ejercicio, nodo y tarea del plan.</p>
+            </div>
+            <button class="primary-btn" id="newNoteBtn">Nueva nota</button>
+          </div>
+          <div class="notes-toolbar card" id="notesToolbar"></div>
+          <div class="notes-grid" id="notesGrid"></div>
+        </section>
+
+        <section class="app-section" id="section-sources" data-title="Fuentes">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Trazabilidad documental</p>
+              <h1>Fuentes</h1>
+              <p>Explorador secundario de documentos y enlaces originales.</p>
+            </div>
+          </div>
+          <div class="sources-toolbar card" id="sourcesToolbar"></div>
+          <div class="sources-groups" id="sourcesGroups"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <button class="icon-btn" id="closeModalBtn" aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  <script src="app.js"></script>
+</body>
+</html>

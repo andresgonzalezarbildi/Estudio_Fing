@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070313">
+  <meta
+    name="description"
+    content="Calendario unificado de Arquitectura de Computadoras y Sistemas Operativos."
+  >
+
+  <title>Plan unificado</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,430;9..144,560;9..144,680&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+   <link rel="icon" type="image/png" href="images/favicon.png">
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+  <canvas id="fluidCanvas" aria-hidden="true"></canvas>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="back-link" href="/">
+      <span aria-hidden="true">←</span>
+      Portal personal
+    </a>
+
+    <div class="topbar__actions">
+      <button class="text-button" id="showAllButton" type="button">
+        Mostrar todo
+      </button>
+
+      <button class="add-button" id="addTaskButton" type="button">
+        <span aria-hidden="true">＋</span>
+        Agregar bloque
+      </button>
+
+      <button class="update-button" id="updatePlanButton" type="button">
+        <span aria-hidden="true">↻</span>
+        Actualizar desde planes
+      </button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <header class="plan-heading">
+      <div>
+        <p>Arquitectura + Sistemas Operativos</p>
+        <h1>Plan unificado</h1>
+      </div>
+
+      <p class="plan-heading__copy">
+        Esta distribución queda fija. Podés completar, mover, agregar o
+        eliminar bloques sin redistribuir automáticamente el cronograma.
+      </p>
+    </header>
+
+    <section class="snapshot-note" id="snapshotNote">
+      <span aria-hidden="true">▣</span>
+      <div>
+        <strong>Instantánea independiente</strong>
+        <p id="snapshotDescription"></p>
+      </div>
+    </section>
+
+    <section class="exam-strip">
+      <article class="exam-card exam-card--arqui">
+        <span>23 JUL</span>
+        <div>
+          <small>Primer examen</small>
+          <strong>Arquitectura</strong>
+        </div>
+        <a href="/arqui/">Abrir ↗</a>
+      </article>
+
+      <article class="exam-card exam-card--so">
+        <span>29 JUL</span>
+        <div>
+          <small>Segundo examen</small>
+          <strong>Sistemas Operativos</strong>
+        </div>
+        <a href="/so/">Abrir ↗</a>
+      </article>
+    </section>
+
+    <section class="summary" aria-label="Resumen del plan">
+      <article>
+        <strong id="completedCount">0/0</strong>
+        <span>bloques completados</span>
+      </article>
+
+      <article>
+        <strong id="remainingMinutes">0 h</strong>
+        <span>carga pendiente estimada</span>
+      </article>
+
+      <article>
+        <strong id="todayCount">0</strong>
+        <span>bloques para hoy</span>
+      </article>
+
+      <div class="summary__progress">
+        <span id="progressBar"></span>
+      </div>
+    </section>
+
+    <nav class="filters" aria-label="Filtros del calendario">
+      <button type="button" data-filter="all" class="active">Todo</button>
+      <button type="button" data-filter="today">Hoy</button>
+      <button type="button" data-filter="pending">Pendiente</button>
+      <button type="button" data-filter="arqui">Arquitectura</button>
+      <button type="button" data-filter="so">Sistemas Operativos</button>
+    </nav>
+
+    <section class="calendar" id="calendar"></section>
+
+    <section class="empty-state" id="emptyState" hidden>
+      No hay bloques para este filtro.
+    </section>
+
+    <section class="deleted-section" id="deletedSection" hidden>
+      <header class="deleted-section__heading">
+        <div>
+          <p>Recuperación</p>
+          <h2>Bloques eliminados</h2>
+        </div>
+        <span id="deletedCount">0 bloques</span>
+      </header>
+
+      <p class="deleted-section__copy">
+        Permanecen fuera del plan al actualizar. Si su fecha quedó antes del
+        inicio vigente, se restaurarán en el primer día del plan actual.
+      </p>
+
+      <div class="deleted-tasks" id="deletedTasks"></div>
+    </section>
+  </main>
+
+  <dialog class="update-dialog" id="updateDialog">
+    <form method="dialog">
+      <span class="dialog-mark" aria-hidden="true">↻</span>
+      <h2>Actualizar el plan unificado</h2>
+      <p>
+        Se leerán todos los bloques de Arquitectura y Sistemas Operativos,
+        incluso los que originalmente estaban asignados antes de la fecha que
+        elijas, y se distribuirán nuevamente desde allí hasta cada examen.
+      </p>
+
+      <label class="move-date-field update-start-field">
+        <span>Repartir el plan desde</span>
+        <input id="updateStartDate" type="date" required>
+        <small>
+          Elegí una fecha anterior a hoy si ya habías empezado antes de
+          actualizar los planes originales.
+        </small>
+      </label>
+
+      <p class="dialog-warning">
+        No quedarán tareas antes de la fecha elegida. Arquitectura y Sistemas
+        se intercalarán antes del primer examen, manteniendo el orden de estudio
+        e intentando no superar cinco bloques ni seis horas por día. Esto solo
+        ocurre al confirmar; abrir la página otro día no modifica el plan. Los
+        bloques eliminados seguirán en recuperación.
+      </p>
+      <div class="dialog-actions">
+        <button value="cancel" class="text-button">Cancelar</button>
+        <button value="default" id="restoreInitialButton" class="text-button">
+          Restaurar versión inicial
+        </button>
+        <button value="confirm" id="confirmUpdateButton" class="update-button">
+          Leer planes y actualizar
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="update-dialog move-dialog" id="moveTaskDialog">
+    <form method="dialog">
+      <span class="dialog-mark" aria-hidden="true">⇢</span>
+      <h2>Mover bloque</h2>
+      <p class="move-task-title" id="moveTaskTitle"></p>
+
+      <label class="move-date-field" for="moveTaskDateSelect">
+        <span>Nuevo día</span>
+        <select id="moveTaskDateSelect"></select>
+      </label>
+
+      <p class="dialog-warning">
+        Solo se moverá este bloque. El estado de completado y el resto del
+        cronograma se mantendrán sin cambios.
+      </p>
+
+      <div class="dialog-actions">
+        <button value="cancel" class="text-button">Cancelar</button>
+        <button value="confirm" id="confirmMoveTaskButton" class="update-button">
+          Mover bloque
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+
+  <dialog class="update-dialog task-form-dialog" id="addTaskDialog">
+    <form method="dialog" id="addTaskForm">
+      <span class="dialog-mark" aria-hidden="true">＋</span>
+      <h2>Agregar bloque</h2>
+      <p>
+        Se agregará como un bloque independiente y quedará guardado junto
+        con el resto del cronograma.
+      </p>
+
+      <div class="task-form-grid">
+        <label class="form-field form-field--wide" for="addTaskTitle">
+          <span>Nombre del bloque</span>
+          <input id="addTaskTitle" type="text" maxlength="120" required>
+        </label>
+
+        <label class="form-field" for="addTaskDateSelect">
+          <span>Día</span>
+          <select id="addTaskDateSelect" required></select>
+        </label>
+
+        <label class="form-field" for="addTaskSubject">
+          <span>Materia</span>
+          <select id="addTaskSubject" required>
+            <option value="arqui">Arquitectura</option>
+            <option value="so">Sistemas Operativos</option>
+          </select>
+        </label>
+
+        <label class="form-field" for="addTaskMinutes">
+          <span>Duración estimada</span>
+          <div class="minutes-field">
+            <input id="addTaskMinutes" type="number" min="0" max="600" step="5" value="60" required>
+            <small>min</small>
+          </div>
+        </label>
+
+        <label class="form-field form-field--wide" for="addTaskDetails">
+          <span>Resumen breve</span>
+          <input
+            id="addTaskDetails"
+            type="text"
+            maxlength="180"
+            placeholder="Qué hay que hacer en este bloque"
+          >
+        </label>
+      </div>
+
+      <div class="dialog-actions">
+        <button value="cancel" class="text-button">Cancelar</button>
+        <button type="submit" id="confirmAddTaskButton" class="update-button">
+          Agregar bloque
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="update-dialog delete-dialog" id="deleteTaskDialog">
+    <form method="dialog">
+      <span class="dialog-mark dialog-mark--danger" aria-hidden="true">×</span>
+      <h2>Eliminar bloque</h2>
+      <p class="move-task-title" id="deleteTaskTitle"></p>
+      <p class="dialog-warning dialog-warning--danger">
+        Se quitará solamente este bloque. Los demás días y tareas no se
+        modificarán.
+      </p>
+
+      <div class="dialog-actions">
+        <button value="cancel" class="text-button">Cancelar</button>
+        <button value="confirm" id="confirmDeleteTaskButton" class="danger-button">
+          Eliminar bloque
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

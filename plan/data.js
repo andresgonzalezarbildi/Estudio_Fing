@@ -1,5 +1,5 @@
 window.PLAN_DATA = {
-  "version": "2026.08.03-1",
+  "version": "2026.08.03-2",
   "semester": {
     "title": "Plan de estudio · segundo semestre 2026",
     "start": "2026-08-03",
@@ -9,28 +9,28 @@ window.PLAN_DATA = {
     "fuaa": {
       "name": "Fundamentos de Aprendizaje Automático",
       "short": "FuAA",
-      "color": "#d8ff56",
+      "color": "#b9ff3b",
       "status": "Cronograma oficial cargado",
       "source": "FuAA 2026"
     },
     "redes": {
       "name": "Redes de Computadoras",
       "short": "Redes",
-      "color": "#35ecff",
+      "color": "#31a8ff",
       "status": "Cronograma oficial cargado",
       "source": "Cronograma Redes 2026"
     },
     "fbd": {
       "name": "Fundamentos de Bases de Datos",
       "short": "FBD",
-      "color": "#ff8b2c",
+      "color": "#ff9f1c",
       "status": "Temario OpenFing cargado; fechas pendientes",
       "source": "Lista OpenFing proporcionada"
     },
     "pln": {
       "name": "Introducción al Procesamiento de Lenguaje Natural",
       "short": "IntroPLN",
-      "color": "#ff43d0",
+      "color": "#ff4fd8",
       "status": "Cronograma y materiales pendientes",
       "source": "Pendiente"
     }

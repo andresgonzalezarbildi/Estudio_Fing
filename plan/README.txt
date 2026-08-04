@@ -1,22 +1,21 @@
-PLAN DE ESTUDIO - SEGUNDO SEMESTRE 2026
+PLAN DE ESTUDIO · SEGUNDO SEMESTRE 2026
 
-Abrir index.html directamente o publicar la carpeta en Netlify.
-No requiere npm ni compilación.
+Abrir index.html en un navegador moderno.
 
-Archivos principales
-- data.js: materias, temarios, cronogramas y bloques sugeridos.
-- app.js: filtros, progreso, edición, importación/exportación y LocalStorage.
-- style.css: interfaz responsive.
+Cambios de esta versión:
+- Diseño más ancho y tipografía/tarjetas de mayor tamaño para PC.
+- Filtros simplificados: todas juntas, por materia y entregas/laboratorios.
+- Las tareas completadas pasan a una lista separada al final, agrupadas por semana.
+- Cada tarjeta se puede reordenar dentro de su semana manteniendo apretado el mouse o usando ⋮⋮.
+- El orden personalizado, el progreso y las marcas de importancia se guardan en LocalStorage.
+- La estrella permite marcar o desmarcar una tarjeta como importante.
+- Colores de materias más contrastados.
+- Importación y exportación del estado en JSON.
 
-Contenido inicial
-- FuAA: cronograma completo, 20 temas, videos OpenFing y secciones del libro.
-- Redes: cronograma semanal, clases, monitoreos/defensas y entregas de Ob1/Ob2.
-- FBD: 21 clases OpenFing sin fechas oficiales.
-- IntroPLN: estructura pendiente para completar cuando se publique el cronograma.
+FuAA y Redes tienen cronogramas cargados.
+FBD conserva las 21 clases OpenFing sin fecha.
+IntroPLN queda preparado para completar cuando publiquen sus materiales.
 
-Datos locales
-El progreso y los cambios se guardan en LocalStorage con la clave:
-semester_study_plan_2026_v1
-
-Prueba de consistencia
-node tests/validate-data.mjs
+Pruebas:
+  node tests/validate-data.mjs
+  node tests/validate-ui.mjs

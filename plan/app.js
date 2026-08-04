@@ -6,7 +6,17 @@
 
   const STORAGE_KEY = "semester_study_plan_2026_v1";
   const IMPORTANT_TYPES = new Set(["control", "partial", "deadline", "defense"]);
+  const DELIVERABLE_TYPES = new Set([
+    "assignment",
+    "assignment-published",
+    "deadline",
+    "monitoring",
+    "defense",
+    "practical",
+    "workshop"
+  ]);
   const INFORMATIONAL_TYPES = new Set(["holiday", "no-class", "partial-window", "assignment-published"]);
+  const SUBJECT_FILTERS = new Set(Object.keys(DATA.subjects));
 
   const elements = {
     subjectOverview: document.querySelector("#subjectOverview"),
@@ -45,22 +55,25 @@
     toast: document.querySelector("#toast")
   };
 
-  let activeFilter = "upcoming";
+  let activeFilter = "all";
   let activeView = "timeline";
   let state = loadState();
   let toastTimer = null;
+  let activeDrag = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
 
   function seedItems() {
-    return DATA.items.map((item) => ({
+    return DATA.items.map((item, index) => ({
       ...clone(item),
       done: false,
       deleted: false,
       edited: false,
-      manual: false
+      manual: false,
+      important: Boolean(item.important),
+      order: index * 10
     }));
   }
 
@@ -93,11 +106,13 @@
       const merged = {
         ...item,
         done: Boolean(previous.done),
-        deleted: Boolean(previous.deleted)
+        deleted: Boolean(previous.deleted),
+        important: Boolean(previous.important),
+        order: finiteOrder(previous.order, item.order)
       };
 
       if (previous.edited) {
-        Object.assign(merged, sanitizeItem(previous, item.id), {
+        Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
           manual: false,
           edited: true
         });
@@ -108,8 +123,8 @@
 
     const manualItems = saved.items
       .filter((item) => item.manual && item.id)
-      .map((item) => ({
-        ...sanitizeItem(item, item.id),
+      .map((item, index) => ({
+        ...sanitizeItem(item, item.id, DATA.items.length * 10 + index * 10),
         manual: true,
         edited: true,
         done: Boolean(item.done),
@@ -125,7 +140,12 @@
     return fresh;
   }
 
-  function sanitizeItem(item, fallbackId) {
+  function finiteOrder(value, fallback = 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function sanitizeItem(item, fallbackId, fallbackOrder = 0) {
     const validSubject = DATA.subjects[item.subject] ? item.subject : "fuaa";
     const validDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date || "") ? item.date : "";
     const minutes = Math.max(0, Math.min(720, Number(item.minutes) || 0));
@@ -140,13 +160,19 @@
       minutes,
       fixed: Boolean(item.fixed),
       source: String(item.source || "Manual").slice(0, 120),
-      priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal"
+      priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal",
+      important: Boolean(item.important),
+      order: finiteOrder(item.order, fallbackOrder)
     };
   }
 
   function saveState(nextState = state) {
     nextState.savedAt = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    } catch {
+      // El plan sigue funcionando en memoria si el navegador bloquea el almacenamiento local.
+    }
   }
 
   function todayISO() {
@@ -242,16 +268,18 @@
 
   function itemMatchesFilter(item) {
     if (item.deleted || !item.date) return false;
-
-    const today = todayISO();
-    const weekStart = startOfWeekISO(today);
-    const weekEnd = endOfWeekISO(today);
-
-    if (activeFilter === "upcoming") return item.date >= today;
-    if (activeFilter === "week") return item.date >= weekStart && item.date <= weekEnd;
-    if (activeFilter === "pending") return !item.done && !INFORMATIONAL_TYPES.has(item.type);
     if (activeFilter === "all") return true;
+    if (activeFilter === "deliverables") return DELIVERABLE_TYPES.has(item.type);
     return item.subject === activeFilter;
+  }
+
+  function compareItems(a, b) {
+    const weekComparison = startOfWeekISO(a.date).localeCompare(startOfWeekISO(b.date));
+    if (weekComparison) return weekComparison;
+    return finiteOrder(a.order) - finiteOrder(b.order)
+      || a.date.localeCompare(b.date)
+      || a.subject.localeCompare(b.subject)
+      || a.id.localeCompare(b.id);
   }
 
   function visibleItems() {
@@ -259,7 +287,7 @@
     return state.items
       .filter(itemMatchesFilter)
       .filter((item) => itemMatchesSearch(item, query))
-      .sort((a, b) => a.date.localeCompare(b.date) || a.subject.localeCompare(b.subject) || a.id.localeCompare(b.id));
+      .sort(compareItems);
   }
 
   function render() {
@@ -278,9 +306,10 @@
     Object.entries(DATA.subjects).forEach(([key, subject]) => {
       const subjectItems = state.items.filter((item) => item.subject === key && !item.deleted);
       const pending = subjectItems.filter((item) => !item.done && !INFORMATIONAL_TYPES.has(item.type));
+      const practical = subjectItems.filter((item) => !item.done && DELIVERABLE_TYPES.has(item.type));
       const next = subjectItems
         .filter((item) => item.date && item.date >= today && !INFORMATIONAL_TYPES.has(item.type))
-        .sort((a, b) => a.date.localeCompare(b.date))[0];
+        .sort((a, b) => a.date.localeCompare(b.date) || finiteOrder(a.order) - finiteOrder(b.order))[0];
       const syllabusItems = DATA.syllabus[key] || [];
       const syllabusDone = syllabusItems.filter((topic) => state.syllabusDone[topic.id]).length;
 
@@ -294,6 +323,7 @@
         <small>${escapeHtml(subject.status)}</small>
         <div class="subject-card__meta">
           <span>${pending.length} pendientes</span>
+          <span>${practical.length} entregas/lab.</span>
           <span>${syllabusDone}/${syllabusItems.length} temas</span>
         </div>
         <p>${next ? `${dateLabel(next.date, { short: true })} · ${escapeHtml(next.title)}` : "Sin próximo evento fechado"}</p>
@@ -316,10 +346,10 @@
     const today = todayISO();
     const weekStart = startOfWeekISO(today);
     const weekEnd = endOfWeekISO(today);
-    const weekItems = items.filter((item) => item.date >= weekStart && item.date <= weekEnd);
+    const weekItems = items.filter((item) => item.date >= weekStart && item.date <= weekEnd && !item.done);
     const nextImportant = state.items
-      .filter((item) => !item.deleted && item.date >= today && IMPORTANT_TYPES.has(item.type))
-      .sort((a, b) => a.date.localeCompare(b.date))[0];
+      .filter((item) => !item.deleted && !item.done && item.date >= today && (item.important || IMPORTANT_TYPES.has(item.type)))
+      .sort((a, b) => a.date.localeCompare(b.date) || finiteOrder(a.order) - finiteOrder(b.order))[0];
 
     elements.completedCount.textContent = `${completed.length}/${items.length}`;
     elements.remainingTime.textContent = formatDuration(pendingMinutes);
@@ -332,8 +362,36 @@
 
   function renderTimeline() {
     const items = visibleItems();
+    const pending = items.filter((item) => !item.done);
+    const completed = items.filter((item) => item.done);
     elements.timeline.replaceChildren();
 
+    if (pending.length) {
+      elements.timeline.append(createTimelineZone(pending, false));
+    }
+
+    if (completed.length) {
+      elements.timeline.append(createTimelineZone(completed, true));
+    }
+
+    elements.emptyState.hidden = items.length > 0 || activeView !== "timeline";
+  }
+
+  function createTimelineZone(items, completed) {
+    const zone = document.createElement("section");
+    zone.className = `timeline-zone ${completed ? "timeline-zone--completed" : "timeline-zone--pending"}`;
+    zone.innerHTML = `
+      <header class="timeline-zone__heading">
+        <div>
+          <p>${completed ? "Historial" : "En curso"}</p>
+          <h2>${completed ? "Completadas" : "Cronograma pendiente"}</h2>
+        </div>
+        <span>${items.length} ${items.length === 1 ? "bloque" : "bloques"}</span>
+      </header>
+      <div class="timeline-zone__weeks"></div>
+    `;
+
+    const weeks = zone.querySelector(".timeline-zone__weeks");
     const groups = new Map();
     items.forEach((item) => {
       const monday = startOfWeekISO(item.date);
@@ -345,29 +403,26 @@
       const section = document.createElement("section");
       section.className = "week-section";
       const total = weekItems.reduce((sum, item) => sum + Number(item.minutes || 0), 0);
-      const done = weekItems.filter((item) => item.done).length;
-
       section.innerHTML = `
         <header class="week-heading">
-          <div><p>${escapeHtml(weekLabel(monday))}</p><h2>${done}/${weekItems.length} completados</h2></div>
+          <div><p>${escapeHtml(weekLabel(monday))}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "bloque" : "bloques"}</h3></div>
           <span>${total ? formatDuration(total) : "Fechas y eventos"}</span>
         </header>
-        <div class="week-items"></div>
+        <div class="week-items" data-group="${completed ? "completed" : "pending"}|${monday}" data-week="${monday}" data-completed="${completed ? "true" : "false"}"></div>
       `;
 
       const container = section.querySelector(".week-items");
       weekItems.forEach((item) => container.append(createItemCard(item)));
-      elements.timeline.append(section);
+      weeks.append(section);
     }
 
-    const hasTimeline = items.length > 0;
-    elements.emptyState.hidden = hasTimeline || activeView !== "timeline";
+    return zone;
   }
 
   function createItemCard(item) {
     const subject = DATA.subjects[item.subject];
     const article = document.createElement("article");
-    article.className = `task-card ${item.done ? "done" : ""} priority-${item.priority}`;
+    article.className = `task-card ${item.done ? "done" : ""} ${item.important ? "is-important" : ""} priority-${item.priority}`;
     article.style.setProperty("--subject", subject.color);
     article.dataset.id = item.id;
 
@@ -393,7 +448,11 @@
         ${item.details ? `<p>${escapeHtml(item.details)}</p>` : ""}
         ${item.source ? `<small class="task-source">${escapeHtml(item.source)}</small>` : ""}
       </div>
-      <button class="task-edit" type="button" aria-label="Editar ${escapeHtml(item.title)}">Editar</button>
+      <div class="task-actions">
+        <button class="task-important" type="button" aria-pressed="${item.important}" aria-label="${item.important ? "Quitar importancia" : "Marcar como importante"}" title="${item.important ? "Quitar importancia" : "Marcar como importante"}">★</button>
+        <button class="task-edit" type="button" aria-label="Editar ${escapeHtml(item.title)}">Editar</button>
+        <button class="task-drag-handle" type="button" aria-label="Reordenar ${escapeHtml(item.title)}" title="Mantener presionado y arrastrar">⋮⋮</button>
+      </div>
     `;
 
     const checkbox = article.querySelector("input[type=checkbox]");
@@ -405,14 +464,169 @@
       });
     }
 
+    article.querySelector(".task-important").addEventListener("click", () => {
+      item.important = !item.important;
+      saveState();
+      render();
+      showToast(item.important ? "Marcado como importante" : "Importancia quitada");
+    });
+
     article.querySelector(".task-edit").addEventListener("click", () => openTaskDialog(item.id));
+    installCardDragging(article);
     return article;
+  }
+
+  function installCardDragging(card) {
+    const handle = card.querySelector(".task-drag-handle");
+    handle.addEventListener("pointerdown", (event) => prepareCardDrag(card, event, true));
+
+    card.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse") return;
+      if (event.target.closest("button, input, label, a, textarea, select")) return;
+      prepareCardDrag(card, event, false);
+    });
+  }
+
+  function prepareCardDrag(card, event, forceHandle) {
+    if (activeDrag || event.button !== 0) return;
+    if (forceHandle) event.preventDefault();
+    const sourceContainer = card.closest(".week-items");
+    if (!sourceContainer) return;
+
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const origin = event.currentTarget;
+    let started = false;
+    let ghost = null;
+    let timer = null;
+
+    const clearListeners = () => {
+      clearTimeout(timer);
+      window.removeEventListener("pointermove", onMove, { capture: true });
+      window.removeEventListener("pointerup", onEnd, { capture: true });
+      window.removeEventListener("pointercancel", onEnd, { capture: true });
+    };
+
+    const begin = (currentEvent) => {
+      if (started || activeDrag) return;
+      started = true;
+      const rect = card.getBoundingClientRect();
+      ghost = card.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      document.body.append(ghost);
+
+      activeDrag = {
+        card,
+        ghost,
+        sourceContainer,
+        group: sourceContainer.dataset.group,
+        offsetX: Math.min(Math.max(startX - rect.left, 20), rect.width - 20),
+        offsetY: Math.min(Math.max(startY - rect.top, 20), rect.height - 20)
+      };
+      card.classList.add("is-dragging");
+      document.body.classList.add("dragging-card");
+      updateDragGhost(currentEvent || event);
+    };
+
+    const onMove = (moveEvent) => {
+      if (moveEvent.pointerId !== pointerId) return;
+      const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
+
+      if (!started) {
+        if (distance <= (forceHandle ? 8 : 10)) return;
+        begin(moveEvent);
+      }
+
+      moveEvent.preventDefault();
+      updateDragGhost(moveEvent);
+      reorderCardAtPoint(moveEvent.clientX, moveEvent.clientY);
+    };
+
+    const onEnd = (endEvent) => {
+      if (endEvent.pointerId !== pointerId) return;
+      clearListeners();
+      if (!started) return;
+      endEvent.preventDefault();
+      const finalContainer = card.closest(".week-items");
+      persistRenderedOrder(finalContainer);
+      cleanupDrag();
+      saveState();
+      render();
+      showToast("Orden actualizado");
+    };
+
+    timer = setTimeout(() => begin(event), forceHandle ? 120 : 190);
+    window.addEventListener("pointermove", onMove, { capture: true, passive: false });
+    window.addEventListener("pointerup", onEnd, { capture: true, passive: false });
+    window.addEventListener("pointercancel", onEnd, { capture: true, passive: false });
+  }
+
+  function updateDragGhost(event) {
+    if (!activeDrag) return;
+    const x = event.clientX - activeDrag.offsetX;
+    const y = event.clientY - activeDrag.offsetY;
+    activeDrag.ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  }
+
+  function reorderCardAtPoint(clientX, clientY) {
+    if (!activeDrag) return;
+    const target = document.elementFromPoint(clientX, clientY);
+    const container = target?.closest(".week-items");
+    if (!container || container.dataset.group !== activeDrag.group) return;
+
+    const candidates = [...container.querySelectorAll(".task-card:not(.is-dragging)")];
+    const next = candidates.find((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      return clientY < rect.top + rect.height / 2;
+    });
+
+    if (next) container.insertBefore(activeDrag.card, next);
+    else container.append(activeDrag.card);
+  }
+
+  function cleanupDrag() {
+    if (!activeDrag) return;
+    activeDrag.card.classList.remove("is-dragging");
+    activeDrag.ghost.remove();
+    document.body.classList.remove("dragging-card");
+    activeDrag = null;
+  }
+
+  function persistRenderedOrder(container) {
+    if (!container) return;
+    const monday = container.dataset.week;
+    const completed = container.dataset.completed === "true";
+    const displayedIds = [...container.querySelectorAll(".task-card")].map((card) => card.dataset.id);
+    const displayedSet = new Set(displayedIds);
+
+    const fullGroup = state.items
+      .filter((item) => !item.deleted && item.date && startOfWeekISO(item.date) === monday && Boolean(item.done) === completed)
+      .sort(compareItems);
+
+    const slots = fullGroup
+      .map((item, index) => displayedSet.has(item.id) ? index : -1)
+      .filter((index) => index >= 0);
+
+    if (slots.length !== displayedIds.length) return;
+
+    const byId = new Map(fullGroup.map((item) => [item.id, item]));
+    const reordered = [...fullGroup];
+    slots.forEach((slot, index) => {
+      reordered[slot] = byId.get(displayedIds[index]);
+    });
+    reordered.forEach((item, index) => {
+      item.order = index * 10;
+    });
   }
 
   function renderUndated() {
     const query = elements.searchInput.value.trim().toLocaleLowerCase("es");
     const entries = DATA.undated.filter((entry) => {
-      if (activeFilter !== "all" && activeFilter !== "upcoming" && activeFilter !== "pending" && activeFilter !== "week" && activeFilter !== entry.subject) return false;
+      if (activeFilter === "deliverables") return false;
+      if (SUBJECT_FILTERS.has(activeFilter) && activeFilter !== entry.subject) return false;
       return itemMatchesSearch({ ...entry, source: DATA.subjects[entry.subject].status, type: "study" }, query);
     });
 
@@ -447,8 +661,7 @@
     let visibleSubjects = 0;
 
     Object.entries(DATA.subjects).forEach(([key, subject]) => {
-      if (!["all", "upcoming", "pending", "week", key].includes(activeFilter)) return;
-      if (["fuaa", "redes", "fbd", "pln"].includes(activeFilter) && activeFilter !== key) return;
+      if (SUBJECT_FILTERS.has(activeFilter) && activeFilter !== key) return;
 
       const topics = (DATA.syllabus[key] || []).filter((topic) => {
         if (!query) return true;
@@ -505,6 +718,15 @@
     elements.syllabusView.hidden = activeView !== "syllabus";
   }
 
+  function nextOrderForDate(date, completed = false) {
+    if (!date) return state.items.length * 10;
+    const monday = startOfWeekISO(date);
+    const orders = state.items
+      .filter((item) => !item.deleted && item.date && startOfWeekISO(item.date) === monday && Boolean(item.done) === completed)
+      .map((item) => finiteOrder(item.order));
+    return (orders.length ? Math.max(...orders) : 0) + 10;
+  }
+
   function openTaskDialog(itemId = null, defaults = {}) {
     const item = itemId ? state.items.find((candidate) => candidate.id === itemId) : null;
     elements.taskForm.reset();
@@ -523,22 +745,26 @@
 
   function saveTaskFromForm() {
     const existingId = elements.taskId.value;
+    const existing = state.items.find((item) => item.id === existingId);
+    const date = elements.taskDate.value;
+    const type = elements.taskType.value;
     const values = sanitizeItem({
       id: existingId || `manual-${Date.now()}`,
-      date: elements.taskDate.value,
+      date,
       subject: elements.taskSubject.value,
-      type: elements.taskType.value,
+      type,
       title: elements.taskTitle.value.trim(),
       details: elements.taskDetails.value.trim(),
       minutes: elements.taskMinutes.value,
       fixed: false,
       source: existingId ? "Ajuste manual" : "Agregado manualmente",
-      priority: ["control", "partial", "deadline", "defense"].includes(elements.taskType.value) ? "critical" : "normal"
-    }, existingId || `manual-${Date.now()}`);
+      priority: IMPORTANT_TYPES.has(type) ? "critical" : DELIVERABLE_TYPES.has(type) ? "high" : "normal",
+      important: existing?.important || false,
+      order: existing && existing.date === date ? existing.order : nextOrderForDate(date, existing?.done || false)
+    }, existingId || `manual-${Date.now()}`, nextOrderForDate(date));
 
     if (!values.title) return;
 
-    const existing = state.items.find((item) => item.id === existingId);
     if (existing) {
       Object.assign(existing, values, { edited: true });
     } else {
@@ -592,16 +818,24 @@
       if (!previous) return item;
       return {
         ...item,
-        ...(previous.edited ? sanitizeItem(previous, item.id) : {}),
+        ...(previous.edited ? sanitizeItem(previous, item.id, item.order) : {}),
         done: Boolean(previous.done),
         deleted: Boolean(previous.deleted),
         edited: Boolean(previous.edited),
+        important: Boolean(previous.important),
+        order: finiteOrder(previous.order, item.order),
         manual: false
       };
     });
     next.items.push(...imported.items
       .filter((item) => item.manual && item.id)
-      .map((item) => ({ ...sanitizeItem(item, item.id), done: Boolean(item.done), deleted: Boolean(item.deleted), edited: true, manual: true })));
+      .map((item, index) => ({
+        ...sanitizeItem(item, item.id, DATA.items.length * 10 + index * 10),
+        done: Boolean(item.done),
+        deleted: Boolean(item.deleted),
+        edited: true,
+        manual: true
+      })));
     next.syllabusDone = imported.syllabusDone && typeof imported.syllabusDone === "object" ? imported.syllabusDone : {};
 
     state = next;
@@ -628,6 +862,7 @@
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => {
       activeView = button.dataset.view;
+      if (activeView === "syllabus" && activeFilter === "deliverables") activeFilter = "all";
       render();
     });
   });
@@ -636,6 +871,7 @@
     const button = event.target.closest("button[data-filter]");
     if (!button) return;
     activeFilter = button.dataset.filter;
+    if (activeFilter === "deliverables") activeView = "timeline";
     render();
   });
 
@@ -671,5 +907,6 @@
   resetButton.addEventListener("click", () => elements.resetDialog.showModal());
   document.querySelector(".topbar__actions").insertBefore(resetButton, elements.addButton);
 
+  window.addEventListener("blur", cleanupDrag);
   render();
 })();

@@ -39,17 +39,6 @@
       </p>
     </header>
 
-    <section class="source-note">
-      <span aria-hidden="true">▣</span>
-      <div>
-        <strong>Base inicial</strong>
-        <p>
-          FuAA y Redes tienen cronograma cargado. FBD conserva las 21 clases
-          OpenFing como temario sin fecha. IntroPLN queda preparado para completar.
-        </p>
-      </div>
-    </section>
-
     <section class="subject-overview" id="subjectOverview" aria-label="Resumen por materia"></section>
 
     <section class="summary" aria-label="Resumen del plan">
@@ -73,16 +62,16 @@
     </section>
 
     <nav class="filters" id="filters" aria-label="Filtros del cronograma">
-      <button type="button" data-filter="upcoming" class="active">Próximos</button>
-      <button type="button" data-filter="week">Esta semana</button>
-      <button type="button" data-filter="pending">Pendientes</button>
-      <button type="button" data-filter="all">Todo</button>
+      <button type="button" data-filter="all" class="active">Todas juntas</button>
+      <button type="button" data-filter="deliverables" class="featured-filter">Entregas y laboratorios</button>
       <span class="filter-separator" aria-hidden="true"></span>
       <button type="button" data-filter="fuaa">FuAA</button>
       <button type="button" data-filter="redes">Redes</button>
       <button type="button" data-filter="fbd">FBD</button>
       <button type="button" data-filter="pln">IntroPLN</button>
     </nav>
+
+    <p class="drag-help"><span aria-hidden="true">⋮⋮</span> Mantené apretada una tarjeta o usá el control de arrastre para reordenarla dentro de su semana.</p>
 
     <section id="timelineView">
       <div class="timeline" id="timeline"></div>
@@ -134,6 +123,11 @@
             <option value="assignment">Obligatorio</option>
             <option value="deadline">Entrega</option>
             <option value="monitoring">Monitoreo</option>
+            <option value="defense">Defensa</option>
+            <option value="questionnaire">Cuestionario</option>
+            <option value="discussion">Discusión</option>
+            <option value="workshop">Taller</option>
+            <option value="assignment-published">Publicación de obligatorio</option>
           </select>
         </label>
         <label class="form-field">

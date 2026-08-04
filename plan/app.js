@@ -17,6 +17,7 @@
   ]);
   const IMPORTANT_TYPES = new Set(["control", "partial", "deadline", "defense", "assignment-published"]);
   const INFORMATIONAL_TYPES = new Set(["holiday", "no-class", "partial-window", "notice"]);
+  const COMPLETION_DELAY_MS = 5000;
 
   const elements = {
     subjectOverview: document.querySelector("#subjectOverview"),
@@ -50,6 +51,8 @@
     cancelDialogButton: document.querySelector("#cancelDialogButton"),
     resetDialog: document.querySelector("#resetDialog"),
     confirmResetButton: document.querySelector("#confirmResetButton"),
+    completedJumpButton: document.querySelector("#completedJumpButton"),
+    topButton: document.querySelector("#topButton"),
     toast: document.querySelector("#toast")
   };
 
@@ -57,6 +60,8 @@
   let state = loadState();
   let activeDrag = null;
   let toastTimer = null;
+  const pendingCompletionIds = new Set();
+  const completionTimers = new Map();
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -240,6 +245,7 @@
   function itemMatchesFilter(item) {
     if (item.deleted) return false;
     if (activeFilter === "all") return true;
+    if (activeFilter === "current-week") return item.week === startOfWeekISO(todayISO());
     if (activeFilter === "deliverables") return DELIVERABLE_TYPES.has(item.type);
     return item.subject === activeFilter;
   }
@@ -315,8 +321,8 @@
 
   function renderTimeline() {
     const dated = visibleItems().filter((item) => item.week);
-    const pending = dated.filter((item) => !item.done);
-    const completed = dated.filter((item) => item.done);
+    const pending = dated.filter((item) => !item.done || pendingCompletionIds.has(item.id));
+    const completed = dated.filter((item) => item.done && !pendingCompletionIds.has(item.id));
     elements.timeline.replaceChildren();
 
     if (pending.length) elements.timeline.append(createTimelineZone(pending, false));
@@ -326,6 +332,7 @@
   function createTimelineZone(items, completed) {
     const zone = document.createElement("section");
     zone.className = `timeline-zone ${completed ? "timeline-zone--completed" : "timeline-zone--pending"}`;
+    if (completed) zone.id = "completedTimeline";
     zone.innerHTML = `
       <header class="timeline-zone__heading">
         <div>
@@ -369,7 +376,8 @@
   function createItemCard(item, draggable) {
     const subject = DATA.subjects[item.subject];
     const article = document.createElement("article");
-    article.className = `task-card ${item.done ? "done" : ""} ${item.important ? "is-important" : ""} priority-${item.priority}`;
+    const isCompleting = pendingCompletionIds.has(item.id);
+    article.className = `task-card ${item.done ? "done" : ""} ${isCompleting ? "is-completing" : ""} ${item.important ? "is-important" : ""} priority-${item.priority}`;
     article.style.setProperty("--subject", subject.color);
     article.dataset.id = item.id;
 
@@ -393,6 +401,7 @@
         <h3>${escapeHtml(item.title)}</h3>
         ${item.details ? `<p>${escapeHtml(item.details)}</p>` : ""}
         ${item.source ? `<small class="task-source">${escapeHtml(item.source)}</small>` : ""}
+        ${isCompleting ? `<span class="completion-delay">Pasa a completadas en unos segundos · podés desmarcarla</span>` : ""}
       </div>
       <div class="task-actions">
         <button class="task-important" type="button" aria-pressed="${item.important}" aria-label="${item.important ? "Quitar importancia" : "Marcar como importante"}" title="${item.important ? "Quitar importancia" : "Marcar como importante"}">★</button>
@@ -404,9 +413,29 @@
     const checkbox = article.querySelector("input[type=checkbox]");
     if (!checkDisabled) {
       checkbox.addEventListener("change", () => {
-        item.done = checkbox.checked;
+        if (checkbox.checked) {
+          item.done = true;
+          saveState();
+          scheduleCompletionMove(item, article);
+          renderSubjectOverview();
+          renderSummary();
+          updateControls();
+          return;
+        }
+
+        const wasWaiting = pendingCompletionIds.has(item.id);
+        cancelCompletionMove(item.id);
+        item.done = false;
         saveState();
-        render();
+        if (wasWaiting) {
+          article.classList.remove("done", "is-completing");
+          article.querySelector(".completion-delay")?.remove();
+          renderSubjectOverview();
+          renderSummary();
+          updateControls();
+        } else {
+          render();
+        }
       });
     }
 
@@ -419,6 +448,38 @@
     article.querySelector(".task-edit").addEventListener("click", () => openTaskDialog(item.id));
     if (draggable) installCardDragging(article);
     return article;
+  }
+
+  function scheduleCompletionMove(item, article) {
+    cancelCompletionMove(item.id);
+    pendingCompletionIds.add(item.id);
+    article.classList.add("done", "is-completing");
+    if (!article.querySelector(".completion-delay")) {
+      const notice = document.createElement("span");
+      notice.className = "completion-delay";
+      notice.textContent = "Pasa a completadas en unos segundos · podés desmarcarla";
+      article.querySelector(".task-content")?.append(notice);
+    }
+
+    const timer = window.setTimeout(() => {
+      completionTimers.delete(item.id);
+      pendingCompletionIds.delete(item.id);
+      render();
+    }, COMPLETION_DELAY_MS);
+    completionTimers.set(item.id, timer);
+  }
+
+  function cancelCompletionMove(itemId) {
+    const timer = completionTimers.get(itemId);
+    if (timer) window.clearTimeout(timer);
+    completionTimers.delete(itemId);
+    pendingCompletionIds.delete(itemId);
+  }
+
+  function clearCompletionMoves() {
+    completionTimers.forEach((timer) => window.clearTimeout(timer));
+    completionTimers.clear();
+    pendingCompletionIds.clear();
   }
 
   function installCardDragging(card) {
@@ -549,8 +610,8 @@
 
   function renderUndated() {
     const undated = visibleItems().filter((item) => !item.week);
-    const pending = undated.filter((item) => !item.done);
-    const completed = undated.filter((item) => item.done);
+    const pending = undated.filter((item) => !item.done || pendingCompletionIds.has(item.id));
+    const completed = undated.filter((item) => item.done && !pendingCompletionIds.has(item.id));
     elements.undatedList.replaceChildren();
     elements.undatedCount.textContent = `${undated.length} ${undated.length === 1 ? "elemento" : "elementos"}`;
 
@@ -565,6 +626,7 @@
   function createUndatedGroup(title, items, completed = false) {
     const section = document.createElement("section");
     section.className = `undated-group ${completed ? "undated-group--completed" : ""}`;
+    if (completed) section.id = "completedUndated";
     section.innerHTML = `<h3>${escapeHtml(title)}</h3><div class="undated-items"></div>`;
     const list = section.querySelector(".undated-items");
     items.forEach((item) => list.append(createItemCard(item, false)));
@@ -575,6 +637,9 @@
     elements.filters.querySelectorAll("button[data-filter]").forEach((button) => {
       button.classList.toggle("active", button.dataset.filter === activeFilter);
     });
+    const completedVisible = visibleItems().filter((item) => item.done && !pendingCompletionIds.has(item.id)).length;
+    elements.completedJumpButton.textContent = `✓ Completadas${completedVisible ? ` · ${completedVisible}` : ""}`;
+    elements.completedJumpButton.classList.toggle("is-empty", completedVisible === 0);
   }
 
   function nextOrderForGroup(week, completed = false) {
@@ -657,6 +722,7 @@
   }
 
   async function importState(file) {
+    clearCompletionMoves();
     const parsed = JSON.parse(await file.text());
     const imported = parsed.state || parsed;
     if (!imported || !Array.isArray(imported.items)) throw new Error("Formato inválido");
@@ -693,6 +759,7 @@
   }
 
   function resetState() {
+    clearCompletionMoves();
     state = initialState();
     saveState();
     elements.resetDialog.close();
@@ -714,6 +781,15 @@
     render();
   });
   elements.searchInput.addEventListener("input", render);
+  elements.completedJumpButton.addEventListener("click", () => {
+    const target = document.querySelector(".timeline-zone--completed, .undated-group--completed");
+    if (!target) {
+      showToast("No hay actividades completadas en esta vista");
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  elements.topButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   elements.addButton.addEventListener("click", () => openTaskDialog());
   elements.taskForm.addEventListener("submit", (event) => {
     event.preventDefault();

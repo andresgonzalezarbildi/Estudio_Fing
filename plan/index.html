@@ -52,6 +52,7 @@
     <section class="controls-panel">
       <nav class="filters" id="filters" aria-label="Filtros del cronograma">
         <button type="button" data-filter="all" class="active">Todas juntas</button>
+        <button type="button" data-filter="current-week">Semana actual</button>
         <button type="button" data-filter="deliverables" class="featured-filter">Entregas, prácticos y laboratorios</button>
         <span class="filter-separator" aria-hidden="true"></span>
         <button type="button" data-filter="fuaa">FuAA</button>
@@ -156,6 +157,11 @@
       </div>
     </form>
   </dialog>
+
+  <nav class="quick-nav" aria-label="Accesos rápidos">
+    <button id="completedJumpButton" type="button">✓ Completadas</button>
+    <button id="topButton" type="button" aria-label="Volver arriba">↑ Arriba</button>
+  </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

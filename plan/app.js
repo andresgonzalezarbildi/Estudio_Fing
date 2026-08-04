@@ -4,33 +4,31 @@
   const DATA = window.PLAN_DATA;
   if (!DATA) throw new Error("No se pudo cargar data.js");
 
-  const STORAGE_KEY = "semester_study_plan_2026_v1";
-  const IMPORTANT_TYPES = new Set(["control", "partial", "deadline", "defense"]);
+  const STORAGE_KEY = "semester_schedule_2026_v3";
+  const SUBJECT_FILTERS = new Set(Object.keys(DATA.subjects));
   const DELIVERABLE_TYPES = new Set([
-    "assignment",
+    "practical",
+    "questionnaire",
+    "workshop",
     "assignment-published",
     "deadline",
     "monitoring",
-    "defense",
-    "practical",
-    "workshop"
+    "defense"
   ]);
-  const INFORMATIONAL_TYPES = new Set(["holiday", "no-class", "partial-window", "assignment-published"]);
-  const SUBJECT_FILTERS = new Set(Object.keys(DATA.subjects));
+  const IMPORTANT_TYPES = new Set(["control", "partial", "deadline", "defense", "assignment-published"]);
+  const INFORMATIONAL_TYPES = new Set(["holiday", "no-class", "partial-window", "notice"]);
 
   const elements = {
     subjectOverview: document.querySelector("#subjectOverview"),
     completedCount: document.querySelector("#completedCount"),
-    remainingTime: document.querySelector("#remainingTime"),
+    pendingCount: document.querySelector("#pendingCount"),
     weekCount: document.querySelector("#weekCount"),
     nextDeadline: document.querySelector("#nextDeadline"),
     progressBar: document.querySelector("#progressBar"),
     timeline: document.querySelector("#timeline"),
-    timelineView: document.querySelector("#timelineView"),
-    syllabusView: document.querySelector("#syllabusView"),
-    syllabusGrid: document.querySelector("#syllabusGrid"),
     undatedSection: document.querySelector("#undatedSection"),
     undatedList: document.querySelector("#undatedList"),
+    undatedCount: document.querySelector("#undatedCount"),
     emptyState: document.querySelector("#emptyState"),
     filters: document.querySelector("#filters"),
     searchInput: document.querySelector("#searchInput"),
@@ -45,8 +43,8 @@
     taskTitle: document.querySelector("#taskTitle"),
     taskSubject: document.querySelector("#taskSubject"),
     taskType: document.querySelector("#taskType"),
-    taskDate: document.querySelector("#taskDate"),
-    taskMinutes: document.querySelector("#taskMinutes"),
+    taskWeek: document.querySelector("#taskWeek"),
+    taskEventDate: document.querySelector("#taskEventDate"),
     taskDetails: document.querySelector("#taskDetails"),
     deleteButton: document.querySelector("#deleteButton"),
     cancelDialogButton: document.querySelector("#cancelDialogButton"),
@@ -56,88 +54,12 @@
   };
 
   let activeFilter = "all";
-  let activeView = "timeline";
   let state = loadState();
-  let toastTimer = null;
   let activeDrag = null;
+  let toastTimer = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
-  }
-
-  function seedItems() {
-    return DATA.items.map((item, index) => ({
-      ...clone(item),
-      done: false,
-      deleted: false,
-      edited: false,
-      manual: false,
-      important: Boolean(item.important),
-      order: index * 10
-    }));
-  }
-
-  function initialState() {
-    return {
-      dataVersion: DATA.version,
-      items: seedItems(),
-      syllabusDone: {},
-      savedAt: new Date().toISOString()
-    };
-  }
-
-  function loadState() {
-    const fresh = initialState();
-    let saved;
-
-    try {
-      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    } catch {
-      saved = null;
-    }
-
-    if (!saved || !Array.isArray(saved.items)) return fresh;
-
-    const savedById = new Map(saved.items.map((item) => [item.id, item]));
-    fresh.items = fresh.items.map((item) => {
-      const previous = savedById.get(item.id);
-      if (!previous) return item;
-
-      const merged = {
-        ...item,
-        done: Boolean(previous.done),
-        deleted: Boolean(previous.deleted),
-        important: Boolean(previous.important),
-        order: finiteOrder(previous.order, item.order)
-      };
-
-      if (previous.edited) {
-        Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
-          manual: false,
-          edited: true
-        });
-      }
-
-      return merged;
-    });
-
-    const manualItems = saved.items
-      .filter((item) => item.manual && item.id)
-      .map((item, index) => ({
-        ...sanitizeItem(item, item.id, DATA.items.length * 10 + index * 10),
-        manual: true,
-        edited: true,
-        done: Boolean(item.done),
-        deleted: Boolean(item.deleted)
-      }));
-
-    fresh.items.push(...manualItems);
-    fresh.syllabusDone = saved.syllabusDone && typeof saved.syllabusDone === "object"
-      ? saved.syllabusDone
-      : {};
-    fresh.savedAt = saved.savedAt || fresh.savedAt;
-    saveState(fresh);
-    return fresh;
   }
 
   function finiteOrder(value, fallback = 0) {
@@ -145,44 +67,12 @@
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
-  function sanitizeItem(item, fallbackId, fallbackOrder = 0) {
-    const validSubject = DATA.subjects[item.subject] ? item.subject : "fuaa";
-    const validDate = /^\d{4}-\d{2}-\d{2}$/.test(item.date || "") ? item.date : "";
-    const minutes = Math.max(0, Math.min(720, Number(item.minutes) || 0));
-
-    return {
-      id: String(item.id || fallbackId),
-      date: validDate,
-      subject: validSubject,
-      type: String(item.type || "study"),
-      title: String(item.title || "Bloque sin título").slice(0, 140),
-      details: String(item.details || "").slice(0, 500),
-      minutes,
-      fixed: Boolean(item.fixed),
-      source: String(item.source || "Manual").slice(0, 120),
-      priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal",
-      important: Boolean(item.important),
-      order: finiteOrder(item.order, fallbackOrder)
-    };
-  }
-
-  function saveState(nextState = state) {
-    nextState.savedAt = new Date().toISOString();
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-    } catch {
-      // El plan sigue funcionando en memoria si el navegador bloquea el almacenamiento local.
-    }
-  }
-
-  function todayISO() {
-    const now = new Date();
-    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    return local.toISOString().slice(0, 10);
+  function validISO(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value || "");
   }
 
   function parseISO(iso) {
-    const [year, month, day] = iso.split("-").map(Number);
+    const [year, month, day] = String(iso).split("-").map(Number);
     return new Date(year, month - 1, day, 12, 0, 0);
   }
 
@@ -191,55 +81,29 @@
     return local.toISOString().slice(0, 10);
   }
 
-  function addDaysISO(iso, days) {
-    const date = parseISO(iso);
-    date.setDate(date.getDate() + days);
-    return isoFromDate(date);
-  }
-
   function startOfWeekISO(iso) {
+    if (!validISO(iso)) return "";
     const date = parseISO(iso);
     const day = date.getDay();
-    const offset = day === 0 ? -6 : 1 - day;
-    date.setDate(date.getDate() + offset);
+    date.setDate(date.getDate() + (day === 0 ? -6 : 1 - day));
     return isoFromDate(date);
   }
 
-  function endOfWeekISO(iso) {
-    return addDaysISO(startOfWeekISO(iso), 6);
+  function todayISO() {
+    return isoFromDate(new Date());
   }
 
-  function dateLabel(iso, options = {}) {
-    if (!iso) return "Sin fecha";
+  function dateLabel(iso, includeYear = false) {
+    if (!validISO(iso)) return "";
     return parseISO(iso).toLocaleDateString("es-UY", {
-      day: options.short ? "2-digit" : "numeric",
-      month: options.short ? "short" : "long",
-      ...(options.year ? { year: "numeric" } : {})
+      day: "2-digit",
+      month: "2-digit",
+      ...(includeYear ? { year: "numeric" } : {})
     });
   }
 
-  function weekdayLabel(iso) {
-    return parseISO(iso).toLocaleDateString("es-UY", { weekday: "short" }).replace(".", "");
-  }
-
-  function weekLabel(monday) {
-    const sunday = addDaysISO(monday, 6);
-    const start = parseISO(monday);
-    const end = parseISO(sunday);
-    const sameMonth = start.getMonth() === end.getMonth();
-    const startText = sameMonth
-      ? String(start.getDate())
-      : start.toLocaleDateString("es-UY", { day: "numeric", month: "short" });
-    const endText = end.toLocaleDateString("es-UY", { day: "numeric", month: "long" });
-    return `Semana del ${startText} al ${endText}`;
-  }
-
-  function formatDuration(minutes) {
-    const value = Math.max(0, Number(minutes) || 0);
-    if (value < 60) return `${value} min`;
-    const hours = Math.floor(value / 60);
-    const rest = value % 60;
-    return rest ? `${hours} h ${rest} min` : `${hours} h`;
+  function weekLabel(week) {
+    return `Semana del ${dateLabel(week)}`;
   }
 
   function escapeHtml(value = "") {
@@ -255,8 +119,114 @@
     return DATA.typeLabels[type] || type;
   }
 
-  function actionableItems() {
-    return state.items.filter((item) => !item.deleted && !INFORMATIONAL_TYPES.has(item.type));
+  function typeMark(type) {
+    return DATA.typeMarks[type] || "•";
+  }
+
+  function sanitizeItem(item, fallbackId, fallbackOrder = 0) {
+    const subject = DATA.subjects[item.subject] ? item.subject : "fuaa";
+    const week = validISO(item.week) ? startOfWeekISO(item.week) : "";
+    const eventDate = validISO(item.eventDate) ? item.eventDate : "";
+    return {
+      id: String(item.id || fallbackId),
+      week,
+      eventDate,
+      subject,
+      type: String(item.type || "course-class"),
+      title: String(item.title || "Elemento sin título").slice(0, 140),
+      details: String(item.details || "").slice(0, 500),
+      source: String(item.source || "Agregado manualmente").slice(0, 120),
+      fixed: Boolean(item.fixed),
+      important: Boolean(item.important),
+      priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal",
+      order: finiteOrder(item.order, fallbackOrder)
+    };
+  }
+
+  function seedItems() {
+    return DATA.items.map((item, index) => ({
+      ...sanitizeItem(item, item.id, index * 10),
+      done: false,
+      deleted: false,
+      edited: false,
+      manual: false
+    }));
+  }
+
+  function initialState() {
+    return {
+      dataVersion: DATA.version,
+      items: seedItems(),
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  function loadState() {
+    const fresh = initialState();
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch {
+      saved = null;
+    }
+    if (!saved || !Array.isArray(saved.items)) return fresh;
+
+    const savedById = new Map(saved.items.map((item) => [item.id, item]));
+    fresh.items = fresh.items.map((item) => {
+      const previous = savedById.get(item.id);
+      if (!previous) return item;
+      const merged = {
+        ...item,
+        done: Boolean(previous.done),
+        deleted: Boolean(previous.deleted),
+        important: Boolean(previous.important),
+        order: finiteOrder(previous.order, item.order)
+      };
+      if (previous.edited) {
+        Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
+          edited: true,
+          manual: false
+        });
+      }
+      return merged;
+    });
+
+    const manualItems = saved.items
+      .filter((item) => item.manual && item.id)
+      .map((item, index) => ({
+        ...sanitizeItem(item, item.id, DATA.items.length * 10 + index * 10),
+        done: Boolean(item.done),
+        deleted: Boolean(item.deleted),
+        edited: true,
+        manual: true
+      }));
+    fresh.items.push(...manualItems);
+    saveState(fresh);
+    return fresh;
+  }
+
+  function saveState(nextState = state) {
+    nextState.savedAt = new Date().toISOString();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+    } catch {
+      // Mantiene el estado en memoria cuando el navegador bloquea localStorage.
+    }
+  }
+
+  function isActionable(item) {
+    return !INFORMATIONAL_TYPES.has(item.type);
+  }
+
+  function itemDateForSorting(item) {
+    return item.eventDate || item.week || "9999-12-31";
+  }
+
+  function compareItems(a, b) {
+    return (a.week || "9999-12-31").localeCompare(b.week || "9999-12-31")
+      || finiteOrder(a.order) - finiteOrder(b.order)
+      || itemDateForSorting(a).localeCompare(itemDateForSorting(b))
+      || a.id.localeCompare(b.id);
   }
 
   function itemMatchesSearch(item, query) {
@@ -267,51 +237,37 @@
   }
 
   function itemMatchesFilter(item) {
-    if (item.deleted || !item.date) return false;
+    if (item.deleted) return false;
     if (activeFilter === "all") return true;
     if (activeFilter === "deliverables") return DELIVERABLE_TYPES.has(item.type);
     return item.subject === activeFilter;
   }
 
-  function compareItems(a, b) {
-    const weekComparison = startOfWeekISO(a.date).localeCompare(startOfWeekISO(b.date));
-    if (weekComparison) return weekComparison;
-    return finiteOrder(a.order) - finiteOrder(b.order)
-      || a.date.localeCompare(b.date)
-      || a.subject.localeCompare(b.subject)
-      || a.id.localeCompare(b.id);
-  }
-
   function visibleItems() {
     const query = elements.searchInput.value.trim().toLocaleLowerCase("es");
-    return state.items
-      .filter(itemMatchesFilter)
-      .filter((item) => itemMatchesSearch(item, query))
-      .sort(compareItems);
+    return state.items.filter(itemMatchesFilter).filter((item) => itemMatchesSearch(item, query)).sort(compareItems);
   }
 
   function render() {
     renderSubjectOverview();
     renderSummary();
     renderTimeline();
-    renderSyllabus();
     renderUndated();
     updateControls();
   }
 
   function renderSubjectOverview() {
     elements.subjectOverview.replaceChildren();
-    const today = todayISO();
-
     Object.entries(DATA.subjects).forEach(([key, subject]) => {
       const subjectItems = state.items.filter((item) => item.subject === key && !item.deleted);
-      const pending = subjectItems.filter((item) => !item.done && !INFORMATIONAL_TYPES.has(item.type));
-      const practical = subjectItems.filter((item) => !item.done && DELIVERABLE_TYPES.has(item.type));
+      const actionable = subjectItems.filter(isActionable);
+      const pending = actionable.filter((item) => !item.done);
+      const deliverables = pending.filter((item) => DELIVERABLE_TYPES.has(item.type));
+      const datedWeeks = new Set(subjectItems.filter((item) => item.week).map((item) => item.week));
+      const today = todayISO();
       const next = subjectItems
-        .filter((item) => item.date && item.date >= today && !INFORMATIONAL_TYPES.has(item.type))
-        .sort((a, b) => a.date.localeCompare(b.date) || finiteOrder(a.order) - finiteOrder(b.order))[0];
-      const syllabusItems = DATA.syllabus[key] || [];
-      const syllabusDone = syllabusItems.filter((topic) => state.syllabusDone[topic.id]).length;
+        .filter((item) => !item.done && itemDateForSorting(item) >= today && (item.important || IMPORTANT_TYPES.has(item.type)))
+        .sort((a, b) => itemDateForSorting(a).localeCompare(itemDateForSorting(b)))[0];
 
       const card = document.createElement("button");
       card.type = "button";
@@ -323,14 +279,13 @@
         <small>${escapeHtml(subject.status)}</small>
         <div class="subject-card__meta">
           <span>${pending.length} pendientes</span>
-          <span>${practical.length} entregas/lab.</span>
-          <span>${syllabusDone}/${syllabusItems.length} temas</span>
+          <span>${deliverables.length} entregas/lab.</span>
+          <span>${datedWeeks.size} semanas</span>
         </div>
-        <p>${next ? `${dateLabel(next.date, { short: true })} · ${escapeHtml(next.title)}` : "Sin próximo evento fechado"}</p>
+        <p>${next ? `${dateLabel(itemDateForSorting(next))} · ${escapeHtml(next.title)}` : "Sin próxima fecha publicada"}</p>
       `;
       card.addEventListener("click", () => {
         activeFilter = key;
-        activeView = "timeline";
         render();
       });
       elements.subjectOverview.append(card);
@@ -338,43 +293,33 @@
   }
 
   function renderSummary() {
-    const items = actionableItems();
-    const completed = items.filter((item) => item.done);
-    const pendingMinutes = items
-      .filter((item) => !item.done)
-      .reduce((total, item) => total + Number(item.minutes || 0), 0);
+    const actionable = state.items.filter((item) => !item.deleted && isActionable(item));
+    const completed = actionable.filter((item) => item.done);
+    const pending = actionable.filter((item) => !item.done);
+    const currentWeek = startOfWeekISO(todayISO());
+    const weekItems = pending.filter((item) => item.week === currentWeek);
     const today = todayISO();
-    const weekStart = startOfWeekISO(today);
-    const weekEnd = endOfWeekISO(today);
-    const weekItems = items.filter((item) => item.date >= weekStart && item.date <= weekEnd && !item.done);
-    const nextImportant = state.items
-      .filter((item) => !item.deleted && !item.done && item.date >= today && (item.important || IMPORTANT_TYPES.has(item.type)))
-      .sort((a, b) => a.date.localeCompare(b.date) || finiteOrder(a.order) - finiteOrder(b.order))[0];
+    const nextImportant = pending
+      .filter((item) => (item.eventDate || item.week) >= today && (item.important || IMPORTANT_TYPES.has(item.type)))
+      .sort((a, b) => itemDateForSorting(a).localeCompare(itemDateForSorting(b)) || finiteOrder(a.order) - finiteOrder(b.order))[0];
 
-    elements.completedCount.textContent = `${completed.length}/${items.length}`;
-    elements.remainingTime.textContent = formatDuration(pendingMinutes);
+    elements.completedCount.textContent = `${completed.length}/${actionable.length}`;
+    elements.pendingCount.textContent = String(pending.length);
     elements.weekCount.textContent = String(weekItems.length);
     elements.nextDeadline.textContent = nextImportant
-      ? `${dateLabel(nextImportant.date, { short: true })} · ${nextImportant.title}`
+      ? `${dateLabel(itemDateForSorting(nextImportant))} · ${nextImportant.title}`
       : "—";
-    elements.progressBar.style.width = `${items.length ? Math.round(completed.length / items.length * 100) : 0}%`;
+    elements.progressBar.style.width = `${actionable.length ? Math.round(completed.length / actionable.length * 100) : 0}%`;
   }
 
   function renderTimeline() {
-    const items = visibleItems();
-    const pending = items.filter((item) => !item.done);
-    const completed = items.filter((item) => item.done);
+    const dated = visibleItems().filter((item) => item.week);
+    const pending = dated.filter((item) => !item.done);
+    const completed = dated.filter((item) => item.done);
     elements.timeline.replaceChildren();
 
-    if (pending.length) {
-      elements.timeline.append(createTimelineZone(pending, false));
-    }
-
-    if (completed.length) {
-      elements.timeline.append(createTimelineZone(completed, true));
-    }
-
-    elements.emptyState.hidden = items.length > 0 || activeView !== "timeline";
+    if (pending.length) elements.timeline.append(createTimelineZone(pending, false));
+    if (completed.length) elements.timeline.append(createTimelineZone(completed, true));
   }
 
   function createTimelineZone(items, completed) {
@@ -383,43 +328,40 @@
     zone.innerHTML = `
       <header class="timeline-zone__heading">
         <div>
-          <p>${completed ? "Historial" : "En curso"}</p>
-          <h2>${completed ? "Completadas" : "Cronograma pendiente"}</h2>
+          <p>${completed ? "Historial" : "Cronogramas"}</p>
+          <h2>${completed ? "Completadas" : "Pendientes"}</h2>
         </div>
-        <span>${items.length} ${items.length === 1 ? "bloque" : "bloques"}</span>
+        <span>${items.length} ${items.length === 1 ? "elemento" : "elementos"}</span>
       </header>
       <div class="timeline-zone__weeks"></div>
     `;
 
-    const weeks = zone.querySelector(".timeline-zone__weeks");
+    const weeksNode = zone.querySelector(".timeline-zone__weeks");
     const groups = new Map();
     items.forEach((item) => {
-      const monday = startOfWeekISO(item.date);
-      if (!groups.has(monday)) groups.set(monday, []);
-      groups.get(monday).push(item);
+      if (!groups.has(item.week)) groups.set(item.week, []);
+      groups.get(item.week).push(item);
     });
 
-    for (const [monday, weekItems] of groups) {
+    for (const [week, weekItems] of groups) {
+      const subjects = new Set(weekItems.map((item) => item.subject));
       const section = document.createElement("section");
       section.className = "week-section";
-      const total = weekItems.reduce((sum, item) => sum + Number(item.minutes || 0), 0);
       section.innerHTML = `
         <header class="week-heading">
-          <div><p>${escapeHtml(weekLabel(monday))}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "bloque" : "bloques"}</h3></div>
-          <span>${total ? formatDuration(total) : "Fechas y eventos"}</span>
+          <div><p>${escapeHtml(weekLabel(week))}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "elemento" : "elementos"}</h3></div>
+          <span>${subjects.size} ${subjects.size === 1 ? "materia" : "materias"}</span>
         </header>
-        <div class="week-items" data-group="${completed ? "completed" : "pending"}|${monday}" data-week="${monday}" data-completed="${completed ? "true" : "false"}"></div>
+        <div class="week-items" data-group="${completed ? "completed" : "pending"}|${week}" data-week="${week}" data-completed="${completed ? "true" : "false"}"></div>
       `;
-
       const container = section.querySelector(".week-items");
-      weekItems.forEach((item) => container.append(createItemCard(item)));
-      weeks.append(section);
+      weekItems.forEach((item) => container.append(createItemCard(item, true)));
+      weeksNode.append(section);
     }
-
     return zone;
   }
 
-  function createItemCard(item) {
+  function createItemCard(item, draggable) {
     const subject = DATA.subjects[item.subject];
     const article = document.createElement("article");
     article.className = `task-card ${item.done ? "done" : ""} ${item.important ? "is-important" : ""} priority-${item.priority}`;
@@ -428,12 +370,10 @@
 
     const checkDisabled = INFORMATIONAL_TYPES.has(item.type);
     article.innerHTML = `
-      <div class="task-date">
-        <span>${escapeHtml(weekdayLabel(item.date))}</span>
-        <strong>${parseISO(item.date).getDate()}</strong>
-        <small>${escapeHtml(parseISO(item.date).toLocaleDateString("es-UY", { month: "short" }).replace(".", ""))}</small>
+      <div class="task-kind" aria-hidden="true">
+        <span>${escapeHtml(typeMark(item.type))}</span>
       </div>
-      <label class="task-check ${checkDisabled ? "task-check--disabled" : ""}" title="${checkDisabled ? "Evento informativo" : "Marcar como completado"}">
+      <label class="task-check ${checkDisabled ? "task-check--disabled" : ""}" title="${checkDisabled ? "Elemento informativo" : "Marcar como completado"}">
         <input type="checkbox" ${item.done ? "checked" : ""} ${checkDisabled ? "disabled" : ""}>
         <span></span>
       </label>
@@ -441,8 +381,8 @@
         <div class="task-meta">
           <span class="subject-badge">${escapeHtml(subject.short)}</span>
           <span>${escapeHtml(typeLabel(item.type))}</span>
-          ${item.fixed ? "<span>fecha oficial</span>" : "<span>sugerido</span>"}
-          ${item.minutes ? `<span>${formatDuration(item.minutes)}</span>` : ""}
+          <span>${item.fixed ? "cronograma oficial" : "agregado manualmente"}</span>
+          ${item.eventDate ? `<span class="exact-date">fecha ${dateLabel(item.eventDate)}</span>` : ""}
         </div>
         <h3>${escapeHtml(item.title)}</h3>
         ${item.details ? `<p>${escapeHtml(item.details)}</p>` : ""}
@@ -451,7 +391,7 @@
       <div class="task-actions">
         <button class="task-important" type="button" aria-pressed="${item.important}" aria-label="${item.important ? "Quitar importancia" : "Marcar como importante"}" title="${item.important ? "Quitar importancia" : "Marcar como importante"}">★</button>
         <button class="task-edit" type="button" aria-label="Editar ${escapeHtml(item.title)}">Editar</button>
-        <button class="task-drag-handle" type="button" aria-label="Reordenar ${escapeHtml(item.title)}" title="Mantener presionado y arrastrar">⋮⋮</button>
+        ${draggable ? `<button class="task-drag-handle" type="button" aria-label="Reordenar ${escapeHtml(item.title)}" title="Mantener presionado y arrastrar">⋮⋮</button>` : ""}
       </div>
     `;
 
@@ -470,16 +410,14 @@
       render();
       showToast(item.important ? "Marcado como importante" : "Importancia quitada");
     });
-
     article.querySelector(".task-edit").addEventListener("click", () => openTaskDialog(item.id));
-    installCardDragging(article);
+    if (draggable) installCardDragging(article);
     return article;
   }
 
   function installCardDragging(card) {
     const handle = card.querySelector(".task-drag-handle");
     handle.addEventListener("pointerdown", (event) => prepareCardDrag(card, event, true));
-
     card.addEventListener("pointerdown", (event) => {
       if (event.pointerType !== "mouse") return;
       if (event.target.closest("button, input, label, a, textarea, select")) return;
@@ -496,7 +434,6 @@
     const pointerId = event.pointerId;
     const startX = event.clientX;
     const startY = event.clientY;
-    const origin = event.currentTarget;
     let started = false;
     let ghost = null;
     let timer = null;
@@ -517,7 +454,6 @@
       ghost.style.width = `${rect.width}px`;
       ghost.style.height = `${rect.height}px`;
       document.body.append(ghost);
-
       activeDrag = {
         card,
         ghost,
@@ -534,12 +470,10 @@
     const onMove = (moveEvent) => {
       if (moveEvent.pointerId !== pointerId) return;
       const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
-
       if (!started) {
         if (distance <= (forceHandle ? 8 : 10)) return;
         begin(moveEvent);
       }
-
       moveEvent.preventDefault();
       updateDragGhost(moveEvent);
       reorderCardAtPoint(moveEvent.clientX, moveEvent.clientY);
@@ -550,8 +484,7 @@
       clearListeners();
       if (!started) return;
       endEvent.preventDefault();
-      const finalContainer = card.closest(".week-items");
-      persistRenderedOrder(finalContainer);
+      persistRenderedOrder(card.closest(".week-items"));
       cleanupDrag();
       saveState();
       render();
@@ -566,9 +499,7 @@
 
   function updateDragGhost(event) {
     if (!activeDrag) return;
-    const x = event.clientX - activeDrag.offsetX;
-    const y = event.clientY - activeDrag.offsetY;
-    activeDrag.ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    activeDrag.ghost.style.transform = `translate3d(${event.clientX - activeDrag.offsetX}px, ${event.clientY - activeDrag.offsetY}px, 0)`;
   }
 
   function reorderCardAtPoint(clientX, clientY) {
@@ -576,13 +507,11 @@
     const target = document.elementFromPoint(clientX, clientY);
     const container = target?.closest(".week-items");
     if (!container || container.dataset.group !== activeDrag.group) return;
-
     const candidates = [...container.querySelectorAll(".task-card:not(.is-dragging)")];
     const next = candidates.find((candidate) => {
       const rect = candidate.getBoundingClientRect();
       return clientY < rect.top + rect.height / 2;
     });
-
     if (next) container.insertBefore(activeDrag.card, next);
     else container.append(activeDrag.card);
   }
@@ -597,146 +526,68 @@
 
   function persistRenderedOrder(container) {
     if (!container) return;
-    const monday = container.dataset.week;
+    const week = container.dataset.week;
     const completed = container.dataset.completed === "true";
     const displayedIds = [...container.querySelectorAll(".task-card")].map((card) => card.dataset.id);
     const displayedSet = new Set(displayedIds);
-
     const fullGroup = state.items
-      .filter((item) => !item.deleted && item.date && startOfWeekISO(item.date) === monday && Boolean(item.done) === completed)
+      .filter((item) => !item.deleted && item.week === week && Boolean(item.done) === completed)
       .sort(compareItems);
-
-    const slots = fullGroup
-      .map((item, index) => displayedSet.has(item.id) ? index : -1)
-      .filter((index) => index >= 0);
-
+    const slots = fullGroup.map((item, index) => displayedSet.has(item.id) ? index : -1).filter((index) => index >= 0);
     if (slots.length !== displayedIds.length) return;
-
     const byId = new Map(fullGroup.map((item) => [item.id, item]));
     const reordered = [...fullGroup];
-    slots.forEach((slot, index) => {
-      reordered[slot] = byId.get(displayedIds[index]);
-    });
-    reordered.forEach((item, index) => {
-      item.order = index * 10;
-    });
+    slots.forEach((slot, index) => { reordered[slot] = byId.get(displayedIds[index]); });
+    reordered.forEach((item, index) => { item.order = index * 10; });
   }
 
   function renderUndated() {
-    const query = elements.searchInput.value.trim().toLocaleLowerCase("es");
-    const entries = DATA.undated.filter((entry) => {
-      if (activeFilter === "deliverables") return false;
-      if (SUBJECT_FILTERS.has(activeFilter) && activeFilter !== entry.subject) return false;
-      return itemMatchesSearch({ ...entry, source: DATA.subjects[entry.subject].status, type: "study" }, query);
-    });
-
+    const undated = visibleItems().filter((item) => !item.week);
+    const pending = undated.filter((item) => !item.done);
+    const completed = undated.filter((item) => item.done);
     elements.undatedList.replaceChildren();
-    entries.forEach((entry) => {
-      const subject = DATA.subjects[entry.subject];
-      const card = document.createElement("article");
-      card.className = "undated-card";
-      card.style.setProperty("--subject", subject.color);
-      card.innerHTML = `
-        <span>${escapeHtml(subject.short)}</span>
-        <div><h3>${escapeHtml(entry.title)}</h3><p>${escapeHtml(entry.details)}</p></div>
-        <button type="button">Agregar fecha</button>
-      `;
-      card.querySelector("button").addEventListener("click", () => {
-        openTaskDialog(null, {
-          subject: entry.subject,
-          title: entry.title,
-          details: entry.details,
-          type: "study"
-        });
-      });
-      elements.undatedList.append(card);
-    });
+    elements.undatedCount.textContent = `${undated.length} ${undated.length === 1 ? "elemento" : "elementos"}`;
 
-    elements.undatedSection.hidden = activeView !== "timeline" || entries.length === 0;
+    if (pending.length) elements.undatedList.append(createUndatedGroup("Pendientes", pending));
+    if (completed.length) elements.undatedList.append(createUndatedGroup("Completadas", completed, true));
+    elements.undatedSection.hidden = undated.length === 0;
+
+    const hasVisible = visibleItems().length > 0;
+    elements.emptyState.hidden = hasVisible;
   }
 
-  function renderSyllabus() {
-    elements.syllabusGrid.replaceChildren();
-    const query = elements.searchInput.value.trim().toLocaleLowerCase("es");
-    let visibleSubjects = 0;
-
-    Object.entries(DATA.subjects).forEach(([key, subject]) => {
-      if (SUBJECT_FILTERS.has(activeFilter) && activeFilter !== key) return;
-
-      const topics = (DATA.syllabus[key] || []).filter((topic) => {
-        if (!query) return true;
-        return `${topic.title} ${topic.details}`.toLocaleLowerCase("es").includes(query);
-      });
-      if (!topics.length) return;
-      visibleSubjects += 1;
-
-      const completed = topics.filter((topic) => state.syllabusDone[topic.id]).length;
-      const section = document.createElement("section");
-      section.className = "syllabus-card";
-      section.style.setProperty("--subject", subject.color);
-      section.innerHTML = `
-        <header>
-          <div><span>${escapeHtml(subject.short)}</span><h2>${escapeHtml(subject.name)}</h2></div>
-          <strong>${completed}/${topics.length}</strong>
-        </header>
-        <p class="syllabus-status">${escapeHtml(subject.status)}</p>
-        <div class="topic-list"></div>
-      `;
-
-      const list = section.querySelector(".topic-list");
-      topics.forEach((topic) => {
-        const label = document.createElement("label");
-        label.className = `topic-row ${state.syllabusDone[topic.id] ? "done" : ""}`;
-        label.innerHTML = `
-          <input type="checkbox" ${state.syllabusDone[topic.id] ? "checked" : ""}>
-          <span class="topic-number">${String(topic.order).padStart(2, "0")}</span>
-          <span class="topic-copy"><strong>${escapeHtml(topic.title)}</strong><small>${escapeHtml(topic.details || "")}</small></span>
-        `;
-        const checkbox = label.querySelector("input");
-        checkbox.addEventListener("change", () => {
-          state.syllabusDone[topic.id] = checkbox.checked;
-          saveState();
-          render();
-        });
-        list.append(label);
-      });
-
-      elements.syllabusGrid.append(section);
-    });
-
-    elements.emptyState.hidden = activeView !== "syllabus" || visibleSubjects > 0;
+  function createUndatedGroup(title, items, completed = false) {
+    const section = document.createElement("section");
+    section.className = `undated-group ${completed ? "undated-group--completed" : ""}`;
+    section.innerHTML = `<h3>${escapeHtml(title)}</h3><div class="undated-items"></div>`;
+    const list = section.querySelector(".undated-items");
+    items.forEach((item) => list.append(createItemCard(item, false)));
+    return section;
   }
 
   function updateControls() {
-    document.querySelectorAll("[data-view]").forEach((button) => {
-      button.classList.toggle("active", button.dataset.view === activeView);
-    });
     elements.filters.querySelectorAll("button[data-filter]").forEach((button) => {
       button.classList.toggle("active", button.dataset.filter === activeFilter);
     });
-    elements.timelineView.hidden = activeView !== "timeline";
-    elements.syllabusView.hidden = activeView !== "syllabus";
   }
 
-  function nextOrderForDate(date, completed = false) {
-    if (!date) return state.items.length * 10;
-    const monday = startOfWeekISO(date);
+  function nextOrderForGroup(week, completed = false) {
     const orders = state.items
-      .filter((item) => !item.deleted && item.date && startOfWeekISO(item.date) === monday && Boolean(item.done) === completed)
+      .filter((item) => !item.deleted && item.week === week && Boolean(item.done) === completed)
       .map((item) => finiteOrder(item.order));
-    return (orders.length ? Math.max(...orders) : 0) + 10;
+    return (orders.length ? Math.max(...orders) : state.items.length * 10) + 10;
   }
 
   function openTaskDialog(itemId = null, defaults = {}) {
     const item = itemId ? state.items.find((candidate) => candidate.id === itemId) : null;
     elements.taskForm.reset();
     elements.taskId.value = item?.id || "";
-    elements.taskDialogTitle.textContent = item ? "Editar bloque" : "Agregar bloque";
+    elements.taskDialogTitle.textContent = item ? "Editar elemento" : "Agregar elemento";
     elements.taskTitle.value = item?.title || defaults.title || "";
     elements.taskSubject.value = item?.subject || defaults.subject || "fuaa";
-    elements.taskType.value = item?.type || defaults.type || "study";
-    elements.taskDate.value = item?.date || defaults.date || "";
-    elements.taskMinutes.value = item?.minutes ?? defaults.minutes ?? 60;
+    elements.taskType.value = item?.type || defaults.type || "course-class";
+    elements.taskWeek.value = item?.week || defaults.week || "";
+    elements.taskEventDate.value = item?.eventDate || defaults.eventDate || "";
     elements.taskDetails.value = item?.details || defaults.details || "";
     elements.deleteButton.hidden = !item;
     elements.taskDialog.showModal();
@@ -746,51 +597,45 @@
   function saveTaskFromForm() {
     const existingId = elements.taskId.value;
     const existing = state.items.find((item) => item.id === existingId);
-    const date = elements.taskDate.value;
+    const week = elements.taskWeek.value ? startOfWeekISO(elements.taskWeek.value) : "";
     const type = elements.taskType.value;
     const values = sanitizeItem({
       id: existingId || `manual-${Date.now()}`,
-      date,
+      week,
+      eventDate: elements.taskEventDate.value,
       subject: elements.taskSubject.value,
       type,
       title: elements.taskTitle.value.trim(),
       details: elements.taskDetails.value.trim(),
-      minutes: elements.taskMinutes.value,
-      fixed: false,
-      source: existingId ? "Ajuste manual" : "Agregado manualmente",
+      source: existingId ? existing?.source || "Ajuste manual" : "Agregado manualmente",
+      fixed: existing ? existing.fixed : false,
+      important: existing?.important || IMPORTANT_TYPES.has(type),
       priority: IMPORTANT_TYPES.has(type) ? "critical" : DELIVERABLE_TYPES.has(type) ? "high" : "normal",
-      important: existing?.important || false,
-      order: existing && existing.date === date ? existing.order : nextOrderForDate(date, existing?.done || false)
-    }, existingId || `manual-${Date.now()}`, nextOrderForDate(date));
-
+      order: existing && existing.week === week ? existing.order : nextOrderForGroup(week, existing?.done || false)
+    }, existingId || `manual-${Date.now()}`, nextOrderForGroup(week));
     if (!values.title) return;
 
-    if (existing) {
-      Object.assign(existing, values, { edited: true });
-    } else {
-      state.items.push({ ...values, done: false, deleted: false, edited: true, manual: true });
-    }
-
+    if (existing) Object.assign(existing, values, { edited: true });
+    else state.items.push({ ...values, done: false, deleted: false, edited: true, manual: true });
     saveState();
     elements.taskDialog.close();
-    showToast(existing ? "Bloque actualizado" : "Bloque agregado");
     render();
+    showToast(existing ? "Elemento actualizado" : "Elemento agregado");
   }
 
   function deleteCurrentTask() {
-    const id = elements.taskId.value;
-    const item = state.items.find((candidate) => candidate.id === id);
+    const item = state.items.find((candidate) => candidate.id === elements.taskId.value);
     if (!item) return;
     item.deleted = true;
     saveState();
     elements.taskDialog.close();
-    showToast("Bloque eliminado");
     render();
+    showToast("Elemento eliminado");
   }
 
   function exportState() {
     const payload = {
-      app: "Plan de estudio 2º semestre 2026",
+      app: "Cronograma 2º semestre 2026",
       exportedAt: new Date().toISOString(),
       dataVersion: DATA.version,
       state
@@ -799,15 +644,14 @@
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `plan-estudio-${todayISO()}.json`;
+    anchor.download = `cronograma-${todayISO()}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
-    showToast("Plan exportado");
+    showToast("Cronograma exportado");
   }
 
   async function importState(file) {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(await file.text());
     const imported = parsed.state || parsed;
     if (!imported || !Array.isArray(imported.items)) throw new Error("Formato inválido");
 
@@ -836,12 +680,10 @@
         edited: true,
         manual: true
       })));
-    next.syllabusDone = imported.syllabusDone && typeof imported.syllabusDone === "object" ? imported.syllabusDone : {};
-
     state = next;
     saveState();
     render();
-    showToast("Plan importado");
+    showToast("Cronograma importado");
   }
 
   function resetState() {
@@ -849,7 +691,7 @@
     saveState();
     elements.resetDialog.close();
     render();
-    showToast("Base restaurada");
+    showToast("Cronograma restaurado");
   }
 
   function showToast(message) {
@@ -859,22 +701,12 @@
     toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2400);
   }
 
-  document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeView = button.dataset.view;
-      if (activeView === "syllabus" && activeFilter === "deliverables") activeFilter = "all";
-      render();
-    });
-  });
-
   elements.filters.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-filter]");
     if (!button) return;
     activeFilter = button.dataset.filter;
-    if (activeFilter === "deliverables") activeView = "timeline";
     render();
   });
-
   elements.searchInput.addEventListener("input", render);
   elements.addButton.addEventListener("click", () => openTaskDialog());
   elements.taskForm.addEventListener("submit", (event) => {

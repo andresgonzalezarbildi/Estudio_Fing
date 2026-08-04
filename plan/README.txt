@@ -1,20 +1,32 @@
-PLAN DE ESTUDIO · SEGUNDO SEMESTRE 2026
+CRONOGRAMA · SEGUNDO SEMESTRE 2026
 
-Abrir index.html en un navegador moderno.
+Abrir index.html en el navegador.
 
-Cambios de esta versión:
-- Diseño más ancho y tipografía/tarjetas de mayor tamaño para PC.
-- Filtros simplificados: todas juntas, por materia y entregas/laboratorios.
-- Las tareas completadas pasan a una lista separada al final, agrupadas por semana.
-- Cada tarjeta se puede reordenar dentro de su semana manteniendo apretado el mouse o usando ⋮⋮.
-- El orden personalizado, el progreso y las marcas de importancia se guardan en LocalStorage.
-- La estrella permite marcar o desmarcar una tarjeta como importante.
-- Colores de materias más contrastados.
-- Importación y exportación del estado en JSON.
+Esta versión no arma un plan de estudio ni agrega bloques sugeridos. Muestra el contenido de los cronogramas y lo agrupa por semana.
 
-FuAA y Redes tienen cronogramas cargados.
-FBD conserva las 21 clases OpenFing sin fecha.
-IntroPLN queda preparado para completar cuando publiquen sus materiales.
+Redes:
+- Cada clase OpenFing asignada aparece como tarjeta independiente.
+- La lectura o capítulo aparece en otra tarjeta.
+- El práctico asignado aparece en otra tarjeta.
+- También se conservan actividades del curso, monitoreos, defensas y fechas de obligatorios.
+
+FuAA:
+- Los temas asociados a cada discusión se conectan con su video OpenFing y las secciones del libro.
+- Controles, prácticos, cuestionarios y parciales aparecen como tarjetas independientes.
+
+FBD:
+- Las 21 clases OpenFing quedan sin fecha hasta que se publique el cronograma.
+
+IntroPLN:
+- Queda marcado como pendiente hasta que se publiquen materiales y fechas.
+
+Interacción:
+- Filtro por todas las materias, una materia o entregas/prácticos/laboratorios.
+- Marcar como completado mueve la tarjeta a Completadas al fondo.
+- Marcar como importante resalta la tarjeta.
+- Arrastrar reordena dentro de la misma semana.
+- El estado se guarda en localStorage.
+- Se puede exportar e importar el estado en JSON.
 
 Pruebas:
   node tests/validate-data.mjs

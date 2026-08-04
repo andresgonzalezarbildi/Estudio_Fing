@@ -1,22 +1,19 @@
+import fs from "node:fs";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, "..");
-const html = readFileSync(resolve(root, "index.html"), "utf8");
-const app = readFileSync(resolve(root, "app.js"), "utf8");
-const css = readFileSync(resolve(root, "style.css"), "utf8");
+const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const js = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
+const css = fs.readFileSync(new URL("../style.css", import.meta.url), "utf8");
 
-assert.match(html, /data-filter="all"/);
-assert.match(html, /data-filter="deliverables"/);
-assert.doesNotMatch(html, /data-filter="upcoming"/);
-assert.doesNotMatch(html, /Base inicial/);
-assert.match(app, /Completadas/);
-assert.match(app, /installCardDragging/);
-assert.match(app, /important/);
-assert.match(css, /\.task-card\.is-important/);
-assert.match(css, /--max-width: 1860px/);
+assert.match(html, /Cronograma del semestre/);
+assert.doesNotMatch(html, /bloques sugeridos|Plan de estudio|Temarios/i);
+assert.match(html, /Todas juntas/);
+assert.match(html, /Entregas, prácticos y laboratorios/);
+assert.match(js, /semester_schedule_2026_v3/);
+assert.match(js, /weekLabel/);
+assert.doesNotMatch(js, /remainingTime|formatDuration|syllabus/i);
+assert.match(css, /--max-width:\s*1920px/);
+assert.match(css, /\.task-kind/);
+assert.match(css, /\.drag-ghost/);
 
-console.log("UI validada correctamente.");
+console.log("OK: interfaz validada");

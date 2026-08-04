@@ -1,33 +1,36 @@
 import fs from "node:fs";
 import vm from "node:vm";
+import assert from "node:assert/strict";
 
 const source = fs.readFileSync(new URL("../data.js", import.meta.url), "utf8");
-const sandbox = { window: {} };
-vm.runInNewContext(source, sandbox);
-const data = sandbox.window.PLAN_DATA;
+const context = { window: {} };
+vm.createContext(context);
+vm.runInContext(source, context);
+const data = context.window.PLAN_DATA;
 
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
-
-assert(data && Array.isArray(data.items), "PLAN_DATA.items no existe");
-assert(Object.keys(data.subjects).length === 4, "Deben existir cuatro materias");
+assert.ok(data);
+assert.equal(data.version, "2026.08.04-3");
+assert.ok(Array.isArray(data.items));
+assert.ok(data.items.length > 200);
 
 const ids = data.items.map((item) => item.id);
-assert(new Set(ids).size === ids.length, "Hay IDs duplicados en el cronograma");
+assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
+assert.ok(data.items.every((item) => data.subjects[item.subject]), "Todas las materias deben existir");
+assert.ok(data.items.every((item) => !item.week || /^\d{4}-\d{2}-\d{2}$/.test(item.week)), "Semanas inválidas");
+assert.ok(data.items.every((item) => !/sugerencia|preparar|repaso para/i.test(`${item.source} ${item.title}`)), "No debe haber bloques de estudio inventados");
+assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
-for (const item of data.items) {
-  assert(data.subjects[item.subject], `Materia inválida en ${item.id}`);
-  assert(/^2026-\d{2}-\d{2}$/.test(item.date), `Fecha inválida en ${item.id}`);
-  assert(item.title.trim(), `Título vacío en ${item.id}`);
-  assert(Number.isFinite(item.minutes) && item.minutes >= 0, `Duración inválida en ${item.id}`);
+const redesW1 = data.items.filter((item) => item.subject === "redes" && item.week === "2026-08-03");
+for (const n of [1, 2, 3]) {
+  assert.ok(redesW1.some((item) => item.type === "openfing" && item.title === `Clase OpenFing ${n}`));
 }
+assert.ok(redesW1.some((item) => item.type === "reading" && item.title === "Capítulo 1"));
+assert.ok(redesW1.some((item) => item.type === "practical" && item.title === "P1 · Retardos"));
+assert.ok(redesW1.some((item) => item.title === "Presentación del curso y repaso de introducción"));
+assert.ok(redesW1.some((item) => item.title === "Práctico 1"));
 
-assert(data.syllabus.fuaa.length === 20, "FuAA debe tener 20 temas");
-assert(data.syllabus.fbd.length === 21, "FBD debe tener 21 clases OpenFing");
-assert(data.items.some((item) => item.id === "redes-ob1-due" && item.date === "2026-09-11"), "Falta entrega Ob1");
-assert(data.items.some((item) => item.id === "redes-ob2-due" && item.date === "2026-11-13"), "Falta entrega Ob2");
-assert(data.items.some((item) => item.subject === "fuaa" && item.type === "partial" && item.date === "2026-09-23"), "Falta primer parcial FuAA");
-assert(data.items.some((item) => item.subject === "fuaa" && item.type === "partial" && item.date === "2026-11-23"), "Falta segundo parcial FuAA");
+const fbd = data.items.filter((item) => item.subject === "fbd");
+assert.equal(fbd.length, 21);
+assert.ok(fbd.every((item) => !item.week && item.type === "openfing"));
 
-console.log(`OK: ${data.items.length} bloques, ${ids.length} IDs únicos y cuatro materias.`);
+console.log(`OK: ${data.items.length} elementos validados`);

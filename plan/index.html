@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#070313">
   <meta name="description" content="Cronograma unificado del segundo semestre 2026.">
-  <title>Plan de estudio · 2º semestre 2026</title>
+  <title>Cronograma · 2º semestre 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,430;9..144,560;9..144,680&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,430;9..144,560;9..144,680&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="stylesheet" href="./style.css">
   <script src="./data.js" defer></script>
@@ -23,7 +23,7 @@
       <button class="text-button" id="exportButton" type="button">Exportar</button>
       <button class="text-button" id="importButton" type="button">Importar</button>
       <input id="importInput" type="file" accept="application/json,.json" hidden>
-      <button class="add-button" id="addButton" type="button"><span aria-hidden="true">＋</span> Agregar</button>
+      <button class="add-button" id="addButton" type="button"><span aria-hidden="true">＋</span> Agregar elemento</button>
     </div>
   </header>
 
@@ -31,45 +31,40 @@
     <header class="hero">
       <div>
         <p>Segundo semestre · 2026</p>
-        <h1>Plan de estudio</h1>
+        <h1>Cronograma del semestre</h1>
       </div>
       <p class="hero__copy">
-        Fechas oficiales, bloques sugeridos, capítulos, videos, prácticos,
-        controles, parciales y entregas en un solo lugar.
+        Contenido de los cronogramas agrupado por semana: clases OpenFing,
+        lecturas, prácticos, actividades, evaluaciones y entregas.
       </p>
     </header>
 
     <section class="subject-overview" id="subjectOverview" aria-label="Resumen por materia"></section>
 
-    <section class="summary" aria-label="Resumen del plan">
-      <article><strong id="completedCount">0/0</strong><span>bloques completados</span></article>
-      <article><strong id="remainingTime">0 h</strong><span>estudio sugerido pendiente</span></article>
-      <article><strong id="weekCount">0</strong><span>bloques esta semana</span></article>
-      <article><strong id="nextDeadline">—</strong><span>próximo hito importante</span></article>
+    <section class="summary" aria-label="Resumen del cronograma">
+      <article><strong id="completedCount">0/0</strong><span>elementos completados</span></article>
+      <article><strong id="pendingCount">0</strong><span>elementos pendientes</span></article>
+      <article><strong id="weekCount">0</strong><span>elementos en la semana actual</span></article>
+      <article><strong id="nextDeadline">—</strong><span>próxima fecha importante</span></article>
       <div class="summary__progress"><span id="progressBar"></span></div>
     </section>
 
     <section class="controls-panel">
-      <div class="view-switch" role="tablist" aria-label="Vista">
-        <button class="active" type="button" data-view="timeline">Cronograma</button>
-        <button type="button" data-view="syllabus">Temarios</button>
-      </div>
+      <nav class="filters" id="filters" aria-label="Filtros del cronograma">
+        <button type="button" data-filter="all" class="active">Todas juntas</button>
+        <button type="button" data-filter="deliverables" class="featured-filter">Entregas, prácticos y laboratorios</button>
+        <span class="filter-separator" aria-hidden="true"></span>
+        <button type="button" data-filter="fuaa">FuAA</button>
+        <button type="button" data-filter="redes">Redes</button>
+        <button type="button" data-filter="fbd">FBD</button>
+        <button type="button" data-filter="pln">IntroPLN</button>
+      </nav>
 
       <label class="search-field">
         <span aria-hidden="true">⌕</span>
-        <input id="searchInput" type="search" placeholder="Buscar tema, capítulo, práctico o entrega">
+        <input id="searchInput" type="search" placeholder="Buscar clase, capítulo, práctico o entrega">
       </label>
     </section>
-
-    <nav class="filters" id="filters" aria-label="Filtros del cronograma">
-      <button type="button" data-filter="all" class="active">Todas juntas</button>
-      <button type="button" data-filter="deliverables" class="featured-filter">Entregas y laboratorios</button>
-      <span class="filter-separator" aria-hidden="true"></span>
-      <button type="button" data-filter="fuaa">FuAA</button>
-      <button type="button" data-filter="redes">Redes</button>
-      <button type="button" data-filter="fbd">FBD</button>
-      <button type="button" data-filter="pln">IntroPLN</button>
-    </nav>
 
     <p class="drag-help"><span aria-hidden="true">⋮⋮</span> Mantené apretada una tarjeta o usá el control de arrastre para reordenarla dentro de su semana.</p>
 
@@ -77,14 +72,11 @@
       <div class="timeline" id="timeline"></div>
       <section class="undated" id="undatedSection">
         <header>
-          <div><p>Pendiente de publicación</p><h2>Materias sin cronograma</h2></div>
+          <div><p>Sin fechas publicadas</p><h2>Material todavía no ubicado en semanas</h2></div>
+          <span id="undatedCount"></span>
         </header>
         <div id="undatedList"></div>
       </section>
-    </section>
-
-    <section id="syllabusView" hidden>
-      <div class="syllabus-grid" id="syllabusGrid"></div>
     </section>
 
     <section class="empty-state" id="emptyState" hidden>No hay elementos para este filtro.</section>
@@ -94,8 +86,8 @@
     <form id="taskForm" method="dialog">
       <input id="taskId" type="hidden">
       <span class="dialog-mark" aria-hidden="true">＋</span>
-      <h2 id="taskDialogTitle">Agregar bloque</h2>
-      <p>La fecha puede quedar vacía si todavía no fue publicada.</p>
+      <h2 id="taskDialogTitle">Agregar elemento</h2>
+      <p>La semana puede quedar vacía si el curso todavía no publicó su cronograma.</p>
 
       <div class="form-grid">
         <label class="form-field form-field--wide">
@@ -114,33 +106,33 @@
         <label class="form-field">
           <span>Tipo</span>
           <select id="taskType" required>
-            <option value="study">Estudio</option>
-            <option value="review">Repaso</option>
-            <option value="class">Clase</option>
+            <option value="openfing">Clase OpenFing</option>
+            <option value="reading">Lectura</option>
             <option value="practical">Práctico</option>
+            <option value="course-class">Actividad del curso</option>
+            <option value="discussion">Discusión</option>
             <option value="control">Control</option>
+            <option value="questionnaire">Cuestionario</option>
+            <option value="workshop">Taller</option>
             <option value="partial">Parcial</option>
-            <option value="assignment">Obligatorio</option>
+            <option value="assignment-published">Publicación de obligatorio</option>
             <option value="deadline">Entrega</option>
             <option value="monitoring">Monitoreo</option>
             <option value="defense">Defensa</option>
-            <option value="questionnaire">Cuestionario</option>
-            <option value="discussion">Discusión</option>
-            <option value="workshop">Taller</option>
-            <option value="assignment-published">Publicación de obligatorio</option>
+            <option value="consultation">Consulta</option>
           </select>
         </label>
         <label class="form-field">
-          <span>Fecha</span>
-          <input id="taskDate" type="date">
+          <span>Semana de referencia</span>
+          <input id="taskWeek" type="date">
         </label>
         <label class="form-field">
-          <span>Duración estimada</span>
-          <div class="minutes-field"><input id="taskMinutes" type="number" min="0" max="720" step="5" value="60"><small>min</small></div>
+          <span>Fecha exacta, solo si corresponde</span>
+          <input id="taskEventDate" type="date">
         </label>
         <label class="form-field form-field--wide">
           <span>Detalle</span>
-          <textarea id="taskDetails" rows="4" maxlength="500" placeholder="Temas, capítulos, videos, condiciones de entrega..."></textarea>
+          <textarea id="taskDetails" rows="4" maxlength="500" placeholder="Temas, capítulos, condiciones de entrega..."></textarea>
         </label>
       </div>
 
@@ -156,8 +148,8 @@
   <dialog id="resetDialog" class="dialog dialog--small">
     <form method="dialog">
       <span class="dialog-mark" aria-hidden="true">↺</span>
-      <h2>Restaurar la base</h2>
-      <p>Se perderán los cambios manuales y los estados de completado.</p>
+      <h2>Restaurar cronograma</h2>
+      <p>Se perderán los cambios manuales, el orden y los estados de completado.</p>
       <div class="dialog-actions">
         <button class="text-button" value="cancel">Cancelar</button>
         <button class="danger-button" value="confirm" id="confirmResetButton">Restaurar</button>

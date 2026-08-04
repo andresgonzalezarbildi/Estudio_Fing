@@ -135,6 +135,7 @@
       type: String(item.type || "course-class"),
       title: String(item.title || "Elemento sin título").slice(0, 140),
       details: String(item.details || "").slice(0, 500),
+      periodLabel: String(item.periodLabel || "").slice(0, 100),
       source: String(item.source || "Agregado manualmente").slice(0, 120),
       fixed: Boolean(item.fixed),
       important: Boolean(item.important),
@@ -232,7 +233,7 @@
   function itemMatchesSearch(item, query) {
     if (!query) return true;
     const subject = DATA.subjects[item.subject]?.name || "";
-    const haystack = `${item.title} ${item.details} ${item.source} ${subject} ${typeLabel(item.type)}`.toLocaleLowerCase("es");
+    const haystack = `${item.title} ${item.details} ${item.periodLabel} ${item.source} ${subject} ${typeLabel(item.type)}`.toLocaleLowerCase("es");
     return haystack.includes(query);
   }
 
@@ -345,11 +346,15 @@
 
     for (const [week, weekItems] of groups) {
       const subjects = new Set(weekItems.map((item) => item.subject));
+      const labels = [...new Set(weekItems.map((item) => item.periodLabel).filter(Boolean))];
+      const headingLabel = labels.length === 1 && weekItems.every((item) => item.periodLabel === labels[0])
+        ? labels[0]
+        : weekLabel(week);
       const section = document.createElement("section");
       section.className = "week-section";
       section.innerHTML = `
         <header class="week-heading">
-          <div><p>${escapeHtml(weekLabel(week))}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "elemento" : "elementos"}</h3></div>
+          <div><p>${escapeHtml(headingLabel)}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "elemento" : "elementos"}</h3></div>
           <span>${subjects.size} ${subjects.size === 1 ? "materia" : "materias"}</span>
         </header>
         <div class="week-items" data-group="${completed ? "completed" : "pending"}|${week}" data-week="${week}" data-completed="${completed ? "true" : "false"}"></div>

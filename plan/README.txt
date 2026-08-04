@@ -2,7 +2,7 @@ CRONOGRAMA · SEGUNDO SEMESTRE 2026
 
 Abrir index.html en el navegador.
 
-Esta versión no arma un plan de estudio ni agrega bloques sugeridos. Muestra el contenido de los cronogramas y lo agrupa por semana.
+Esta versión no arma un plan de estudio ni agrega bloques sugeridos. Muestra el contenido publicado en los cronogramas y lo agrupa por semana.
 
 Redes:
 - Cada clase OpenFing asignada aparece como tarjeta independiente.
@@ -11,11 +11,14 @@ Redes:
 - También se conservan actividades del curso, monitoreos, defensas y fechas de obligatorios.
 
 FuAA:
-- Los temas asociados a cada discusión se conectan con su video OpenFing y las secciones del libro.
-- Controles, prácticos, cuestionarios y parciales aparecen como tarjetas independientes.
+- Cada tema, video OpenFing y sección del libro aparece según su semana.
+- Controles, discusiones, prácticos, cuestionarios y parciales aparecen como tarjetas independientes.
 
 FBD:
-- Las 21 clases OpenFing quedan sin fecha hasta que se publique el cronograma.
+- Se cargó el cronograma semanal oficial proporcionado.
+- Los temas teóricos, cada video OpenFing y cada teórico-práctico aparecen en tarjetas independientes.
+- El período conjunto de parciales de las semanas 8 y 9 se conserva como un único bloque, sin dividirlo artificialmente.
+- La fecha escrita como 31/09 en el texto recibido se interpretó como 31/08, ya que septiembre no tiene día 31 y corresponde a la quinta semana del semestre.
 
 IntroPLN:
 - Queda marcado como pendiente hasta que se publiquen materiales y fechas.

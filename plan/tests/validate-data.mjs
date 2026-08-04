@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.04-3");
+assert.equal(data.version, "2026.08.04-4");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 200);
 
@@ -30,7 +30,23 @@ assert.ok(redesW1.some((item) => item.title === "Presentación del curso y repas
 assert.ok(redesW1.some((item) => item.title === "Práctico 1"));
 
 const fbd = data.items.filter((item) => item.subject === "fbd");
-assert.equal(fbd.length, 21);
-assert.ok(fbd.every((item) => !item.week && item.type === "openfing"));
+assert.ok(fbd.length > 40);
+assert.ok(fbd.every((item) => item.week));
+assert.ok(fbd.every((item) => item.periodLabel));
+assert.ok(!fbd.some((item) => item.id.startsWith("fbd-undated")));
+
+const fbdW1 = fbd.filter((item) => item.week === "2026-08-03");
+assert.ok(fbdW1.some((item) => item.title === "Introducción"));
+assert.ok(fbdW1.some((item) => item.title === "Diseño Conceptual"));
+assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 1" && /16:43/.test(item.details)));
+assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 2"));
+assert.ok(fbdW1.some((item) => item.title === "Presentación del curso"));
+
+const partials = fbd.filter((item) => item.title === "Parciales");
+assert.equal(partials.length, 1, "El período conjunto no debe separarse artificialmente");
+assert.equal(partials[0].periodLabel, "Semanas 8 y 9 · 19/09–03/10");
+
+const repeatedVideos = fbd.filter((item) => ["Video OpenFing 13", "Video OpenFing 14"].includes(item.title));
+assert.equal(repeatedVideos.length, 4, "Los videos 13 y 14 deben figurar en semanas 7 y 10");
 
 console.log(`OK: ${data.items.length} elementos validados`);

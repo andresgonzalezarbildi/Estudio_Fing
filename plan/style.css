@@ -262,7 +262,7 @@ a { color: inherit; text-decoration: none; }
   --subject: var(--cyan);
   position: relative;
   display: grid;
-  grid-template-columns: 106px 40px minmax(0,1fr) auto;
+  grid-template-columns: 150px 40px minmax(0,1fr) auto;
   align-items: center;
   gap: 20px;
   min-height: 150px;
@@ -315,17 +315,29 @@ a { color: inherit; text-decoration: none; }
   align-self: stretch;
   display: grid;
   place-content: center;
-  min-width: 106px;
+  min-width: 150px;
   padding: 12px;
   border-right: 1px solid var(--line-soft);
   text-align: center;
 }
-.task-kind span {
+.task-kind strong {
+  display: block;
   color: var(--subject);
-  font-size: .72rem;
-  font-weight: 600;
+  font-size: 1.02rem;
+  font-weight: 800;
   letter-spacing: .08em;
-  line-height: 1.25;
+  line-height: 1.15;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.task-kind small {
+  display: block;
+  margin-top: 8px;
+  color: color-mix(in srgb,var(--subject) 84%,white 16%);
+  font-size: .66rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: .03em;
   overflow-wrap: anywhere;
 }
 .task-check { position: relative; width: 30px; height: 30px; cursor: pointer; }
@@ -456,6 +468,10 @@ a { color: inherit; text-decoration: none; }
   .hero .hero__copy { font-size: .84rem; }
   .subject-overview { grid-template-columns: 1fr 1fr; gap: 11px; }
   .subject-card { min-height: 200px; padding: 18px; }
+  .task-card { grid-template-columns: 124px 36px minmax(0,1fr) auto; gap: 14px; }
+  .task-kind { min-width: 124px; padding: 10px; }
+  .task-kind strong { font-size: .92rem; }
+  .task-kind small { font-size: .61rem; }
   .subject-card strong { font-size: 1.22rem; }
   .subject-card__meta { display: grid; gap: 5px; }
   .filters { gap: 7px; }
@@ -479,6 +495,11 @@ a { color: inherit; text-decoration: none; }
   .topbar__actions .text-button:nth-of-type(2) { display: none; }
   .subject-overview { grid-template-columns: 1fr; }
   .subject-card { min-height: 175px; }
+  .task-card { grid-template-columns: 1fr; padding: 16px; gap: 14px; }
+  .task-kind { min-width: 0; align-self: auto; padding: 0 0 10px; border-right: 0; border-bottom: 1px solid var(--line-soft); text-align: left; }
+  .task-check { order: 2; }
+  .task-content { order: 1; }
+  .task-actions { order: 3; align-self: auto; grid-template-columns: 40px auto 40px; }
   .subject-card strong, .subject-card small { min-height: auto; }
   .summary { grid-template-columns: 1fr 1fr; }
   .summary strong { font-size: 1.35rem; }

@@ -375,8 +375,9 @@
 
     const checkDisabled = INFORMATIONAL_TYPES.has(item.type);
     article.innerHTML = `
-      <div class="task-kind" aria-hidden="true">
-        <span>${escapeHtml(typeMark(item.type))}</span>
+      <div class="task-kind" aria-hidden="true" title="${escapeHtml(subject.name)}">
+        <strong>${escapeHtml(subject.short)}</strong>
+        <small>${escapeHtml(subject.name)}</small>
       </div>
       <label class="task-check ${checkDisabled ? "task-check--disabled" : ""}" title="${checkDisabled ? "Elemento informativo" : "Marcar como completado"}">
         <input type="checkbox" ${item.done ? "checked" : ""} ${checkDisabled ? "disabled" : ""}>

@@ -20,9 +20,6 @@
   <header class="topbar">
     <a class="back-link" href="/"><span aria-hidden="true">←</span> Portal personal</a>
     <div class="topbar__actions">
-      <button class="text-button" id="exportButton" type="button">Exportar</button>
-      <button class="text-button" id="importButton" type="button">Importar</button>
-      <input id="importInput" type="file" accept="application/json,.json" hidden>
       <button class="add-button" id="addButton" type="button"><span aria-hidden="true">＋</span> Agregar elemento</button>
     </div>
   </header>
@@ -33,10 +30,6 @@
         <p>Segundo semestre · 2026</p>
         <h1>Cronograma del semestre</h1>
       </div>
-      <p class="hero__copy">
-        Contenido de los cronogramas agrupado por semana: clases OpenFing,
-        lecturas, prácticos, actividades, evaluaciones y entregas.
-      </p>
     </header>
 
     <section class="subject-overview" id="subjectOverview" aria-label="Resumen por materia"></section>
@@ -66,8 +59,6 @@
         <input id="searchInput" type="search" placeholder="Buscar clase, capítulo, práctico o entrega">
       </label>
     </section>
-
-    <p class="drag-help"><span aria-hidden="true">⋮⋮</span> Mantené apretada una tarjeta o usá el control de arrastre para reordenarla dentro de su semana.</p>
 
     <section id="timelineView">
       <div class="timeline" id="timeline"></div>
@@ -146,17 +137,6 @@
     </form>
   </dialog>
 
-  <dialog id="resetDialog" class="dialog dialog--small">
-    <form method="dialog">
-      <span class="dialog-mark" aria-hidden="true">↺</span>
-      <h2>Restaurar cronograma</h2>
-      <p>Se perderán los cambios manuales, el orden y los estados de completado.</p>
-      <div class="dialog-actions">
-        <button class="text-button" value="cancel">Cancelar</button>
-        <button class="danger-button" value="confirm" id="confirmResetButton">Restaurar</button>
-      </div>
-    </form>
-  </dialog>
 
   <nav class="quick-nav" aria-label="Accesos rápidos">
     <button id="topButton" type="button" aria-label="Volver arriba">↑ Arriba</button>

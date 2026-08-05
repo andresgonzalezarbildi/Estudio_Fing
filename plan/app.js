@@ -5,7 +5,6 @@
   if (!DATA) throw new Error("No se pudo cargar data.js");
 
   const STORAGE_KEY = "semester_schedule_2026_v3";
-  const SUBJECT_FILTERS = new Set(Object.keys(DATA.subjects));
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",
@@ -34,9 +33,6 @@
     filters: document.querySelector("#filters"),
     searchInput: document.querySelector("#searchInput"),
     addButton: document.querySelector("#addButton"),
-    exportButton: document.querySelector("#exportButton"),
-    importButton: document.querySelector("#importButton"),
-    importInput: document.querySelector("#importInput"),
     taskDialog: document.querySelector("#taskDialog"),
     taskForm: document.querySelector("#taskForm"),
     taskDialogTitle: document.querySelector("#taskDialogTitle"),
@@ -49,8 +45,6 @@
     taskDetails: document.querySelector("#taskDetails"),
     deleteButton: document.querySelector("#deleteButton"),
     cancelDialogButton: document.querySelector("#cancelDialogButton"),
-    resetDialog: document.querySelector("#resetDialog"),
-    confirmResetButton: document.querySelector("#confirmResetButton"),
     completedJumpButton: document.querySelector("#completedJumpButton"),
     topButton: document.querySelector("#topButton"),
     toast: document.querySelector("#toast")
@@ -62,6 +56,9 @@
   let toastTimer = null;
   const pendingCompletionIds = new Set();
   const completionTimers = new Map();
+  const weekOpenOverrides = new Map();
+  let completedZoneOpen = false;
+  let completedUndatedOpen = false;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -98,6 +95,28 @@
     return isoFromDate(new Date());
   }
 
+  function addDaysISO(iso, days) {
+    if (!validISO(iso)) return "";
+    const date = parseISO(iso);
+    date.setDate(date.getDate() + days);
+    return isoFromDate(date);
+  }
+
+  function defaultWeekOpen(week, completed, items = []) {
+    if (completed) return true;
+    if (elements.searchInput.value.trim() || activeFilter === "current-week") return true;
+    const currentWeek = startOfWeekISO(todayISO());
+    const nextWeek = addDaysISO(currentWeek, 7);
+    if (week === currentWeek || week === nextWeek) return true;
+    return week < currentWeek && items.some(isActionable);
+  }
+
+  function isWeekOpen(week, completed, items = []) {
+    if (elements.searchInput.value.trim() || activeFilter === "current-week") return true;
+    const key = `${completed ? "completed" : "pending"}|${week}`;
+    return weekOpenOverrides.has(key) ? weekOpenOverrides.get(key) : defaultWeekOpen(week, completed, items);
+  }
+
   function dateLabel(iso, includeYear = false) {
     if (!validISO(iso)) return "";
     return parseISO(iso).toLocaleDateString("es-UY", {
@@ -124,9 +143,6 @@
     return DATA.typeLabels[type] || type;
   }
 
-  function typeMark(type) {
-    return DATA.typeMarks[type] || "•";
-  }
 
   function sanitizeItem(item, fallbackId, fallbackOrder = 0) {
     const subject = DATA.subjects[item.subject] ? item.subject : "fuaa";
@@ -330,19 +346,37 @@
   }
 
   function createTimelineZone(items, completed) {
-    const zone = document.createElement("section");
+    const zone = document.createElement(completed ? "details" : "section");
     zone.className = `timeline-zone ${completed ? "timeline-zone--completed" : "timeline-zone--pending"}`;
-    if (completed) zone.id = "completedTimeline";
-    zone.innerHTML = `
-      <header class="timeline-zone__heading">
-        <div>
-          <p>${completed ? "Historial" : "Cronogramas"}</p>
-          <h2>${completed ? "Completadas" : "Pendientes"}</h2>
-        </div>
-        <span>${items.length} ${items.length === 1 ? "elemento" : "elementos"}</span>
-      </header>
-      <div class="timeline-zone__weeks"></div>
-    `;
+    if (completed) {
+      zone.id = "completedTimeline";
+      zone.open = completedZoneOpen;
+      zone.innerHTML = `
+        <summary class="timeline-zone__heading timeline-zone__heading--toggle">
+          <div>
+            <p>Historial</p>
+            <h2>Completadas</h2>
+          </div>
+          <span class="timeline-zone__heading-side">
+            <span>${items.length} ${items.length === 1 ? "elemento" : "elementos"}</span>
+            <strong class="collapse-sign" aria-hidden="true"></strong>
+          </span>
+        </summary>
+        <div class="timeline-zone__weeks"></div>
+      `;
+      zone.addEventListener("toggle", () => { completedZoneOpen = zone.open; });
+    } else {
+      zone.innerHTML = `
+        <header class="timeline-zone__heading">
+          <div>
+            <p>Cronogramas</p>
+            <h2>Pendientes</h2>
+          </div>
+          <span>${items.length} ${items.length === 1 ? "elemento" : "elementos"}</span>
+        </header>
+        <div class="timeline-zone__weeks"></div>
+      `;
+    }
 
     const weeksNode = zone.querySelector(".timeline-zone__weeks");
     const groups = new Map();
@@ -352,20 +386,30 @@
     });
 
     for (const [week, weekItems] of groups) {
+      if (!weekItems.length) continue;
       const subjects = new Set(weekItems.map((item) => item.subject));
       const labels = [...new Set(weekItems.map((item) => item.periodLabel).filter(Boolean))];
       const headingLabel = labels.length === 1 && weekItems.every((item) => item.periodLabel === labels[0])
         ? labels[0]
         : weekLabel(week);
-      const section = document.createElement("section");
+      const section = document.createElement("details");
       section.className = "week-section";
+      section.open = isWeekOpen(week, completed, weekItems);
       section.innerHTML = `
-        <header class="week-heading">
-          <div><p>${escapeHtml(headingLabel)}</p><h3>${weekItems.length} ${weekItems.length === 1 ? "elemento" : "elementos"}</h3></div>
-          <span>${subjects.size} ${subjects.size === 1 ? "materia" : "materias"}</span>
-        </header>
+        <summary class="week-heading">
+          <span class="week-heading__main">
+            <span class="week-heading__label">${escapeHtml(headingLabel)}</span>
+            <span class="week-heading__count">${weekItems.length} ${weekItems.length === 1 ? "elemento" : "elementos"}</span>
+          </span>
+          <span class="week-heading__side">
+            <span>${subjects.size} ${subjects.size === 1 ? "materia" : "materias"}</span>
+            <strong class="collapse-sign" aria-hidden="true"></strong>
+          </span>
+        </summary>
         <div class="week-items" data-group="${completed ? "completed" : "pending"}|${week}" data-week="${week}" data-completed="${completed ? "true" : "false"}"></div>
       `;
+      const overrideKey = `${completed ? "completed" : "pending"}|${week}`;
+      section.addEventListener("toggle", () => { weekOpenOverrides.set(overrideKey, section.open); });
       const container = section.querySelector(".week-items");
       weekItems.forEach((item) => container.append(createItemCard(item, true)));
       weeksNode.append(section);
@@ -476,11 +520,6 @@
     pendingCompletionIds.delete(itemId);
   }
 
-  function clearCompletionMoves() {
-    completionTimers.forEach((timer) => window.clearTimeout(timer));
-    completionTimers.clear();
-    pendingCompletionIds.clear();
-  }
 
   function installCardDragging(card) {
     const handle = card.querySelector(".task-drag-handle");
@@ -624,10 +663,27 @@
   }
 
   function createUndatedGroup(title, items, completed = false) {
-    const section = document.createElement("section");
-    section.className = `undated-group ${completed ? "undated-group--completed" : ""}`;
-    if (completed) section.id = "completedUndated";
-    section.innerHTML = `<h3>${escapeHtml(title)}</h3><div class="undated-items"></div>`;
+    if (!completed) {
+      const section = document.createElement("section");
+      section.className = "undated-group";
+      section.innerHTML = `<h3>${escapeHtml(title)}</h3><div class="undated-items"></div>`;
+      const list = section.querySelector(".undated-items");
+      items.forEach((item) => list.append(createItemCard(item, false)));
+      return section;
+    }
+
+    const section = document.createElement("details");
+    section.className = "undated-group undated-group--completed";
+    section.id = "completedUndated";
+    section.open = completedUndatedOpen;
+    section.innerHTML = `
+      <summary class="undated-group__heading">
+        <span>${escapeHtml(title)} · ${items.length}</span>
+        <strong class="collapse-sign" aria-hidden="true"></strong>
+      </summary>
+      <div class="undated-items"></div>
+    `;
+    section.addEventListener("toggle", () => { completedUndatedOpen = section.open; });
     const list = section.querySelector(".undated-items");
     items.forEach((item) => list.append(createItemCard(item, false)));
     return section;
@@ -704,69 +760,6 @@
     showToast("Elemento eliminado");
   }
 
-  function exportState() {
-    const payload = {
-      app: "Cronograma 2º semestre 2026",
-      exportedAt: new Date().toISOString(),
-      dataVersion: DATA.version,
-      state
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `cronograma-${todayISO()}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    showToast("Cronograma exportado");
-  }
-
-  async function importState(file) {
-    clearCompletionMoves();
-    const parsed = JSON.parse(await file.text());
-    const imported = parsed.state || parsed;
-    if (!imported || !Array.isArray(imported.items)) throw new Error("Formato inválido");
-
-    const next = initialState();
-    const importedById = new Map(imported.items.filter((item) => item?.id).map((item) => [item.id, item]));
-    next.items = next.items.map((item) => {
-      const previous = importedById.get(item.id);
-      if (!previous) return item;
-      return {
-        ...item,
-        ...(previous.edited ? sanitizeItem(previous, item.id, item.order) : {}),
-        done: Boolean(previous.done),
-        deleted: Boolean(previous.deleted),
-        edited: Boolean(previous.edited),
-        important: Boolean(previous.important),
-        order: finiteOrder(previous.order, item.order),
-        manual: false
-      };
-    });
-    next.items.push(...imported.items
-      .filter((item) => item.manual && item.id)
-      .map((item, index) => ({
-        ...sanitizeItem(item, item.id, DATA.items.length * 10 + index * 10),
-        done: Boolean(item.done),
-        deleted: Boolean(item.deleted),
-        edited: true,
-        manual: true
-      })));
-    state = next;
-    saveState();
-    render();
-    showToast("Cronograma importado");
-  }
-
-  function resetState() {
-    clearCompletionMoves();
-    state = initialState();
-    saveState();
-    elements.resetDialog.close();
-    render();
-    showToast("Cronograma restaurado");
-  }
-
   function showToast(message) {
     clearTimeout(toastTimer);
     elements.toast.textContent = message;
@@ -782,12 +775,19 @@
   });
   elements.searchInput.addEventListener("input", render);
   elements.completedJumpButton.addEventListener("click", () => {
-    const target = document.querySelector(".timeline-zone--completed, .undated-group--completed");
-    if (!target) {
+    const hasDated = Boolean(document.querySelector(".timeline-zone--completed"));
+    const hasUndated = Boolean(document.querySelector(".undated-group--completed"));
+    if (!hasDated && !hasUndated) {
       showToast("No hay actividades completadas en esta vista");
       return;
     }
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    completedZoneOpen = hasDated;
+    completedUndatedOpen = !hasDated && hasUndated;
+    render();
+    requestAnimationFrame(() => {
+      document.querySelector(".timeline-zone--completed, .undated-group--completed")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   });
   elements.topButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   elements.addButton.addEventListener("click", () => openTaskDialog());
@@ -797,30 +797,6 @@
   });
   elements.cancelDialogButton.addEventListener("click", () => elements.taskDialog.close());
   elements.deleteButton.addEventListener("click", deleteCurrentTask);
-  elements.exportButton.addEventListener("click", exportState);
-  elements.importButton.addEventListener("click", () => elements.importInput.click());
-  elements.importInput.addEventListener("change", async () => {
-    const [file] = elements.importInput.files;
-    elements.importInput.value = "";
-    if (!file) return;
-    try {
-      await importState(file);
-    } catch {
-      showToast("No se pudo importar el archivo");
-    }
-  });
-  elements.confirmResetButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    resetState();
-  });
-
-  const resetButton = document.createElement("button");
-  resetButton.type = "button";
-  resetButton.className = "text-button";
-  resetButton.textContent = "Restaurar";
-  resetButton.addEventListener("click", () => elements.resetDialog.showModal());
-  document.querySelector(".topbar__actions").insertBefore(resetButton, elements.addButton);
-
   window.addEventListener("blur", cleanupDrag);
   render();
 })();

@@ -23,15 +23,15 @@ FBD:
 IntroPLN:
 - Se cargaron las 20 clases disponibles en OpenFing, una tarjeta por clase y en su orden original.
 - No se asignaron a semanas porque todavía no hay cronograma publicado.
-- El contenido de OpenFing se identifica con licencia Creative Commons BY-NC-ND.
 
 Interacción:
-- Filtro por todas las materias, una materia o entregas/prácticos/laboratorios.
-- Marcar como completado mueve la tarjeta a Completadas al fondo.
+- Filtro por todas las materias, la semana actual, una materia o entregas/prácticos/laboratorios.
+- Marcar como completado deja unos segundos para deshacer y luego mueve la tarjeta a Completadas.
 - Marcar como importante resalta la tarjeta.
 - Arrastrar reordena dentro de la misma semana.
+- Las semanas se pueden abrir y cerrar con +/−. La actual, la siguiente y las anteriores con pendientes quedan abiertas por defecto.
+- Completadas queda cerrada por defecto.
 - El estado se guarda en localStorage.
-- Se puede exportar e importar el estado en JSON.
 
 Pruebas:
   node tests/validate-data.mjs

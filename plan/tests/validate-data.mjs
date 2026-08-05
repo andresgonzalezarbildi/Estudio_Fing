@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.04-7");
+assert.equal(data.version, "2026.08.05-8");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 200);
 
@@ -54,6 +54,7 @@ assert.equal(pln.filter((item) => item.type === "openfing").length, 20, "Deben e
 assert.ok(pln.every((item) => !item.week), "IntroPLN no debe asignarse a semanas sin cronograma oficial");
 assert.ok(pln.some((item) => item.title === "Clase OpenFing 1 · Introducción al Procesamiento de Lenguaje Natural"));
 assert.ok(pln.some((item) => item.title === "Clase OpenFing 20 · Recuperación de Información"));
-assert.ok(pln.filter((item) => item.type === "openfing").every((item) => /Creative Commons BY-NC-ND/.test(item.source)));
+assert.ok(pln.filter((item) => item.type === "openfing").every((item) => item.source === "OpenFing"));
+assert.ok(!/Creative Commons/i.test(source));
 
 console.log(`OK: ${data.items.length} elementos validados`);

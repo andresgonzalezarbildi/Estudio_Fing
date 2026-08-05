@@ -21,7 +21,9 @@ FBD:
 - La fecha escrita como 31/09 en el texto recibido se interpretó como 31/08, ya que septiembre no tiene día 31 y corresponde a la quinta semana del semestre.
 
 IntroPLN:
-- Queda marcado como pendiente hasta que se publiquen materiales y fechas.
+- Se cargaron las 20 clases disponibles en OpenFing, una tarjeta por clase y en su orden original.
+- No se asignaron a semanas porque todavía no hay cronograma publicado.
+- El contenido de OpenFing se identifica con licencia Creative Commons BY-NC-ND.
 
 Interacción:
 - Filtro por todas las materias, una materia o entregas/prácticos/laboratorios.

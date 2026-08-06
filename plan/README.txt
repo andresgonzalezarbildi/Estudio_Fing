@@ -55,3 +55,10 @@ Cambios v11:
 - Se eliminaron las tarjetas de clase de Redes que repetían prácticos o repasos ya representados.
 - Se retiraron discusiones, consultas, feriados, avisos sin clase y presentaciones administrativas.
 - Se mantienen temas, OpenFing, lecturas, prácticos, controles, entregas, monitoreos, defensas y parciales.
+
+
+Cambios v12:
+- Corregida la reaparición ocasional de actividades completadas después de una sincronización.
+- La sincronización ya no reemplaza el estado por copias idénticas que dejaban las tarjetas apuntando a objetos viejos.
+- Los cambios locales pendientes tienen prioridad durante la sincronización, incluso si los relojes de dos computadoras no coinciden.
+- Los cambios realizados mientras una subida está en curso quedan pendientes para una segunda sincronización automática.

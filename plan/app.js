@@ -65,6 +65,8 @@
   let activeFilter = "all";
   let currentStorageKey = STORAGE_KEY;
   let state = loadState(currentStorageKey);
+  let dirtyItems = readDirtyItems(currentStorageKey);
+  let mutationSequence = 0;
   let activeDrag = null;
   let toastTimer = null;
   const pendingCompletionIds = new Set();
@@ -113,6 +115,40 @@
     } catch {
       return false;
     }
+  }
+
+  function dirtyStorageKey(storageKey = currentStorageKey) {
+    return `${storageKey}_drive_dirty`;
+  }
+
+  function readDirtyItems(storageKey = currentStorageKey) {
+    const raw = safeStorageGet(dirtyStorageKey(storageKey));
+    if (!raw) return new Map();
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return new Map();
+      return new Map(Object.entries(parsed).filter(([id, token]) => id && typeof token === "string"));
+    } catch {
+      return new Map();
+    }
+  }
+
+  function persistDirtyItems() {
+    safeStorageSet(dirtyStorageKey(), JSON.stringify(Object.fromEntries(dirtyItems)));
+  }
+
+  function markItemDirty(item) {
+    if (!item?.id) return;
+    const token = `${Date.now()}-${++mutationSequence}`;
+    dirtyItems.set(item.id, token);
+    persistDirtyItems();
+  }
+
+  function clearSyncedDirty(snapshot) {
+    for (const [id, token] of snapshot) {
+      if (dirtyItems.get(id) === token) dirtyItems.delete(id);
+    }
+    persistDirtyItems();
   }
 
   function finiteOrder(value, fallback = 0) {
@@ -303,7 +339,9 @@
   }
 
   function touchItem(item) {
-    if (item) item.updatedAt = nowTimestamp();
+    if (!item) return;
+    item.updatedAt = nowTimestamp();
+    markItemDirty(item);
   }
 
   function stateFingerprint(candidate) {
@@ -313,7 +351,7 @@
     return JSON.stringify({ dataVersion: candidate.dataVersion, items });
   }
 
-  function mergeStates(localState, remoteState) {
+  function mergeStates(localState, remoteState, preferLocalIds = new Set()) {
     const localById = new Map(localState.items.map((item) => [item.id, item]));
     const remoteById = new Map(remoteState.items.map((item) => [item.id, item]));
     const ids = new Set([...localById.keys(), ...remoteById.keys()]);
@@ -327,6 +365,10 @@
         continue;
       }
       if (!remoteItem) {
+        mergedItems.push(clone(localItem));
+        continue;
+      }
+      if (preferLocalIds.has(id)) {
         mergedItems.push(clone(localItem));
         continue;
       }
@@ -491,17 +533,25 @@
         state = drive.legacyCandidate;
       }
 
+      const dirtySnapshot = new Map(dirtyItems);
       const localBefore = stateFingerprint(state);
       const merged = remoteState
-        ? mergeStates(state, remoteState)
+        ? mergeStates(state, remoteState, new Set(dirtySnapshot.keys()))
         : stateFromSaved(state);
       const remoteFingerprint = remoteState ? stateFingerprint(remoteState) : "";
       const mergedFingerprint = stateFingerprint(merged);
 
-      state = merged;
-      if (!validTimestamp(state.savedAt)) state.savedAt = nowTimestamp();
-      persistLocalState(state);
-      if (localBefore !== mergedFingerprint) render();
+      // No reemplazar el estado por clones cuando el contenido no cambió:
+      // las tarjetas visibles conservan referencias a los objetos actuales.
+      if (localBefore !== mergedFingerprint) {
+        state = merged;
+        if (!validTimestamp(state.savedAt)) state.savedAt = nowTimestamp();
+        persistLocalState(state);
+        render();
+      } else {
+        state.savedAt = validTimestamp(merged.savedAt) ? merged.savedAt : state.savedAt || nowTimestamp();
+        persistLocalState(state);
+      }
 
       if (!remoteFile?.id) {
         const created = await createDriveFile(state);
@@ -510,10 +560,16 @@
         await updateDriveFile(remoteFile.id, state);
       }
 
+      clearSyncedDirty(dirtySnapshot);
       drive.hadAccountState = true;
       drive.legacyCandidate = null;
       safeStorageSet(DRIVE_MIGRATION_KEY, drive.user?.permissionId || "done");
-      setDriveStatus("synced", `Sincronizado automáticamente · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
+      if (dirtyItems.size) {
+        drive.syncAgain = true;
+        setDriveStatus("pending", "Hay cambios nuevos pendientes de sincronizar");
+      } else {
+        setDriveStatus("synced", `Sincronizado automáticamente · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
+      }
     } catch (error) {
       if (drive.connected) setDriveStatus("error", "No se pudo sincronizar · cambios guardados localmente");
       console.error(error);
@@ -547,6 +603,7 @@
     drive.legacyCandidate = !accountState && !alreadyMigrated ? legacyState : null;
     currentStorageKey = drive.storageKey;
     state = accountState || initialState();
+    dirtyItems = readDirtyItems(currentStorageKey);
     persistLocalState(state);
 
     const accountLabel = drive.user.emailAddress || drive.user.displayName || "Cuenta de Google";
@@ -627,6 +684,7 @@
     });
     currentStorageKey = STORAGE_KEY;
     state = loadState(currentStorageKey);
+    dirtyItems = readDirtyItems(currentStorageKey);
     elements.driveAccount.hidden = true;
     elements.driveDisconnectButton.hidden = true;
     elements.driveButton.textContent = configuredClientId() ? "Conectar Drive" : "Configurar Drive";
@@ -1153,7 +1211,9 @@
       Object.assign(existing, values, { edited: true });
       touchItem(existing);
     } else {
-      state.items.push({ ...values, done: false, deleted: false, edited: true, manual: true, updatedAt: nowTimestamp() });
+      const createdItem = { ...values, done: false, deleted: false, edited: true, manual: true, updatedAt: nowTimestamp() };
+      state.items.push(createdItem);
+      markItemDirty(createdItem);
     }
     saveState();
     elements.taskDialog.close();

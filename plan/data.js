@@ -1,5 +1,5 @@
 window.PLAN_DATA = {
-  "version": "2026.08.06-11",
+  "version": "2026.08.06-12",
   "semester": {
     "title": "Cronograma · segundo semestre 2026",
     "start": "2026-08-03",

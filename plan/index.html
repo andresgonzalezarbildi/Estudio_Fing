@@ -23,10 +23,17 @@
     <a class="back-link" href="/"><span aria-hidden="true">←</span> Portal personal</a>
     <div class="topbar__actions">
       <div class="drive-sync" id="driveSync">
-        <span class="drive-sync__account" id="driveAccount" hidden></span>
-        <span class="drive-sync__status" id="driveStatus" data-state="local">Solo en este navegador</span>
-        <button class="drive-button" id="driveButton" type="button">Conectar Drive</button>
-        <button class="drive-disconnect" id="driveDisconnectButton" type="button" hidden>Desconectar</button>
+        <div class="drive-sync__summary">
+          <span class="drive-sync__status" id="driveStatus" data-state="local">Solo en este navegador</span>
+          <span class="drive-sync__account" id="driveAccount" hidden></span>
+        </div>
+        <button class="drive-menu-button" id="driveMenuButton" type="button" aria-expanded="false" aria-controls="driveMenu" aria-label="Opciones de Google Drive" title="Opciones de Google Drive">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="drive-menu" id="driveMenu" hidden>
+          <button class="drive-button" id="driveButton" type="button">Conectar Drive</button>
+          <button class="drive-disconnect" id="driveDisconnectButton" type="button" hidden>Desconectar</button>
+        </div>
       </div>
       <button class="add-button" id="addButton" type="button"><span aria-hidden="true">＋</span> Agregar elemento</button>
     </div>

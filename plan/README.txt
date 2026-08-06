@@ -32,7 +32,7 @@ Interacción:
 - Las semanas se pueden abrir y cerrar con +/−. La actual, la siguiente y las anteriores con pendientes quedan abiertas por defecto.
 - Completadas queda cerrada por defecto.
 - Sin Google Drive, el estado se guarda solamente en localStorage.
-- Al conectar Google Drive, se sincroniza un archivo JSON privado por cuenta dentro de appDataFolder.
+- Al conectar Google Drive, cada cambio se sincroniza automáticamente después de una pausa breve en un archivo JSON privado por cuenta dentro de appDataFolder.
 - Cada cuenta de Google mantiene su propio progreso y no puede leer ni modificar el de otra cuenta.
 - Al desconectarse, la app vuelve al estado local anónimo y deja oculto el progreso de esa cuenta.
 
@@ -47,5 +47,6 @@ GOOGLE DRIVE
 - La aplicación solicita únicamente el permiso drive.appdata.
 - Los tokens se mantienen en memoria. Al recargar la página hay que volver a pulsar Conectar Drive.
 - La sincronización combina cambios por actividad usando la fecha de modificación de cada tarjeta.
+- Sincronizar ahora y Desconectar están dentro del menú pequeño de Google Drive en la barra superior.
 
 Ver CONFIGURAR_GOOGLE_DRIVE.txt para preparar Google Cloud.

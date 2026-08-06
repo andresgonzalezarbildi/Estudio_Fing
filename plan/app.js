@@ -9,7 +9,7 @@
   const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
   const DRIVE_FILE_NAME = String(DRIVE_CONFIG.fileName || "cronograma-semestre-2026.json");
   const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
-  const DRIVE_SYNC_DELAY_MS = 900;
+  const DRIVE_SYNC_DELAY_MS = 650;
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",
@@ -38,10 +38,13 @@
     filters: document.querySelector("#filters"),
     searchInput: document.querySelector("#searchInput"),
     addButton: document.querySelector("#addButton"),
+    driveSync: document.querySelector("#driveSync"),
     driveStatus: document.querySelector("#driveStatus"),
     driveButton: document.querySelector("#driveButton"),
     driveDisconnectButton: document.querySelector("#driveDisconnectButton"),
     driveAccount: document.querySelector("#driveAccount"),
+    driveMenuButton: document.querySelector("#driveMenuButton"),
+    driveMenu: document.querySelector("#driveMenu"),
     taskDialog: document.querySelector("#taskDialog"),
     taskForm: document.querySelector("#taskForm"),
     taskDialogTitle: document.querySelector("#taskDialogTitle"),
@@ -344,6 +347,17 @@
     return clientId.endsWith(".apps.googleusercontent.com") && !clientId.includes("PEGAR_CLIENT_ID");
   }
 
+  function setDriveMenuOpen(open) {
+    const shouldOpen = Boolean(open);
+    elements.driveMenu.hidden = !shouldOpen;
+    elements.driveMenuButton.setAttribute("aria-expanded", String(shouldOpen));
+    elements.driveMenuButton.classList.toggle("is-open", shouldOpen);
+  }
+
+  function toggleDriveMenu() {
+    setDriveMenuOpen(elements.driveMenu.hidden);
+  }
+
   function setDriveStatus(stateName, text) {
     elements.driveStatus.dataset.state = stateName;
     elements.driveStatus.textContent = text;
@@ -479,7 +493,7 @@
 
       const localBefore = stateFingerprint(state);
       const merged = remoteState
-        ? (drive.hadAccountState ? mergeStates(state, remoteState) : remoteState)
+        ? mergeStates(state, remoteState)
         : stateFromSaved(state);
       const remoteFingerprint = remoteState ? stateFingerprint(remoteState) : "";
       const mergedFingerprint = stateFingerprint(merged);
@@ -496,8 +510,10 @@
         await updateDriveFile(remoteFile.id, state);
       }
 
+      drive.hadAccountState = true;
+      drive.legacyCandidate = null;
       safeStorageSet(DRIVE_MIGRATION_KEY, drive.user?.permissionId || "done");
-      setDriveStatus("synced", `Sincronizado · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
+      setDriveStatus("synced", `Sincronizado automáticamente · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
     } catch (error) {
       if (drive.connected) setDriveStatus("error", "No se pudo sincronizar · cambios guardados localmente");
       console.error(error);
@@ -592,6 +608,7 @@
   }
 
   function disconnectDrive() {
+    setDriveMenuOpen(false);
     window.clearTimeout(drive.syncTimer);
     const token = drive.accessToken;
     if (token && window.google?.accounts?.oauth2) {
@@ -1186,8 +1203,21 @@
   });
   elements.topButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   elements.addButton.addEventListener("click", () => openTaskDialog());
-  elements.driveButton.addEventListener("click", connectOrSyncDrive);
+  elements.driveMenuButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleDriveMenu();
+  });
+  elements.driveButton.addEventListener("click", () => {
+    setDriveMenuOpen(false);
+    connectOrSyncDrive();
+  });
   elements.driveDisconnectButton.addEventListener("click", disconnectDrive);
+  document.addEventListener("click", (event) => {
+    if (!elements.driveSync.contains(event.target)) setDriveMenuOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setDriveMenuOpen(false);
+  });
   elements.taskForm.addEventListener("submit", (event) => {
     event.preventDefault();
     saveTaskFromForm();
@@ -1200,6 +1230,9 @@
   });
   window.addEventListener("online", () => {
     if (drive.connected) syncDriveState();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden" && drive.connected) syncDriveState();
   });
   initializeDriveClient();
   render();

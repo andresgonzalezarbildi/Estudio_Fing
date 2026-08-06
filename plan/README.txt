@@ -31,8 +31,21 @@ Interacción:
 - Arrastrar reordena dentro de la misma semana.
 - Las semanas se pueden abrir y cerrar con +/−. La actual, la siguiente y las anteriores con pendientes quedan abiertas por defecto.
 - Completadas queda cerrada por defecto.
-- El estado se guarda en localStorage.
+- Sin Google Drive, el estado se guarda solamente en localStorage.
+- Al conectar Google Drive, se sincroniza un archivo JSON privado por cuenta dentro de appDataFolder.
+- Cada cuenta de Google mantiene su propio progreso y no puede leer ni modificar el de otra cuenta.
+- Al desconectarse, la app vuelve al estado local anónimo y deja oculto el progreso de esa cuenta.
 
 Pruebas:
   node tests/validate-data.mjs
   node tests/validate-ui.mjs
+
+
+GOOGLE DRIVE
+- Requiere configurar google-drive-config.js con un Client ID OAuth de aplicación web.
+- Requiere publicar el sitio por HTTPS o abrirlo desde localhost; Google no admite OAuth desde file://.
+- La aplicación solicita únicamente el permiso drive.appdata.
+- Los tokens se mantienen en memoria. Al recargar la página hay que volver a pulsar Conectar Drive.
+- La sincronización combina cambios por actividad usando la fecha de modificación de cada tarjeta.
+
+Ver CONFIGURAR_GOOGLE_DRIVE.txt para preparar Google Cloud.

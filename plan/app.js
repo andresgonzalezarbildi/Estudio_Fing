@@ -5,6 +5,11 @@
   if (!DATA) throw new Error("No se pudo cargar data.js");
 
   const STORAGE_KEY = "semester_schedule_2026_v3";
+  const DRIVE_CONFIG = window.GOOGLE_DRIVE_SYNC_CONFIG || {};
+  const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+  const DRIVE_FILE_NAME = String(DRIVE_CONFIG.fileName || "cronograma-semestre-2026.json");
+  const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
+  const DRIVE_SYNC_DELAY_MS = 900;
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",
@@ -33,6 +38,10 @@
     filters: document.querySelector("#filters"),
     searchInput: document.querySelector("#searchInput"),
     addButton: document.querySelector("#addButton"),
+    driveStatus: document.querySelector("#driveStatus"),
+    driveButton: document.querySelector("#driveButton"),
+    driveDisconnectButton: document.querySelector("#driveDisconnectButton"),
+    driveAccount: document.querySelector("#driveAccount"),
     taskDialog: document.querySelector("#taskDialog"),
     taskForm: document.querySelector("#taskForm"),
     taskDialogTitle: document.querySelector("#taskDialogTitle"),
@@ -51,7 +60,8 @@
   };
 
   let activeFilter = "all";
-  let state = loadState();
+  let currentStorageKey = STORAGE_KEY;
+  let state = loadState(currentStorageKey);
   let activeDrag = null;
   let toastTimer = null;
   const pendingCompletionIds = new Set();
@@ -59,9 +69,47 @@
   const weekOpenOverrides = new Map();
   let completedZoneOpen = false;
   let completedUndatedOpen = false;
+  const drive = {
+    tokenClient: null,
+    accessToken: "",
+    connected: false,
+    syncing: false,
+    syncAgain: false,
+    syncTimer: null,
+    fileId: "",
+    user: null,
+    storageKey: "",
+    hadAccountState: false,
+    legacyCandidate: null
+  };
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function validTimestamp(value) {
+    return typeof value === "string" && !Number.isNaN(Date.parse(value));
+  }
+
+  function nowTimestamp() {
+    return new Date().toISOString();
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function finiteOrder(value, fallback = 0) {
@@ -161,7 +209,8 @@
       fixed: Boolean(item.fixed),
       important: Boolean(item.important),
       priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal",
-      order: finiteOrder(item.order, fallbackOrder)
+      order: finiteOrder(item.order, fallbackOrder),
+      updatedAt: validTimestamp(item.updatedAt) ? item.updatedAt : ""
     };
   }
 
@@ -179,21 +228,16 @@
     return {
       dataVersion: DATA.version,
       items: seedItems(),
-      savedAt: new Date().toISOString()
+      savedAt: ""
     };
   }
 
-  function loadState() {
+  function stateFromSaved(saved) {
     const fresh = initialState();
-    let saved = null;
-    try {
-      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    } catch {
-      saved = null;
-    }
     if (!saved || !Array.isArray(saved.items)) return fresh;
 
-    const savedById = new Map(saved.items.map((item) => [item.id, item]));
+    const fallbackUpdatedAt = validTimestamp(saved.savedAt) ? saved.savedAt : "";
+    const savedById = new Map(saved.items.map((item) => [String(item.id || ""), item]));
     fresh.items = fresh.items.map((item) => {
       const previous = savedById.get(item.id);
       if (!previous) return item;
@@ -202,12 +246,14 @@
         done: Boolean(previous.done),
         deleted: Boolean(previous.deleted),
         important: Boolean(previous.important),
-        order: finiteOrder(previous.order, item.order)
+        order: finiteOrder(previous.order, item.order),
+        updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : fallbackUpdatedAt
       };
       if (previous.edited) {
         Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
           edited: true,
-          manual: false
+          manual: false,
+          updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : fallbackUpdatedAt
         });
       }
       return merged;
@@ -220,20 +266,355 @@
         done: Boolean(item.done),
         deleted: Boolean(item.deleted),
         edited: true,
-        manual: true
+        manual: true,
+        updatedAt: validTimestamp(item.updatedAt) ? item.updatedAt : fallbackUpdatedAt
       }));
     fresh.items.push(...manualItems);
-    saveState(fresh);
+    fresh.savedAt = validTimestamp(saved.savedAt) ? saved.savedAt : "";
     return fresh;
   }
 
-  function saveState(nextState = state) {
-    nextState.savedAt = new Date().toISOString();
+  function readStoredState(storageKey) {
+    const raw = safeStorageGet(storageKey);
+    if (!raw) return null;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+      const parsed = JSON.parse(raw);
+      return parsed && Array.isArray(parsed.items) ? stateFromSaved(parsed) : null;
     } catch {
-      // Mantiene el estado en memoria cuando el navegador bloquea localStorage.
+      return null;
     }
+  }
+
+  function loadState(storageKey = currentStorageKey) {
+    return readStoredState(storageKey) || initialState();
+  }
+
+  function persistLocalState(nextState = state) {
+    safeStorageSet(currentStorageKey, JSON.stringify(nextState));
+  }
+
+  function saveState(nextState = state, options = {}) {
+    nextState.savedAt = nowTimestamp();
+    persistLocalState(nextState);
+    if (options.sync !== false) scheduleDriveSync();
+  }
+
+  function touchItem(item) {
+    if (item) item.updatedAt = nowTimestamp();
+  }
+
+  function stateFingerprint(candidate) {
+    const items = candidate.items
+      .map((item) => ({ ...item }))
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    return JSON.stringify({ dataVersion: candidate.dataVersion, items });
+  }
+
+  function mergeStates(localState, remoteState) {
+    const localById = new Map(localState.items.map((item) => [item.id, item]));
+    const remoteById = new Map(remoteState.items.map((item) => [item.id, item]));
+    const ids = new Set([...localById.keys(), ...remoteById.keys()]);
+    const mergedItems = [];
+
+    for (const id of ids) {
+      const localItem = localById.get(id);
+      const remoteItem = remoteById.get(id);
+      if (!localItem) {
+        mergedItems.push(clone(remoteItem));
+        continue;
+      }
+      if (!remoteItem) {
+        mergedItems.push(clone(localItem));
+        continue;
+      }
+      const localTime = validTimestamp(localItem.updatedAt) ? localItem.updatedAt : "";
+      const remoteTime = validTimestamp(remoteItem.updatedAt) ? remoteItem.updatedAt : "";
+      mergedItems.push(clone(remoteTime > localTime ? remoteItem : localItem));
+    }
+
+    const savedAt = [localState.savedAt, remoteState.savedAt]
+      .filter(validTimestamp)
+      .sort()
+      .at(-1) || "";
+    return stateFromSaved({ dataVersion: DATA.version, items: mergedItems, savedAt });
+  }
+
+  function configuredClientId() {
+    const clientId = String(DRIVE_CONFIG.clientId || "").trim();
+    return clientId.endsWith(".apps.googleusercontent.com") && !clientId.includes("PEGAR_CLIENT_ID");
+  }
+
+  function setDriveStatus(stateName, text) {
+    elements.driveStatus.dataset.state = stateName;
+    elements.driveStatus.textContent = text;
+  }
+
+  function driveAuthHeader() {
+    return { Authorization: `Bearer ${drive.accessToken}` };
+  }
+
+  async function driveFetch(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...driveAuthHeader(),
+        ...(options.headers || {})
+      }
+    });
+    if (response.status === 401) {
+      drive.connected = false;
+      drive.accessToken = "";
+      elements.driveButton.textContent = "Reconectar Drive";
+      setDriveStatus("warning", "La sesión venció · cambios guardados localmente");
+      throw new Error("La autorización de Google Drive venció");
+    }
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const body = await response.json();
+        detail = body?.error?.message || "";
+      } catch {
+        detail = await response.text();
+      }
+      throw new Error(detail || `Google Drive respondió ${response.status}`);
+    }
+    return response;
+  }
+
+  async function fetchDriveUser() {
+    const response = await driveFetch("https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress,permissionId)");
+    const body = await response.json();
+    return body.user || {};
+  }
+
+  async function findDriveFile() {
+    const query = `name='${DRIVE_FILE_NAME.replaceAll("'", "\\'")}' and trashed=false`;
+    const params = new URLSearchParams({
+      spaces: "appDataFolder",
+      q: query,
+      fields: "files(id,name,modifiedTime)",
+      orderBy: "modifiedTime desc",
+      pageSize: "10"
+    });
+    const response = await driveFetch(`https://www.googleapis.com/drive/v3/files?${params}`);
+    const body = await response.json();
+    return body.files?.[0] || null;
+  }
+
+  async function downloadDriveState(fileId) {
+    const response = await driveFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`);
+    const body = await response.json();
+    return stateFromSaved(body);
+  }
+
+  function cloudPayload(candidate = state) {
+    return {
+      schemaVersion: 1,
+      dataVersion: DATA.version,
+      savedAt: candidate.savedAt || nowTimestamp(),
+      items: candidate.items
+    };
+  }
+
+  async function createDriveFile(candidate) {
+    const boundary = `cronograma_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    const metadata = JSON.stringify({
+      name: DRIVE_FILE_NAME,
+      mimeType: "application/json",
+      parents: ["appDataFolder"]
+    });
+    const content = JSON.stringify(cloudPayload(candidate));
+    const body = [
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`,
+      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n`,
+      `--${boundary}--`
+    ].join("");
+    const response = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime", {
+      method: "POST",
+      headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+      body
+    });
+    return response.json();
+  }
+
+  async function updateDriveFile(fileId, candidate) {
+    const response = await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=media&fields=id,modifiedTime`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cloudPayload(candidate))
+    });
+    return response.json();
+  }
+
+  function scheduleDriveSync() {
+    if (!drive.connected || !drive.accessToken) return;
+    window.clearTimeout(drive.syncTimer);
+    setDriveStatus("pending", "Cambios pendientes de sincronizar");
+    drive.syncTimer = window.setTimeout(() => syncDriveState(), DRIVE_SYNC_DELAY_MS);
+  }
+
+  async function syncDriveState() {
+    if (!drive.connected || !drive.accessToken) return;
+    if (drive.syncing) {
+      drive.syncAgain = true;
+      return;
+    }
+
+    drive.syncing = true;
+    drive.syncAgain = false;
+    window.clearTimeout(drive.syncTimer);
+    setDriveStatus("syncing", "Sincronizando…");
+
+    try {
+      let remoteFile = drive.fileId ? { id: drive.fileId } : await findDriveFile();
+      let remoteState = null;
+      if (remoteFile?.id) {
+        drive.fileId = remoteFile.id;
+        remoteState = await downloadDriveState(remoteFile.id);
+      }
+
+      if (!remoteState && !drive.hadAccountState && drive.legacyCandidate) {
+        state = drive.legacyCandidate;
+      }
+
+      const localBefore = stateFingerprint(state);
+      const merged = remoteState
+        ? (drive.hadAccountState ? mergeStates(state, remoteState) : remoteState)
+        : stateFromSaved(state);
+      const remoteFingerprint = remoteState ? stateFingerprint(remoteState) : "";
+      const mergedFingerprint = stateFingerprint(merged);
+
+      state = merged;
+      if (!validTimestamp(state.savedAt)) state.savedAt = nowTimestamp();
+      persistLocalState(state);
+      if (localBefore !== mergedFingerprint) render();
+
+      if (!remoteFile?.id) {
+        const created = await createDriveFile(state);
+        drive.fileId = created.id;
+      } else if (remoteFingerprint !== mergedFingerprint) {
+        await updateDriveFile(remoteFile.id, state);
+      }
+
+      safeStorageSet(DRIVE_MIGRATION_KEY, drive.user?.permissionId || "done");
+      setDriveStatus("synced", `Sincronizado · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
+    } catch (error) {
+      if (drive.connected) setDriveStatus("error", "No se pudo sincronizar · cambios guardados localmente");
+      console.error(error);
+      showToast(error.message || "No se pudo sincronizar con Google Drive");
+    } finally {
+      drive.syncing = false;
+      if (drive.syncAgain && drive.connected) syncDriveState();
+    }
+  }
+
+  function accountStorageKey(user) {
+    const accountId = String(user.permissionId || user.emailAddress || "google").replace(/[^a-zA-Z0-9_-]/g, "_");
+    return `${STORAGE_KEY}_google_${accountId}`;
+  }
+
+  async function finishDriveConnection(tokenResponse) {
+    if (tokenResponse.error || !tokenResponse.access_token) {
+      throw new Error(tokenResponse.error_description || tokenResponse.error || "Google no devolvió una autorización válida");
+    }
+
+    drive.accessToken = tokenResponse.access_token;
+    drive.connected = true;
+    drive.user = await fetchDriveUser();
+    drive.storageKey = accountStorageKey(drive.user);
+    drive.fileId = "";
+
+    const accountState = readStoredState(drive.storageKey);
+    const legacyState = readStoredState(STORAGE_KEY);
+    const alreadyMigrated = Boolean(safeStorageGet(DRIVE_MIGRATION_KEY));
+    drive.hadAccountState = Boolean(accountState);
+    drive.legacyCandidate = !accountState && !alreadyMigrated ? legacyState : null;
+    currentStorageKey = drive.storageKey;
+    state = accountState || initialState();
+    persistLocalState(state);
+
+    const accountLabel = drive.user.emailAddress || drive.user.displayName || "Cuenta de Google";
+    elements.driveAccount.textContent = accountLabel;
+    elements.driveAccount.hidden = false;
+    elements.driveDisconnectButton.hidden = false;
+    elements.driveButton.textContent = "Sincronizar ahora";
+    render();
+    await syncDriveState();
+  }
+
+  function initializeDriveClient() {
+    if (!configuredClientId()) {
+      elements.driveButton.textContent = "Configurar Drive";
+      setDriveStatus("warning", "Falta pegar el Client ID");
+      return false;
+    }
+    if (location.protocol === "file:") {
+      setDriveStatus("warning", "Drive requiere abrir el sitio por HTTPS o localhost");
+      return false;
+    }
+    if (!window.google?.accounts?.oauth2) {
+      setDriveStatus("error", "No se cargó Google Identity Services");
+      return false;
+    }
+    if (!drive.tokenClient) {
+      drive.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: DRIVE_CONFIG.clientId,
+        scope: DRIVE_SCOPE,
+        callback: (response) => {
+          setDriveStatus("syncing", "Conectando con tu cuenta…");
+          finishDriveConnection(response).catch((error) => {
+            drive.connected = false;
+            setDriveStatus("error", "No se pudo conectar Google Drive");
+            showToast(error.message || "No se pudo conectar Google Drive");
+          });
+        },
+        error_callback: () => {
+          setDriveStatus("local", "Conexión cancelada · sigue guardado localmente");
+        }
+      });
+    }
+    return true;
+  }
+
+  function connectOrSyncDrive() {
+    if (drive.connected && drive.accessToken) {
+      syncDriveState();
+      return;
+    }
+    if (!initializeDriveClient()) {
+      showToast(configuredClientId()
+        ? "Abrí el cronograma desde HTTPS o localhost"
+        : "Pegá tu Client ID en google-drive-config.js");
+      return;
+    }
+    setDriveStatus("syncing", "Esperando autorización…");
+    drive.tokenClient.requestAccessToken({ prompt: "consent" });
+  }
+
+  function disconnectDrive() {
+    window.clearTimeout(drive.syncTimer);
+    const token = drive.accessToken;
+    if (token && window.google?.accounts?.oauth2) {
+      google.accounts.oauth2.revoke(token, () => {});
+    }
+    Object.assign(drive, {
+      accessToken: "",
+      connected: false,
+      syncing: false,
+      syncAgain: false,
+      fileId: "",
+      user: null,
+      storageKey: "",
+      hadAccountState: false,
+      legacyCandidate: null
+    });
+    currentStorageKey = STORAGE_KEY;
+    state = loadState(currentStorageKey);
+    elements.driveAccount.hidden = true;
+    elements.driveDisconnectButton.hidden = true;
+    elements.driveButton.textContent = configuredClientId() ? "Conectar Drive" : "Configurar Drive";
+    setDriveStatus("local", "Desconectado · tu progreso de Drive quedó protegido");
+    render();
   }
 
   function isActionable(item) {
@@ -459,6 +840,7 @@
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
           item.done = true;
+          touchItem(item);
           saveState();
           scheduleCompletionMove(item, article);
           renderSubjectOverview();
@@ -470,6 +852,7 @@
         const wasWaiting = pendingCompletionIds.has(item.id);
         cancelCompletionMove(item.id);
         item.done = false;
+        touchItem(item);
         saveState();
         if (wasWaiting) {
           article.classList.remove("done", "is-completing");
@@ -485,6 +868,7 @@
 
     article.querySelector(".task-important").addEventListener("click", () => {
       item.important = !item.important;
+      touchItem(item);
       saveState();
       render();
       showToast(item.important ? "Marcado como importante" : "Importancia quitada");
@@ -644,7 +1028,13 @@
     const byId = new Map(fullGroup.map((item) => [item.id, item]));
     const reordered = [...fullGroup];
     slots.forEach((slot, index) => { reordered[slot] = byId.get(displayedIds[index]); });
-    reordered.forEach((item, index) => { item.order = index * 10; });
+    reordered.forEach((item, index) => {
+      const nextOrder = index * 10;
+      if (item.order !== nextOrder) {
+        item.order = nextOrder;
+        touchItem(item);
+      }
+    });
   }
 
   function renderUndated() {
@@ -742,8 +1132,12 @@
     }, existingId || `manual-${Date.now()}`, nextOrderForGroup(week));
     if (!values.title) return;
 
-    if (existing) Object.assign(existing, values, { edited: true });
-    else state.items.push({ ...values, done: false, deleted: false, edited: true, manual: true });
+    if (existing) {
+      Object.assign(existing, values, { edited: true });
+      touchItem(existing);
+    } else {
+      state.items.push({ ...values, done: false, deleted: false, edited: true, manual: true, updatedAt: nowTimestamp() });
+    }
     saveState();
     elements.taskDialog.close();
     render();
@@ -754,6 +1148,7 @@
     const item = state.items.find((candidate) => candidate.id === elements.taskId.value);
     if (!item) return;
     item.deleted = true;
+    touchItem(item);
     saveState();
     elements.taskDialog.close();
     render();
@@ -791,6 +1186,8 @@
   });
   elements.topButton.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   elements.addButton.addEventListener("click", () => openTaskDialog());
+  elements.driveButton.addEventListener("click", connectOrSyncDrive);
+  elements.driveDisconnectButton.addEventListener("click", disconnectDrive);
   elements.taskForm.addEventListener("submit", (event) => {
     event.preventDefault();
     saveTaskFromForm();
@@ -798,5 +1195,12 @@
   elements.cancelDialogButton.addEventListener("click", () => elements.taskDialog.close());
   elements.deleteButton.addEventListener("click", deleteCurrentTask);
   window.addEventListener("blur", cleanupDrag);
+  window.addEventListener("focus", () => {
+    if (drive.connected) syncDriveState();
+  });
+  window.addEventListener("online", () => {
+    if (drive.connected) syncDriveState();
+  });
+  initializeDriveClient();
   render();
 })();

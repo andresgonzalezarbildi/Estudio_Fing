@@ -1,5 +1,5 @@
 window.PLAN_DATA = {
-  "version": "2026.08.05-8",
+  "version": "2026.08.06-11",
   "semester": {
     "title": "Cronograma · segundo semestre 2026",
     "start": "2026-08-03",
@@ -161,34 +161,6 @@ window.PLAN_DATA = {
       "order": 50
     },
     {
-      "id": "redes-20260803-07",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Presentación del curso y repaso de introducción",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 60
-    },
-    {
-      "id": "redes-20260803-08",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 1",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 70
-    },
-    {
       "id": "redes-20260803-09",
       "week": "2026-08-03",
       "eventDate": "2026-08-07",
@@ -271,34 +243,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 130
-    },
-    {
-      "id": "redes-20260810-06",
-      "week": "2026-08-10",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso HTTP y Práctico 2",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 140
-    },
-    {
-      "id": "redes-20260810-07",
-      "week": "2026-08-10",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso sockets y Práctico 3",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 150
     },
     {
       "id": "redes-20260810-08",
@@ -385,34 +329,6 @@ window.PLAN_DATA = {
       "order": 210
     },
     {
-      "id": "redes-20260817-06",
-      "week": "2026-08-17",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 3",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 220
-    },
-    {
-      "id": "redes-20260817-07",
-      "week": "2026-08-17",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 3",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 230
-    },
-    {
       "id": "redes-20260817-08",
       "week": "2026-08-17",
       "eventDate": "",
@@ -495,34 +411,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 290
-    },
-    {
-      "id": "redes-20260824-06",
-      "week": "2026-08-24",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "holiday",
-      "title": "Feriado",
-      "details": "Actividad del curso",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 300
-    },
-    {
-      "id": "redes-20260824-07",
-      "week": "2026-08-24",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso DNS y Práctico 4",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 310
     },
     {
       "id": "redes-20260824-08",
@@ -609,34 +497,6 @@ window.PLAN_DATA = {
       "order": 370
     },
     {
-      "id": "redes-20260831-06",
-      "week": "2026-08-31",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso EMAIL y Práctico 4",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 380
-    },
-    {
-      "id": "redes-20260831-07",
-      "week": "2026-08-31",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso transporte y RDT",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 390
-    },
-    {
       "id": "redes-20260831-08",
       "week": "2026-08-31",
       "eventDate": "",
@@ -719,20 +579,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 450
-    },
-    {
-      "id": "redes-20260907-06",
-      "week": "2026-09-07",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "P5",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 460
     },
     {
       "id": "redes-20260907-07",
@@ -833,34 +679,6 @@ window.PLAN_DATA = {
       "order": 530
     },
     {
-      "id": "redes-20260914-06",
-      "week": "2026-09-14",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "P5",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 540
-    },
-    {
-      "id": "redes-20260914-07",
-      "week": "2026-09-14",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso TCP y control de congestión",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 550
-    },
-    {
       "id": "redes-20260914-08",
       "week": "2026-09-14",
       "eventDate": "",
@@ -887,20 +705,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 570
-    },
-    {
-      "id": "redes-20260928-01",
-      "week": "2026-09-28",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "no-class",
-      "title": "No hay clase",
-      "details": "Actividad del curso",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 580
     },
     {
       "id": "redes-20260928-02",
@@ -987,34 +791,6 @@ window.PLAN_DATA = {
       "order": 640
     },
     {
-      "id": "redes-20261005-05",
-      "week": "2026-10-05",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso control de congestión y P5",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 650
-    },
-    {
-      "id": "redes-20261005-06",
-      "week": "2026-10-05",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "P5",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 660
-    },
-    {
       "id": "redes-20261005-07",
       "week": "2026-10-05",
       "eventDate": "",
@@ -1097,34 +873,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 720
-    },
-    {
-      "id": "redes-20261012-06",
-      "week": "2026-10-12",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso servicios, planos, políticas y P6",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 730
-    },
-    {
-      "id": "redes-20261012-07",
-      "week": "2026-10-12",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso numeración IP y P6",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 740
     },
     {
       "id": "redes-20261012-08",
@@ -1225,34 +973,6 @@ window.PLAN_DATA = {
       "order": 810
     },
     {
-      "id": "redes-20261019-07",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 6",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 820
-    },
-    {
-      "id": "redes-20261019-08",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 6",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 830
-    },
-    {
       "id": "redes-20261019-09",
       "week": "2026-10-19",
       "eventDate": "",
@@ -1335,34 +1055,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 890
-    },
-    {
-      "id": "redes-20261026-06",
-      "week": "2026-10-26",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso algoritmos de enrutamiento",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 900
-    },
-    {
-      "id": "redes-20261026-07",
-      "week": "2026-10-26",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso OSPF y BGP; Práctico 7",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 910
     },
     {
       "id": "redes-20261026-08",
@@ -1449,34 +1141,6 @@ window.PLAN_DATA = {
       "order": 970
     },
     {
-      "id": "redes-20261102-06",
-      "week": "2026-11-02",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 7",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 980
-    },
-    {
-      "id": "redes-20261102-07",
-      "week": "2026-11-02",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 7",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 990
-    },
-    {
       "id": "redes-20261102-08",
       "week": "2026-11-02",
       "eventDate": "",
@@ -1559,34 +1223,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1050
-    },
-    {
-      "id": "redes-20261109-06",
-      "week": "2026-11-09",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Repaso enlace",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1060
-    },
-    {
-      "id": "redes-20261109-07",
-      "week": "2026-11-09",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 8",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1070
     },
     {
       "id": "redes-20261109-08",
@@ -1685,34 +1321,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1140
-    },
-    {
-      "id": "redes-20261116-06",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 8 y Práctico 9",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1150
-    },
-    {
-      "id": "redes-20261116-07",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "course-class",
-      "title": "Práctico 9 y cierre del curso",
-      "details": "Actividad de clase indicada en el cronograma",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1160
     },
     {
       "id": "redes-20261116-08",
@@ -2163,20 +1771,6 @@ window.PLAN_DATA = {
       "order": 1480
     },
     {
-      "id": "fuaa-20260803-01",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "course-class",
-      "title": "Presentación",
-      "details": "Tema 1",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1490
-    },
-    {
       "id": "fuaa-20260803-02",
       "week": "2026-08-03",
       "eventDate": "",
@@ -2189,20 +1783,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1500
-    },
-    {
-      "id": "fuaa-20260810-04",
-      "week": "2026-08-10",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 1 y 2",
-      "details": "Temas 1 y 2",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1510
     },
     {
       "id": "fuaa-20260810-05",
@@ -2247,20 +1827,6 @@ window.PLAN_DATA = {
       "order": 1540
     },
     {
-      "id": "fuaa-20260817-04",
-      "week": "2026-08-17",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 3 y 4",
-      "details": "Temas 3 y 4",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1550
-    },
-    {
       "id": "fuaa-20260817-05",
       "week": "2026-08-17",
       "eventDate": "",
@@ -2303,20 +1869,6 @@ window.PLAN_DATA = {
       "order": 1580
     },
     {
-      "id": "fuaa-20260824-04",
-      "week": "2026-08-24",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 5 y 6",
-      "details": "Temas 5 y 6",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1590
-    },
-    {
       "id": "fuaa-20260824-05",
       "week": "2026-08-24",
       "eventDate": "",
@@ -2343,20 +1895,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1610
-    },
-    {
-      "id": "fuaa-20260831-04",
-      "week": "2026-08-31",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 7 y 8",
-      "details": "Temas 7 y 8",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1620
     },
     {
       "id": "fuaa-20260831-05",
@@ -2401,20 +1939,6 @@ window.PLAN_DATA = {
       "order": 1650
     },
     {
-      "id": "fuaa-20260907-05",
-      "week": "2026-09-07",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 9, 10 y 11",
-      "details": "Temas 9, 10 y 11",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1660
-    },
-    {
       "id": "fuaa-20260907-06",
       "week": "2026-09-07",
       "eventDate": "",
@@ -2441,20 +1965,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1680
-    },
-    {
-      "id": "fuaa-20260914-03",
-      "week": "2026-09-14",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión / Práctico 4",
-      "details": "Tema 12",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1690
     },
     {
       "id": "fuaa-20260914-04",
@@ -2499,20 +2009,6 @@ window.PLAN_DATA = {
       "order": 1720
     },
     {
-      "id": "fuaa-20260921-01",
-      "week": "2026-09-21",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "consultation",
-      "title": "Consultas / Taller de parciales",
-      "details": "",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1730
-    },
-    {
       "id": "fuaa-20260921-02",
       "week": "2026-09-21",
       "eventDate": "2026-09-23",
@@ -2539,20 +2035,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1750
-    },
-    {
-      "id": "fuaa-20261005-05",
-      "week": "2026-10-05",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 13, 14 y 15",
-      "details": "Temas 13, 14 y 15",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1760
     },
     {
       "id": "fuaa-20261005-06",
@@ -2583,20 +2065,6 @@ window.PLAN_DATA = {
       "order": 1780
     },
     {
-      "id": "fuaa-20261012-01",
-      "week": "2026-10-12",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "holiday",
-      "title": "Feriado",
-      "details": "",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1790
-    },
-    {
       "id": "fuaa-20261012-02",
       "week": "2026-10-12",
       "eventDate": "",
@@ -2623,20 +2091,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1810
-    },
-    {
-      "id": "fuaa-20261019-04",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 16 y 17",
-      "details": "Temas 16 y 17",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1820
     },
     {
       "id": "fuaa-20261019-05",
@@ -2681,20 +2135,6 @@ window.PLAN_DATA = {
       "order": 1850
     },
     {
-      "id": "fuaa-20261026-04",
-      "week": "2026-10-26",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 18 y 19",
-      "details": "Temas 18 y 19",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1860
-    },
-    {
       "id": "fuaa-20261026-05",
       "week": "2026-10-26",
       "eventDate": "",
@@ -2737,20 +2177,6 @@ window.PLAN_DATA = {
       "order": 1890
     },
     {
-      "id": "fuaa-20261102-01",
-      "week": "2026-11-02",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "holiday",
-      "title": "Feriado",
-      "details": "",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1900
-    },
-    {
       "id": "fuaa-20261102-02",
       "week": "2026-11-02",
       "eventDate": "",
@@ -2777,20 +2203,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1920
-    },
-    {
-      "id": "fuaa-20261109-02",
-      "week": "2026-11-09",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "discussion",
-      "title": "Discusión 20",
-      "details": "Tema 20",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1930
     },
     {
       "id": "fuaa-20261109-03",
@@ -2833,34 +2245,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1960
-    },
-    {
-      "id": "fuaa-20261116-01",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "consultation",
-      "title": "Consultas",
-      "details": "Ética",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1970
-    },
-    {
-      "id": "fuaa-20261116-02",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "fuaa",
-      "type": "consultation",
-      "title": "Consultas finales",
-      "details": "",
-      "source": "FuAA 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1980
     },
     {
       "id": "fuaa-20261123-01",
@@ -2949,21 +2333,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 2040
-    },
-    {
-      "id": "fbd-20260803-05",
-      "week": "2026-08-03",
-      "periodLabel": "Semana 1 · 03/08–09/08",
-      "eventDate": "",
-      "subject": "fbd",
-      "type": "course-class",
-      "title": "Presentación del curso",
-      "details": "Sólo habrá clase el martes.",
-      "source": "Cronograma FBD 2026 proporcionado",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 2050
     },
     {
       "id": "fbd-20260810-01",
@@ -3699,20 +3068,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 2540
-    },
-    {
-      "id": "pln-undated-01",
-      "week": "",
-      "eventDate": "",
-      "subject": "pln",
-      "type": "notice",
-      "title": "Cronograma y fechas pendientes de publicación",
-      "details": "Las clases de OpenFing están cargadas en su orden original, sin asignarlas a semanas.",
-      "source": "Información disponible hasta ahora",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 2550
     },
     {
       "id": "pln-openfing-01",

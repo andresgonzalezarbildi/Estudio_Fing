@@ -50,3 +50,8 @@ GOOGLE DRIVE
 - Sincronizar ahora y Desconectar están dentro del menú pequeño de Google Drive en la barra superior.
 
 Ver CONFIGURAR_GOOGLE_DRIVE.txt para preparar Google Cloud.
+
+Cambios v11:
+- Se eliminaron las tarjetas de clase de Redes que repetían prácticos o repasos ya representados.
+- Se retiraron discusiones, consultas, feriados, avisos sin clase y presentaciones administrativas.
+- Se mantienen temas, OpenFing, lecturas, prácticos, controles, entregas, monitoreos, defensas y parciales.

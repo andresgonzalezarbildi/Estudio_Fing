@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.05-8");
+assert.equal(data.version, "2026.08.06-11");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 200);
 
@@ -26,8 +26,15 @@ for (const n of [1, 2, 3]) {
 }
 assert.ok(redesW1.some((item) => item.type === "reading" && item.title === "Capítulo 1"));
 assert.ok(redesW1.some((item) => item.type === "practical" && item.title === "P1 · Retardos"));
-assert.ok(redesW1.some((item) => item.title === "Presentación del curso y repaso de introducción"));
-assert.ok(redesW1.some((item) => item.title === "Práctico 1"));
+assert.ok(!redesW1.some((item) => item.title === "Presentación del curso y repaso de introducción"));
+assert.ok(!redesW1.some((item) => item.title === "Práctico 1"));
+assert.equal(redesW1.filter((item) => item.type === "practical").length, 1, "La semana 1 de Redes debe tener un solo práctico");
+
+
+assert.ok(!data.items.some((item) => item.type === "discussion"), "No deben quedar tarjetas de discusión");
+assert.ok(!data.items.some((item) => item.type === "consultation"), "No deben quedar tarjetas de consulta");
+assert.ok(!data.items.some((item) => ["holiday", "no-class", "notice"].includes(item.type)), "No deben quedar avisos administrativos de poco valor");
+assert.ok(!data.items.some((item) => item.subject === "redes" && item.type === "course-class" && item.details === "Actividad de clase indicada en el cronograma"), "No deben quedar actividades de clase redundantes en Redes");
 
 const fbd = data.items.filter((item) => item.subject === "fbd");
 assert.ok(fbd.length > 40);
@@ -40,7 +47,7 @@ assert.ok(fbdW1.some((item) => item.title === "Introducción"));
 assert.ok(fbdW1.some((item) => item.title === "Diseño Conceptual"));
 assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 1" && /16:43/.test(item.details)));
 assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 2"));
-assert.ok(fbdW1.some((item) => item.title === "Presentación del curso"));
+assert.ok(!fbdW1.some((item) => item.title === "Presentación del curso"));
 
 const partials = fbd.filter((item) => item.title === "Parciales");
 assert.equal(partials.length, 1, "El período conjunto no debe separarse artificialmente");

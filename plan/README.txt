@@ -28,7 +28,7 @@ Google Drive · v13:
 - Los cambios pendientes se resuelven por tarjeta y el servidor asigna la hora al sincronizarlos, por lo que no depende del reloj de cada PC.
 
 Configuración:
-Ver CONFIGURAR_GOOGLE_DRIVE.txt. Esta versión requiere Netlify Functions y tres variables de entorno: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET.
+Ver CONFIGURAR_GOOGLE_DRIVE.txt. Esta versión requiere Netlify Functions y tres variables de entorno: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y SESSION_SECRET. El Client ID ya no se duplica en google-drive-config.js.
 
 Pruebas:
   node tests/validate-data.mjs

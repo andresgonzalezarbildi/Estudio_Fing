@@ -574,6 +574,18 @@
     await activateDriveSession(result.user);
   }
 
+  async function loadDriveRuntimeConfig() {
+    try {
+      const result = await driveApi("drive-config", { method: "GET" });
+      if (result.clientId) DRIVE_CONFIG.clientId = String(result.clientId).trim();
+      return configuredClientId();
+    } catch (error) {
+      console.error(error);
+      setDriveStatus("warning", "No se pudo leer la configuración de Google");
+      return false;
+    }
+  }
+
   function initializeDriveClient() {
     if (!configuredClientId()) {
       elements.driveButton.textContent = "Configurar Drive";
@@ -636,7 +648,7 @@
     if (!initializeDriveClient()) {
       showToast(configuredClientId()
         ? "Publicá el cronograma mediante Netlify para usar la sesión persistente"
-        : "Pegá tu Client ID en google-drive-config.js");
+        : "Revisá GOOGLE_CLIENT_ID en las variables de entorno de Netlify");
       return;
     }
     setDriveStatus("syncing", "Esperando autorización…");
@@ -1278,7 +1290,10 @@
     if (document.visibilityState === "visible") syncDriveState({ background: true });
     else if (dirtyItems.size) syncDriveState({ background: true });
   });
-  initializeDriveClient();
   render();
-  restoreDriveSession();
+  (async () => {
+    await loadDriveRuntimeConfig();
+    initializeDriveClient();
+    await restoreDriveSession();
+  })();
 })();

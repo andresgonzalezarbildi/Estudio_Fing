@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.06-12");
+assert.equal(data.version, "2026.08.07-13");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 200);
 

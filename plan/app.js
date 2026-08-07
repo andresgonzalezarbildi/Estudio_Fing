@@ -10,6 +10,8 @@
   const DRIVE_FILE_NAME = String(DRIVE_CONFIG.fileName || "cronograma-semestre-2026.json");
   const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
   const DRIVE_SYNC_DELAY_MS = 650;
+  const DRIVE_PULL_INTERVAL_MS = 12000;
+  const DRIVE_FUNCTION_BASE = "/.netlify/functions";
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",
@@ -75,8 +77,7 @@
   let completedZoneOpen = false;
   let completedUndatedOpen = false;
   const drive = {
-    tokenClient: null,
-    accessToken: "",
+    codeClient: null,
     connected: false,
     syncing: false,
     syncAgain: false,
@@ -85,7 +86,8 @@
     user: null,
     storageKey: "",
     hadAccountState: false,
-    legacyCandidate: null
+    legacyCandidate: null,
+    pullTimer: null
   };
 
   function clone(value) {
@@ -405,112 +407,42 @@
     elements.driveStatus.textContent = text;
   }
 
-  function driveAuthHeader() {
-    return { Authorization: `Bearer ${drive.accessToken}` };
-  }
-
-  async function driveFetch(url, options = {}) {
-    const response = await fetch(url, {
+  async function driveApi(functionName, options = {}) {
+    const response = await fetch(`${DRIVE_FUNCTION_BASE}/${functionName}`, {
+      credentials: "same-origin",
+      cache: "no-store",
       ...options,
       headers: {
-        ...driveAuthHeader(),
+        "X-Requested-With": "XmlHttpRequest",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {})
       }
     });
-    if (response.status === 401) {
-      drive.connected = false;
-      drive.accessToken = "";
-      elements.driveButton.textContent = "Reconectar Drive";
-      setDriveStatus("warning", "La sesión venció · cambios guardados localmente");
-      throw new Error("La autorización de Google Drive venció");
+
+    let body = {};
+    try {
+      body = await response.json();
+    } catch {
+      body = {};
     }
+
     if (!response.ok) {
-      let detail = "";
-      try {
-        const body = await response.json();
-        detail = body?.error?.message || "";
-      } catch {
-        detail = await response.text();
-      }
-      throw new Error(detail || `Google Drive respondió ${response.status}`);
+      const error = new Error(body.error || `La sincronización respondió ${response.status}`);
+      error.status = response.status;
+      throw error;
     }
-    return response;
-  }
-
-  async function fetchDriveUser() {
-    const response = await driveFetch("https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress,permissionId)");
-    const body = await response.json();
-    return body.user || {};
-  }
-
-  async function findDriveFile() {
-    const query = `name='${DRIVE_FILE_NAME.replaceAll("'", "\\'")}' and trashed=false`;
-    const params = new URLSearchParams({
-      spaces: "appDataFolder",
-      q: query,
-      fields: "files(id,name,modifiedTime)",
-      orderBy: "modifiedTime desc",
-      pageSize: "10"
-    });
-    const response = await driveFetch(`https://www.googleapis.com/drive/v3/files?${params}`);
-    const body = await response.json();
-    return body.files?.[0] || null;
-  }
-
-  async function downloadDriveState(fileId) {
-    const response = await driveFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`);
-    const body = await response.json();
-    return stateFromSaved(body);
-  }
-
-  function cloudPayload(candidate = state) {
-    return {
-      schemaVersion: 1,
-      dataVersion: DATA.version,
-      savedAt: candidate.savedAt || nowTimestamp(),
-      items: candidate.items
-    };
-  }
-
-  async function createDriveFile(candidate) {
-    const boundary = `cronograma_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    const metadata = JSON.stringify({
-      name: DRIVE_FILE_NAME,
-      mimeType: "application/json",
-      parents: ["appDataFolder"]
-    });
-    const content = JSON.stringify(cloudPayload(candidate));
-    const body = [
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n`,
-      `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n`,
-      `--${boundary}--`
-    ].join("");
-    const response = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime", {
-      method: "POST",
-      headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
-      body
-    });
-    return response.json();
-  }
-
-  async function updateDriveFile(fileId, candidate) {
-    const response = await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=media&fields=id,modifiedTime`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cloudPayload(candidate))
-    });
-    return response.json();
+    return body;
   }
 
   function scheduleDriveSync() {
-    if (!drive.connected || !drive.accessToken) return;
+    if (!drive.connected) return;
     window.clearTimeout(drive.syncTimer);
     setDriveStatus("pending", "Cambios pendientes de sincronizar");
     drive.syncTimer = window.setTimeout(() => syncDriveState(), DRIVE_SYNC_DELAY_MS);
   }
 
-  async function syncDriveState() {
-    if (!drive.connected || !drive.accessToken) return;
+  async function syncDriveState(options = {}) {
+    if (!drive.connected) return;
     if (drive.syncing) {
       drive.syncAgain = true;
       return;
@@ -519,61 +451,60 @@
     drive.syncing = true;
     drive.syncAgain = false;
     window.clearTimeout(drive.syncTimer);
-    setDriveStatus("syncing", "Sincronizando…");
+    if (!options.background) setDriveStatus("syncing", "Sincronizando…");
+
+    const dirtySnapshot = new Map(dirtyItems);
+    const localBefore = stateFingerprint(state);
 
     try {
-      let remoteFile = drive.fileId ? { id: drive.fileId } : await findDriveFile();
-      let remoteState = null;
-      if (remoteFile?.id) {
-        drive.fileId = remoteFile.id;
-        remoteState = await downloadDriveState(remoteFile.id);
-      }
+      const result = await driveApi("drive-sync", {
+        method: "POST",
+        body: JSON.stringify({
+          state,
+          dirtyIds: [...dirtySnapshot.keys()]
+        })
+      });
 
-      if (!remoteState && !drive.hadAccountState && drive.legacyCandidate) {
-        state = drive.legacyCandidate;
-      }
+      const canonical = stateFromSaved(result.state);
+      const remoteFingerprint = stateFingerprint(canonical);
 
-      const dirtySnapshot = new Map(dirtyItems);
-      const localBefore = stateFingerprint(state);
-      const merged = remoteState
-        ? mergeStates(state, remoteState, new Set(dirtySnapshot.keys()))
-        : stateFromSaved(state);
-      const remoteFingerprint = remoteState ? stateFingerprint(remoteState) : "";
-      const mergedFingerprint = stateFingerprint(merged);
-
-      // No reemplazar el estado por clones cuando el contenido no cambió:
-      // las tarjetas visibles conservan referencias a los objetos actuales.
-      if (localBefore !== mergedFingerprint) {
-        state = merged;
-        if (!validTimestamp(state.savedAt)) state.savedAt = nowTimestamp();
-        persistLocalState(state);
-        render();
+      // Si no hubo nuevos cambios mientras la petición estaba en curso, se adopta
+      // el estado canónico que devuelve el servidor. Si sí los hubo, primero se
+      // mezclan para no borrar una acción que el usuario acaba de hacer.
+      const changedDuringSync = [...dirtyItems.entries()].some(([id, token]) => dirtySnapshot.get(id) !== token);
+      if (changedDuringSync) {
+        state = mergeStates(state, canonical, new Set(dirtyItems.keys()));
+      } else if (localBefore !== remoteFingerprint) {
+        state = canonical;
       } else {
-        state.savedAt = validTimestamp(merged.savedAt) ? merged.savedAt : state.savedAt || nowTimestamp();
-        persistLocalState(state);
+        state.savedAt = canonical.savedAt || state.savedAt;
       }
 
-      if (!remoteFile?.id) {
-        const created = await createDriveFile(state);
-        drive.fileId = created.id;
-      } else if (remoteFingerprint !== mergedFingerprint) {
-        await updateDriveFile(remoteFile.id, state);
-      }
-
+      persistLocalState(state);
       clearSyncedDirty(dirtySnapshot);
+      render();
+
       drive.hadAccountState = true;
       drive.legacyCandidate = null;
-      safeStorageSet(DRIVE_MIGRATION_KEY, drive.user?.permissionId || "done");
+      safeStorageSet(DRIVE_MIGRATION_KEY, drive.user?.permissionId || drive.user?.emailAddress || "done");
+
       if (dirtyItems.size) {
         drive.syncAgain = true;
         setDriveStatus("pending", "Hay cambios nuevos pendientes de sincronizar");
       } else {
-        setDriveStatus("synced", `Sincronizado automáticamente · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
+        setDriveStatus("synced", `Sincronizado · ${new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })}`);
       }
     } catch (error) {
-      if (drive.connected) setDriveStatus("error", "No se pudo sincronizar · cambios guardados localmente");
+      if (error.status === 401) {
+        drive.connected = false;
+        stopDrivePulling();
+        elements.driveButton.textContent = "Conectar Drive";
+        setDriveStatus("warning", "La sesión de Google ya no es válida");
+      } else if (!options.background) {
+        setDriveStatus("error", "No se pudo sincronizar · los cambios siguen guardados localmente");
+      }
       console.error(error);
-      showToast(error.message || "No se pudo sincronizar con Google Drive");
+      if (!options.background) showToast(error.message || "No se pudo sincronizar con Google Drive");
     } finally {
       drive.syncing = false;
       if (drive.syncAgain && drive.connected) syncDriveState();
@@ -585,24 +516,33 @@
     return `${STORAGE_KEY}_google_${accountId}`;
   }
 
-  async function finishDriveConnection(tokenResponse) {
-    if (tokenResponse.error || !tokenResponse.access_token) {
-      throw new Error(tokenResponse.error_description || tokenResponse.error || "Google no devolvió una autorización válida");
-    }
+  function startDrivePulling() {
+    stopDrivePulling();
+    drive.pullTimer = window.setInterval(() => {
+      if (drive.connected && document.visibilityState === "visible") {
+        syncDriveState({ background: true });
+      }
+    }, DRIVE_PULL_INTERVAL_MS);
+  }
 
-    drive.accessToken = tokenResponse.access_token;
+  function stopDrivePulling() {
+    if (drive.pullTimer) window.clearInterval(drive.pullTimer);
+    drive.pullTimer = null;
+  }
+
+  async function activateDriveSession(user, options = {}) {
     drive.connected = true;
-    drive.user = await fetchDriveUser();
+    drive.user = user || {};
     drive.storageKey = accountStorageKey(drive.user);
-    drive.fileId = "";
 
     const accountState = readStoredState(drive.storageKey);
-    const legacyState = readStoredState(STORAGE_KEY);
+    const anonymousState = readStoredState(STORAGE_KEY);
     const alreadyMigrated = Boolean(safeStorageGet(DRIVE_MIGRATION_KEY));
     drive.hadAccountState = Boolean(accountState);
-    drive.legacyCandidate = !accountState && !alreadyMigrated ? legacyState : null;
+    drive.legacyCandidate = !accountState && !alreadyMigrated ? anonymousState : null;
+
     currentStorageKey = drive.storageKey;
-    state = accountState || initialState();
+    state = accountState || drive.legacyCandidate || initialState();
     dirtyItems = readDirtyItems(currentStorageKey);
     persistLocalState(state);
 
@@ -611,8 +551,27 @@
     elements.driveAccount.hidden = false;
     elements.driveDisconnectButton.hidden = false;
     elements.driveButton.textContent = "Sincronizar ahora";
+    setDriveStatus("synced", "Sesión de Google activa");
     render();
-    await syncDriveState();
+    startDrivePulling();
+
+    if (options.sync !== false) await syncDriveState();
+  }
+
+  async function finishCodeConnection(response) {
+    if (response.error || !response.code) {
+      throw new Error(response.error_description || response.error || "Google no devolvió un código de autorización válido");
+    }
+
+    setDriveStatus("syncing", "Guardando sesión de Google…");
+    const result = await driveApi("drive-auth", {
+      method: "POST",
+      body: JSON.stringify({
+        code: response.code,
+        redirectUri: location.origin
+      })
+    });
+    await activateDriveSession(result.user);
   }
 
   function initializeDriveClient() {
@@ -622,20 +581,21 @@
       return false;
     }
     if (location.protocol === "file:") {
-      setDriveStatus("warning", "Drive requiere abrir el sitio por HTTPS o localhost");
+      setDriveStatus("warning", "Drive requiere publicar el sitio en Netlify");
       return false;
     }
     if (!window.google?.accounts?.oauth2) {
       setDriveStatus("error", "No se cargó Google Identity Services");
       return false;
     }
-    if (!drive.tokenClient) {
-      drive.tokenClient = google.accounts.oauth2.initTokenClient({
+    if (!drive.codeClient) {
+      drive.codeClient = google.accounts.oauth2.initCodeClient({
         client_id: DRIVE_CONFIG.clientId,
         scope: DRIVE_SCOPE,
+        ux_mode: "popup",
         callback: (response) => {
           setDriveStatus("syncing", "Conectando con tu cuenta…");
-          finishDriveConnection(response).catch((error) => {
+          finishCodeConnection(response).catch((error) => {
             drive.connected = false;
             setDriveStatus("error", "No se pudo conectar Google Drive");
             showToast(error.message || "No se pudo conectar Google Drive");
@@ -649,30 +609,52 @@
     return true;
   }
 
+  async function restoreDriveSession() {
+    if (!configuredClientId() || location.protocol === "file:") return;
+    setDriveStatus("syncing", "Recuperando sesión…");
+    try {
+      const result = await driveApi("drive-session", { method: "GET" });
+      if (result.authenticated && result.user) {
+        await activateDriveSession(result.user);
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        setDriveStatus("local", "Conectar Google Drive");
+        elements.driveButton.textContent = "Conectar Drive";
+        return;
+      }
+      setDriveStatus("warning", "No se pudo comprobar la sesión");
+      console.error(error);
+    }
+  }
+
   function connectOrSyncDrive() {
-    if (drive.connected && drive.accessToken) {
+    if (drive.connected) {
       syncDriveState();
       return;
     }
     if (!initializeDriveClient()) {
       showToast(configuredClientId()
-        ? "Abrí el cronograma desde HTTPS o localhost"
+        ? "Publicá el cronograma mediante Netlify para usar la sesión persistente"
         : "Pegá tu Client ID en google-drive-config.js");
       return;
     }
     setDriveStatus("syncing", "Esperando autorización…");
-    drive.tokenClient.requestAccessToken({ prompt: "consent" });
+    drive.codeClient.requestCode();
   }
 
-  function disconnectDrive() {
+  async function disconnectDrive() {
     setDriveMenuOpen(false);
     window.clearTimeout(drive.syncTimer);
-    const token = drive.accessToken;
-    if (token && window.google?.accounts?.oauth2) {
-      google.accounts.oauth2.revoke(token, () => {});
+    stopDrivePulling();
+
+    try {
+      await driveApi("drive-logout", { method: "POST", body: "{}" });
+    } catch (error) {
+      console.error(error);
     }
+
     Object.assign(drive, {
-      accessToken: "",
       connected: false,
       syncing: false,
       syncAgain: false,
@@ -688,7 +670,7 @@
     elements.driveAccount.hidden = true;
     elements.driveDisconnectButton.hidden = true;
     elements.driveButton.textContent = configuredClientId() ? "Conectar Drive" : "Configurar Drive";
-    setDriveStatus("local", "Desconectado · tu progreso de Drive quedó protegido");
+    setDriveStatus("local", "Sesión cerrada manualmente");
     render();
   }
 
@@ -1286,14 +1268,17 @@
   elements.deleteButton.addEventListener("click", deleteCurrentTask);
   window.addEventListener("blur", cleanupDrag);
   window.addEventListener("focus", () => {
-    if (drive.connected) syncDriveState();
+    if (drive.connected) syncDriveState({ background: true });
   });
   window.addEventListener("online", () => {
     if (drive.connected) syncDriveState();
   });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden" && drive.connected) syncDriveState();
+    if (!drive.connected) return;
+    if (document.visibilityState === "visible") syncDriveState({ background: true });
+    else if (dirtyItems.size) syncDriveState({ background: true });
   });
   initializeDriveClient();
   render();
+  restoreDriveSession();
 })();

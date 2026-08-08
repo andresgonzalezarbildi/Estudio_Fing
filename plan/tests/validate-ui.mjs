@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const js = fs.readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const css = fs.readFileSync(new URL("../style.css", import.meta.url), "utf8");
-const syncFn = fs.readFileSync(new URL("../netlify/functions/drive-sync.js", import.meta.url), "utf8");
-const googleLib = fs.readFileSync(new URL("../netlify/functions/_lib/google.js", import.meta.url), "utf8");
+const syncFn = fs.readFileSync(new URL("../../netlify/functions/drive-sync.js", import.meta.url), "utf8");
+const googleLib = fs.readFileSync(new URL("../../netlify/functions/_lib/google.js", import.meta.url), "utf8");
 
 assert.match(html, /Cronograma del semestre/);
 assert.doesNotMatch(html, /bloques sugeridos|Plan de estudio|Temarios/i);

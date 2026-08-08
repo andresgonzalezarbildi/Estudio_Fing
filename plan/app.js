@@ -5,7 +5,10 @@
   if (!DATA) throw new Error("No se pudo cargar data.js");
 
   const STORAGE_KEY = "semester_schedule_2026_v3";
-  const DRIVE_CONFIG = window.GOOGLE_DRIVE_SYNC_CONFIG || {};
+  const DRIVE_CONFIG = {
+    clientId: "",
+    fileName: "cronograma-semestre-2026.json"
+  };
   const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
   const DRIVE_FILE_NAME = String(DRIVE_CONFIG.fileName || "cronograma-semestre-2026.json");
   const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
@@ -387,8 +390,12 @@
   }
 
   function configuredClientId() {
+    return Boolean(String(DRIVE_CONFIG.clientId || "").trim());
+  }
+
+  function validGoogleClientId() {
     const clientId = String(DRIVE_CONFIG.clientId || "").trim();
-    return clientId.endsWith(".apps.googleusercontent.com") && !clientId.includes("PEGAR_CLIENT_ID");
+    return /^[^\s]+\.apps\.googleusercontent\.com$/.test(clientId);
   }
 
   function setDriveMenuOpen(open) {
@@ -577,19 +584,32 @@
   async function loadDriveRuntimeConfig() {
     try {
       const result = await driveApi("drive-config", { method: "GET" });
-      if (result.clientId) DRIVE_CONFIG.clientId = String(result.clientId).trim();
-      return configuredClientId();
+      DRIVE_CONFIG.clientId = String(result?.clientId || "").trim();
+
+      if (!configuredClientId()) {
+        throw new Error("La función drive-config no devolvió GOOGLE_CLIENT_ID");
+      }
+      if (!validGoogleClientId()) {
+        throw new Error("GOOGLE_CLIENT_ID no tiene formato de cliente OAuth web");
+      }
+      return true;
     } catch (error) {
-      console.error(error);
-      setDriveStatus("warning", "No se pudo leer la configuración de Google");
+      DRIVE_CONFIG.clientId = "";
+      console.error("Google Drive config:", error);
+      setDriveStatus("warning", error.message || "No se pudo leer la configuración de Google");
       return false;
     }
   }
 
   function initializeDriveClient() {
     if (!configuredClientId()) {
-      elements.driveButton.textContent = "Configurar Drive";
-      setDriveStatus("warning", "Falta pegar el Client ID");
+      elements.driveButton.textContent = "Conectar Drive";
+      setDriveStatus("warning", "No se pudo obtener el Client ID desde Netlify");
+      return false;
+    }
+    if (!validGoogleClientId()) {
+      elements.driveButton.textContent = "Conectar Drive";
+      setDriveStatus("warning", "El Client ID configurado en Netlify no es válido");
       return false;
     }
     if (location.protocol === "file:") {

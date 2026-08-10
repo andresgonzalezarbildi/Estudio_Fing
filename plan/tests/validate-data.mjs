@@ -21,9 +21,7 @@ assert.ok(data.items.every((item) => !/sugerencia|preparar|repaso para/i.test(`$
 assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
 const redesW1 = data.items.filter((item) => item.subject === "redes" && item.week === "2026-08-03");
-for (const n of [1, 2, 3]) {
-  assert.ok(redesW1.some((item) => item.type === "openfing" && item.title === `Clase OpenFing ${n}`));
-}
+assert.ok(!data.items.some((item) => item.subject === "redes" && item.type === "openfing"), "Redes no debe mostrar clases OpenFing");
 assert.ok(redesW1.some((item) => item.type === "reading" && item.title === "Capítulo 1"));
 assert.ok(redesW1.some((item) => item.type === "practical" && item.title === "P1 · Retardos"));
 assert.ok(!redesW1.some((item) => item.title === "Presentación del curso y repaso de introducción"));

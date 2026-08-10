@@ -91,48 +91,6 @@ window.PLAN_DATA = {
       "order": 0
     },
     {
-      "id": "redes-20260803-02",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 1",
-      "details": "Asignada dentro de Presentación e Introducción",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 10
-    },
-    {
-      "id": "redes-20260803-03",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 2",
-      "details": "Asignada dentro de Presentación e Introducción",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 20
-    },
-    {
-      "id": "redes-20260803-04",
-      "week": "2026-08-03",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 3",
-      "details": "Asignada dentro de Presentación e Introducción",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 30
-    },
-    {
       "id": "redes-20260803-05",
       "week": "2026-08-03",
       "eventDate": "",
@@ -187,34 +145,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 90
-    },
-    {
-      "id": "redes-20260810-02",
-      "week": "2026-08-10",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 4",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 100
-    },
-    {
-      "id": "redes-20260810-03",
-      "week": "2026-08-10",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 5",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 110
     },
     {
       "id": "redes-20260810-04",
@@ -273,34 +203,6 @@ window.PLAN_DATA = {
       "order": 170
     },
     {
-      "id": "redes-20260817-02",
-      "week": "2026-08-17",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 6",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 180
-    },
-    {
-      "id": "redes-20260817-03",
-      "week": "2026-08-17",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 7",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 190
-    },
-    {
       "id": "redes-20260817-04",
       "week": "2026-08-17",
       "eventDate": "",
@@ -355,34 +257,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 250
-    },
-    {
-      "id": "redes-20260824-02",
-      "week": "2026-08-24",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 6",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 260
-    },
-    {
-      "id": "redes-20260824-03",
-      "week": "2026-08-24",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 7",
-      "details": "Asignada dentro de Aplicación",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 270
     },
     {
       "id": "redes-20260824-04",
@@ -441,34 +315,6 @@ window.PLAN_DATA = {
       "order": 330
     },
     {
-      "id": "redes-20260831-02",
-      "week": "2026-08-31",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 8",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 340
-    },
-    {
-      "id": "redes-20260831-03",
-      "week": "2026-08-31",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 9",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 350
-    },
-    {
       "id": "redes-20260831-04",
       "week": "2026-08-31",
       "eventDate": "",
@@ -523,34 +369,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 410
-    },
-    {
-      "id": "redes-20260907-02",
-      "week": "2026-09-07",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 8",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 420
-    },
-    {
-      "id": "redes-20260907-03",
-      "week": "2026-09-07",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 9",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 430
     },
     {
       "id": "redes-20260907-04",
@@ -621,34 +439,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 490
-    },
-    {
-      "id": "redes-20260914-02",
-      "week": "2026-09-14",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 10",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 500
-    },
-    {
-      "id": "redes-20260914-03",
-      "week": "2026-09-14",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 11",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 510
     },
     {
       "id": "redes-20260914-04",
@@ -749,20 +539,6 @@ window.PLAN_DATA = {
       "order": 610
     },
     {
-      "id": "redes-20261005-02",
-      "week": "2026-10-05",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 11",
-      "details": "Asignada dentro de Transporte",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 620
-    },
-    {
       "id": "redes-20261005-03",
       "week": "2026-10-05",
       "eventDate": "",
@@ -817,34 +593,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 680
-    },
-    {
-      "id": "redes-20261012-02",
-      "week": "2026-10-12",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 12",
-      "details": "Asignada dentro de Red: plano de datos",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 690
-    },
-    {
-      "id": "redes-20261012-03",
-      "week": "2026-10-12",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 13",
-      "details": "Asignada dentro de Red: plano de datos",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 700
     },
     {
       "id": "redes-20261012-04",
@@ -903,48 +651,6 @@ window.PLAN_DATA = {
       "order": 760
     },
     {
-      "id": "redes-20261019-02",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 14",
-      "details": "Asignada dentro de Red: IPv6",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 770
-    },
-    {
-      "id": "redes-20261019-03",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 18",
-      "details": "Asignada dentro de Red: IPv6",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 780
-    },
-    {
-      "id": "redes-20261019-04",
-      "week": "2026-10-19",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 19",
-      "details": "Asignada dentro de Red: IPv6",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 790
-    },
-    {
       "id": "redes-20261019-05",
       "week": "2026-10-19",
       "eventDate": "",
@@ -999,34 +705,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 850
-    },
-    {
-      "id": "redes-20261026-02",
-      "week": "2026-10-26",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 14",
-      "details": "Asignada dentro de Red: plano de control",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 860
-    },
-    {
-      "id": "redes-20261026-03",
-      "week": "2026-10-26",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 15",
-      "details": "Asignada dentro de Red: plano de control",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 870
     },
     {
       "id": "redes-20261026-04",
@@ -1085,34 +763,6 @@ window.PLAN_DATA = {
       "order": 930
     },
     {
-      "id": "redes-20261102-02",
-      "week": "2026-11-02",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 16",
-      "details": "Asignada dentro de Red: plano de control",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 940
-    },
-    {
-      "id": "redes-20261102-03",
-      "week": "2026-11-02",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 17",
-      "details": "Asignada dentro de Red: plano de control",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 950
-    },
-    {
       "id": "redes-20261102-04",
       "week": "2026-11-02",
       "eventDate": "",
@@ -1167,34 +817,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1010
-    },
-    {
-      "id": "redes-20261109-02",
-      "week": "2026-11-09",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 20",
-      "details": "Asignada dentro de Enlace",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1020
-    },
-    {
-      "id": "redes-20261109-03",
-      "week": "2026-11-09",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 21",
-      "details": "Asignada dentro de Enlace",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1030
     },
     {
       "id": "redes-20261109-04",
@@ -1265,34 +887,6 @@ window.PLAN_DATA = {
       "important": false,
       "priority": "normal",
       "order": 1100
-    },
-    {
-      "id": "redes-20261116-02",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 22",
-      "details": "Asignada dentro de Enlace",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1110
-    },
-    {
-      "id": "redes-20261116-03",
-      "week": "2026-11-16",
-      "eventDate": "",
-      "subject": "redes",
-      "type": "openfing",
-      "title": "Clase OpenFing 23",
-      "details": "Asignada dentro de Enlace",
-      "source": "Cronograma Redes 2026",
-      "fixed": true,
-      "important": false,
-      "priority": "normal",
-      "order": 1120
     },
     {
       "id": "redes-20261116-04",

@@ -14,7 +14,9 @@
   const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
   const DRIVE_SYNC_DELAY_MS = 650;
   const DRIVE_PULL_INTERVAL_MS = 12000;
-  const DRIVE_FUNCTION_BASE = "/.netlify/functions";
+  const DRIVE_FUNCTION_BASE = window.location.hostname === "andresgonzalez.netlify.app"
+    ? "/plan-api"
+    : "/.netlify/functions";
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",

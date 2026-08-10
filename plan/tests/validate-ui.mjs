@@ -19,7 +19,7 @@ assert.match(html, /driveDisconnectButton/);
 assert.match(html, /driveMenuButton/);
 assert.match(html, /driveMenu/);
 assert.doesNotMatch(html, /google-drive-config\.js/);
-assert.match(html, /app\.js\?v=15/);
+assert.match(html, /app\.js\?v=16/);
 assert.match(html, /accounts\.google\.com\/gsi\/client/);
 assert.doesNotMatch(html, /Contenido de los cronogramas agrupado por semana/i);
 assert.doesNotMatch(html, /Exportar|Importar|Restaurar cronograma/i);

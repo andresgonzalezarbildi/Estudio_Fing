@@ -14,9 +14,10 @@
   const DRIVE_MIGRATION_KEY = `${STORAGE_KEY}_drive_migrated`;
   const DRIVE_SYNC_DELAY_MS = 650;
   const DRIVE_PULL_INTERVAL_MS = 12000;
-  const DRIVE_FUNCTION_BASE = window.location.hostname === "andresgonzalez.netlify.app"
-    ? "/plan-api"
-    : "/.netlify/functions";
+  // La API de Drive vive debajo de /plan para que funcione igual
+  // tanto en estudiofing.netlify.app/plan como cuando /plan se sirve
+  // mediante el proxy de andresgonzalez.netlify.app.
+  const DRIVE_FUNCTION_BASE = "/plan/api";
   const DELIVERABLE_TYPES = new Set([
     "practical",
     "questionnaire",

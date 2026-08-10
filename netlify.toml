@@ -4,3 +4,12 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# API del cronograma. Mantenerla dentro de /plan permite que el proxy
+# existente de andresgonzalez.netlify.app/plan/* también transporte
+# autenticación y sincronización sin desplegar Functions en ese sitio.
+[[redirects]]
+  from = "/plan/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true

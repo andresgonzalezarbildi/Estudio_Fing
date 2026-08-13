@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.07-13");
+assert.equal(data.version, "2026.08.12-14");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 200);
 
@@ -58,11 +58,17 @@ const repeatedVideos = fbd.filter((item) => ["Video OpenFing 13", "Video OpenFin
 assert.equal(repeatedVideos.length, 4, "Los videos 13 y 14 deben figurar en semanas 7 y 10");
 
 const pln = data.items.filter((item) => item.subject === "pln");
-assert.equal(pln.filter((item) => item.type === "openfing").length, 20, "Deben existir las 20 clases OpenFing de IntroPLN");
-assert.ok(pln.every((item) => !item.week), "IntroPLN no debe asignarse a semanas sin cronograma oficial");
-assert.ok(pln.some((item) => item.title === "Clase OpenFing 1 · Introducción al Procesamiento de Lenguaje Natural"));
-assert.ok(pln.some((item) => item.title === "Clase OpenFing 20 · Recuperación de Información"));
-assert.ok(pln.filter((item) => item.type === "openfing").every((item) => item.source === "OpenFing"));
+assert.equal(pln.filter((item) => item.type === "openfing").length, 20, "Deben mantenerse las 20 clases OpenFing de IntroPLN");
+assert.ok(pln.filter((item) => item.type === "openfing").every((item) => item.week), "Las clases OpenFing de PLN deben quedar ubicadas según el cronograma tentativo");
+assert.ok(pln.some((item) => item.id === "pln-openfing-01" && item.week === "2026-08-03" && item.eventDate === "2026-08-04"));
+assert.ok(pln.some((item) => item.id === "pln-openfing-02" && item.week === "2026-08-17"));
+assert.ok(pln.some((item) => item.id === "pln-openfing-20" && item.week === "2026-10-26"));
+assert.ok(pln.some((item) => item.title === "No está en OpenFing · Extracción de Información"));
+assert.ok(pln.some((item) => item.title === "No está en OpenFing · Narrativa interactiva"));
+assert.equal(pln.filter((item) => /Suspendida por paro/i.test(item.title)).length, 0, "La semana suspendida no debe generar una tarjeta vacía");
+assert.ok(pln.some((item) => item.id === "pln-prueba-1" && !item.week));
+assert.ok(pln.some((item) => item.id === "pln-prueba-2" && !item.week));
+assert.equal(pln.filter((item) => /Presentaciones de artículos/.test(item.title)).length, 2);
 assert.ok(!/Creative Commons/i.test(source));
 
 console.log(`OK: ${data.items.length} elementos validados`);

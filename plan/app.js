@@ -765,13 +765,16 @@
         .filter((item) => !item.done && itemDateForSorting(item) >= today && (item.important || IMPORTANT_TYPES.has(item.type)))
         .sort((a, b) => itemDateForSorting(a).localeCompare(itemDateForSorting(b)))[0];
 
-      const card = document.createElement("button");
-      card.type = "button";
+      const card = document.createElement("article");
       card.className = `subject-card ${activeFilter === key ? "active" : ""}`;
       card.style.setProperty("--subject", subject.color);
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Filtrar por ${subject.name}`);
       card.innerHTML = `
         <span class="subject-card__short">${escapeHtml(subject.short)}</span>
         <strong>${escapeHtml(subject.name)}</strong>
+        ${subject.scheduleUrl ? `<a class="subject-card__schedule ${subject.scheduleOriginal ? "is-original" : ""}" href="${escapeHtml(subject.scheduleUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(subject.scheduleLabel || "Ver cronograma")} <span aria-hidden="true">↗</span></a>` : ""}
         <small>${escapeHtml(subject.status)}</small>
         <div class="subject-card__meta">
           <span>${pending.length} pendientes</span>
@@ -780,9 +783,20 @@
         </div>
         <p>${next ? `${dateLabel(itemDateForSorting(next))} · ${escapeHtml(next.title)}` : "Sin próxima fecha publicada"}</p>
       `;
-      card.addEventListener("click", () => {
+      const applyFilter = () => {
         activeFilter = key;
         render();
+      };
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("a")) return;
+        applyFilter();
+      });
+      card.addEventListener("keydown", (event) => {
+        if (event.target.closest("a")) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          applyFilter();
+        }
       });
       elements.subjectOverview.append(card);
     });

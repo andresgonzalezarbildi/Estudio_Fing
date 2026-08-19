@@ -11,28 +11,40 @@ window.PLAN_DATA = {
       "short": "FuAA",
       "color": "#8cff3a",
       "status": "Cronograma oficial cargado",
-      "source": "FuAA 2026"
+      "source": "FuAA 2026",
+      "scheduleUrl": "cronogramas/FuAA_2026_cronograma.pdf",
+      "scheduleLabel": "Cronograma oficial",
+      "scheduleOriginal": true
     },
     "redes": {
       "name": "Redes de Computadoras",
       "short": "Redes",
       "color": "#36a9ff",
       "status": "Cronograma oficial cargado",
-      "source": "Cronograma Redes 2026"
+      "source": "Cronograma Redes 2026",
+      "scheduleUrl": "cronogramas/Cronograma_redes_2026.pdf",
+      "scheduleLabel": "Cronograma oficial",
+      "scheduleOriginal": true
     },
     "fbd": {
       "name": "Fundamentos de Bases de Datos",
       "short": "FBD",
       "color": "#ff9a3c",
       "status": "Cronograma oficial cargado",
-      "source": "Cronograma FBD 2026 proporcionado"
+      "source": "Cronograma FBD 2026 proporcionado",
+      "scheduleUrl": "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start",
+      "scheduleLabel": "Cronograma oficial",
+      "scheduleOriginal": true
     },
     "pln": {
       "name": "Introducción al Procesamiento de Lenguaje Natural",
       "short": "IntroPLN",
       "color": "#ff4fcf",
       "status": "Cronograma tentativo 2026 + clases OpenFing cargadas",
-      "source": "Cronograma tentativo PLN 2026 + OpenFing"
+      "source": "Cronograma tentativo PLN 2026 + OpenFing",
+      "scheduleUrl": "https://eva.fing.edu.uy/mod/page/view.php?id=84886",
+      "scheduleLabel": "Cronograma oficial",
+      "scheduleOriginal": true
     }
   },
   "typeLabels": {

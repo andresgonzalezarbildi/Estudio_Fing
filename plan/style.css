@@ -263,6 +263,31 @@ a { color: inherit; text-decoration: none; }
 }
 .subject-card__short { display: inline-block; margin-bottom: 20px; color: var(--subject); font-size: .75rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .subject-card strong { display: block; min-height: 60px; font: 600 1.5rem/1.06 var(--font-display); }
+.subject-card__schedule {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb,var(--subject) 48%,var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb,var(--subject) 8%,transparent);
+  color: color-mix(in srgb,var(--subject) 86%,white 14%);
+  font-size: .66rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms var(--ease);
+}
+.subject-card__schedule:hover,
+.subject-card__schedule:focus-visible {
+  border-color: var(--subject);
+  background: color-mix(in srgb,var(--subject) 16%,transparent);
+  transform: translateY(-1px);
+  outline: none;
+}
+.subject-card__schedule.is-original { font-weight: 750; }
 .subject-card small { display: block; min-height: 48px; margin-top: 11px; color: var(--muted); font-size: .7rem; line-height: 1.55; }
 .subject-card__meta { display: flex; flex-wrap: wrap; gap: 8px 15px; margin-top: 17px; color: var(--subject); font-size: .67rem; }
 .subject-card p { margin: 16px 0 0; overflow: hidden; color: var(--muted); font-size: .69rem; line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
@@ -733,6 +758,12 @@ details[open] > summary .collapse-sign::before { content: "−"; }
     font-size: .63rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
+  }
+  .subject-card__schedule {
+    margin-top: 9px;
+    padding: 7px 9px;
+    font-size: .61rem;
+    white-space: normal;
   }
   .subject-card__meta {
     display: flex;

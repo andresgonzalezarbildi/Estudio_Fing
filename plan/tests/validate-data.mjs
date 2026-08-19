@@ -71,4 +71,12 @@ assert.ok(pln.some((item) => item.id === "pln-prueba-2" && !item.week));
 assert.equal(pln.filter((item) => /Presentaciones de artículos/.test(item.title)).length, 2);
 assert.ok(!/Creative Commons/i.test(source));
 
+
+assert.equal(data.subjects.fbd.scheduleUrl, "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start");
+assert.equal(data.subjects.fbd.scheduleLabel, "Cronograma oficial");
+assert.equal(data.subjects.fbd.scheduleOriginal, true);
+assert.equal(data.subjects.pln.scheduleUrl, "https://eva.fing.edu.uy/mod/page/view.php?id=84886");
+assert.equal(data.subjects.pln.scheduleLabel, "Cronograma oficial");
+assert.equal(data.subjects.pln.scheduleOriginal, true);
+
 console.log(`OK: ${data.items.length} elementos validados`);

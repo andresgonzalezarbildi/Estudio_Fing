@@ -9,9 +9,9 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.08.12-14");
+assert.equal(data.version, "2026.09.03-15");
 assert.ok(Array.isArray(data.items));
-assert.ok(data.items.length > 200);
+assert.ok(data.items.length > 160);
 
 const ids = data.items.map((item) => item.id);
 assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
@@ -20,17 +20,16 @@ assert.ok(data.items.every((item) => !item.week || /^\d{4}-\d{2}-\d{2}$/.test(it
 assert.ok(data.items.every((item) => !/sugerencia|preparar|repaso para/i.test(`${item.source} ${item.title}`)), "No debe haber bloques de estudio inventados");
 assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
-const redesW1 = data.items.filter((item) => item.subject === "redes" && item.week === "2026-08-03");
-assert.equal(data.items.filter((item) => item.subject === "redes" && item.type === "openfing").length, 29, "Redes debe mostrar las 29 clases OpenFing indicadas en el cronograma");
-assert.ok(!data.items.some((item) => item.subject === "redes" && item.type === "reading"), "Redes no debe mostrar las lecturas/capítulos del libro equivalentes a OpenFing");
-for (const n of [1, 2, 3]) {
-  assert.ok(redesW1.some((item) => item.type === "openfing" && item.title === `Clase OpenFing ${n}`));
-}
-assert.ok(redesW1.some((item) => item.type === "practical" && item.title === "P1 · Retardos"));
-assert.ok(!redesW1.some((item) => item.title === "Presentación del curso y repaso de introducción"));
-assert.ok(!redesW1.some((item) => item.title === "Práctico 1"));
-assert.equal(redesW1.filter((item) => item.type === "practical").length, 1, "La semana 1 de Redes debe tener un solo práctico");
-
+const redes = data.items.filter((item) => item.subject === "redes");
+const redesW1 = redes.filter((item) => item.week === "2026-08-03");
+assert.equal(redes.length, 28, "Redes debe quedar reducido a prácticos y lecturas del libro");
+assert.equal(redes.filter((item) => item.type === "practical").length, 14, "Deben mantenerse los 14 prácticos de Redes");
+assert.equal(redes.filter((item) => item.type === "reading").length, 14, "Deben mantenerse las 14 lecturas/capítulos de Redes");
+assert.ok(redes.every((item) => ["practical", "reading"].includes(item.type)), "Redes no debe mostrar monitoreos, OpenFing, parciales, obligatorios ni otras tarjetas oficiales");
+assert.ok(!redes.some((item) => item.type === "monitoring"), "Redes no debe mostrar monitoreos");
+assert.ok(redesW1.some((item) => item.id === "redes-20260803-05" && item.type === "reading" && item.title === "Capítulo 1"));
+assert.ok(redesW1.some((item) => item.id === "redes-20260803-06" && item.type === "practical" && item.title === "P1 · Retardos"));
+assert.equal(redesW1.length, 2, "La semana 1 de Redes debe tener únicamente capítulo y práctico");
 
 assert.ok(!data.items.some((item) => item.type === "discussion"), "No deben quedar tarjetas de discusión");
 assert.ok(!data.items.some((item) => item.type === "consultation"), "No deben quedar tarjetas de consulta");

@@ -52,6 +52,10 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-preview mjx-container[display="true"]{margin:.35em 0!important;text-align:left!important}
 .query-calc-line{max-width:100%;overflow-x:auto;margin:4px 0}
 
+
+.query-symbols-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+#queryCalcTools{margin-top:10px}
+
 </style>
 
 <script>
@@ -99,7 +103,14 @@ window.MathJax = {
       </select>
     </div>
 
-    <div id="querySymbols" class="query-symbols"></div>
+    <div class="query-symbols-wrap">
+      <div id="querySymbols" class="query-symbols"></div>
+      <div id="queryCalcTools" class="query-symbols hidden">
+        <button id="newQueryExpression" class="query-symbol" type="button">Nueva expresión</button>
+        <button id="indentCalc" class="query-symbol" type="button">Tab +</button>
+        <button id="outdentCalc" class="query-symbol" type="button">Tab −</button>
+      </div>
+    </div>
 
     <div class="query-grid">
       <div class="query-box">
@@ -114,9 +125,6 @@ window.MathJax = {
     </div>
 
     <div class="query-actions">
-      <button id="newQueryExpression" class="btn secondary hidden" type="button">Nueva expresión</button>
-      <button id="indentCalc" class="btn secondary hidden" type="button">Tab +</button>
-      <button id="outdentCalc" class="btn secondary hidden" type="button">Tab −</button>
       <button id="copyQueryLatex" class="btn primary" type="button">Copiar LaTeX</button>
       <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
       <span id="queryCopyStatus" class="query-copy-status"></span>
@@ -184,6 +192,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const newExpressionBtn = document.getElementById("newQueryExpression");
   const indentCalcBtn = document.getElementById("indentCalc");
   const outdentCalcBtn = document.getElementById("outdentCalc");
+  const calcTools = document.getElementById("queryCalcTools");
   const status = document.getElementById("queryCopyStatus");
 
   if (!mode || !input || !preview || !symbolsBox) return;
@@ -384,9 +393,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     renderSymbols();
     const isCalc = mode.value === "calculo";
 
-    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
-    if (indentCalcBtn) indentCalcBtn.classList.toggle("hidden", !isCalc);
-    if (outdentCalcBtn) outdentCalcBtn.classList.toggle("hidden", !isCalc);
+    if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
 
     update();
   });
@@ -423,15 +430,19 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     indentCalcBtn.addEventListener("click", () => {
       if (mode.value !== "calculo") return;
 
+      const originalStart = input.selectionStart;
+      const originalEnd = input.selectionEnd;
       const { start } = currentLineBounds();
+
       input.value =
         input.value.slice(0, start) +
         "\\quad " +
         input.value.slice(start);
 
-      const newPos = input.selectionStart + 6;
+      // Mantener el cursor exactamente sobre el mismo contenido lógico.
+      const added = 6;
       input.focus();
-      input.setSelectionRange(newPos, newPos);
+      input.setSelectionRange(originalStart + added, originalEnd + added);
       update();
     });
   }
@@ -440,6 +451,8 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     outdentCalcBtn.addEventListener("click", () => {
       if (mode.value !== "calculo") return;
 
+      const originalStart = input.selectionStart;
+      const originalEnd = input.selectionEnd;
       const { start, end } = currentLineBounds();
       const line = input.value.slice(start, end);
 
@@ -449,9 +462,12 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
           line.slice(6) +
           input.value.slice(end);
 
-        const newPos = Math.max(start, input.selectionStart - 6);
+        const removed = 6;
         input.focus();
-        input.setSelectionRange(newPos, newPos);
+        input.setSelectionRange(
+          Math.max(start, originalStart - removed),
+          Math.max(start, originalEnd - removed)
+        );
         update();
       }
     });
@@ -490,9 +506,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   renderSymbols();
   const isCalc = mode.value === "calculo";
-  if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
-  if (indentCalcBtn) indentCalcBtn.classList.toggle("hidden", !isCalc);
-  if (outdentCalcBtn) outdentCalcBtn.classList.toggle("hidden", !isCalc);
+  if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
   update();
 })();
 </script>

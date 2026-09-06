@@ -357,9 +357,17 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
         .join("\n\n");
     }
 
-    return expressions
-      .map(expr => "$$\n" + expr + "\n$$")
-      .join("\n\n");
+    const lines = expressions
+      .map(line => line.trimEnd())
+      .filter(line => line.trim().length > 0);
+
+    const alignedLines = lines
+      .map(line => "&" + line)
+      .join(" \\\\" + "\n");
+
+    return "$$\n\\begin{aligned}\n" +
+      alignedLines +
+      "\n\\end{aligned}\n$$";
   }
 
   function updatePreview() {

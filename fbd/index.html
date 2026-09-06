@@ -315,7 +315,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     if (!text) return "";
 
     if (mode.value === "sql") {
-      return "\\begin{verbatim}\n" + text + "\n\\end{verbatim}";
+      return text;
     }
 
     const expressions = getExpressions();
@@ -392,8 +392,10 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   mode.addEventListener("change", () => {
     renderSymbols();
     const isCalc = mode.value === "calculo";
+    const isSQL = mode.value === "sql";
 
     if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
+    if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
 
     update();
   });
@@ -506,7 +508,9 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   renderSymbols();
   const isCalc = mode.value === "calculo";
+  const isSQL = mode.value === "sql";
   if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
+  if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
   update();
 })();
 </script>

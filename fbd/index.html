@@ -32,10 +32,10 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-symbols{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
 .query-symbol{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:9px;padding:7px 10px;min-width:40px;font-weight:750}
 .query-symbol:hover{border-color:var(--accent);color:var(--accent)}
-.query-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.query-grid{display:grid;grid-template-columns:1fr;gap:18px}
 .query-box h3{margin:0 0 8px;font-size:1rem}
-#queryInput{width:100%;min-height:230px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:14px;font:15px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
-.query-preview{min-height:230px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;white-space:pre-wrap;overflow:auto;font:16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+#queryInput{width:100%;min-height:360px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:14px;font:15px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+.query-preview{min-height:180px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;white-space:pre-wrap;overflow:auto;font:16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
 .query-latex{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:12px;white-space:pre-wrap;overflow:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
 .query-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .query-copy-status{color:var(--good);font-weight:800;font-size:.9rem}
@@ -108,9 +108,6 @@ window.MathJax = {
       <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
       <span id="queryCopyStatus" class="query-copy-status"></span>
     </div>
-
-    <h3 style="margin:18px 0 8px;font-size:1rem">LaTeX generado</h3>
-    <div id="queryLatexOutput" class="query-latex">Todavía no hay contenido.</div>
   </div>
 </section>
 
@@ -169,12 +166,11 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const input = document.getElementById("queryInput");
   const preview = document.getElementById("queryPreview");
   const symbolsBox = document.getElementById("querySymbols");
-  const latexOutput = document.getElementById("queryLatexOutput");
   const copyBtn = document.getElementById("copyQueryLatex");
   const clearBtn = document.getElementById("clearQuery");
   const status = document.getElementById("queryCopyStatus");
 
-  if (!mode || !input || !preview || !symbolsBox || !latexOutput) return;
+  if (!mode || !input || !preview || !symbolsBox) return;
 
   const symbolSets = {
     algebra: [
@@ -319,8 +315,6 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   }
 
   function update() {
-    const latex = buildLatex();
-    latexOutput.textContent = latex || "Todavía no hay contenido.";
     updatePreview();
     status.textContent = "";
   }

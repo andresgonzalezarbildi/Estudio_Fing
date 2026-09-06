@@ -423,6 +423,65 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   input.addEventListener("input", update);
 
+  // Alt + ↑ / Alt + ↓: mover la línea actual o el bloque de líneas seleccionado.
+  input.addEventListener("keydown", (event) => {
+    if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+
+    event.preventDefault();
+
+    const value = input.value;
+    const selStart = input.selectionStart;
+    const selEnd = input.selectionEnd;
+
+    const blockStart = value.lastIndexOf("\n", Math.max(0, selStart - 1)) + 1;
+
+    let searchEnd = selEnd;
+    if (selEnd > selStart && value[selEnd - 1] === "\n") {
+      searchEnd = selEnd - 1;
+    }
+
+    let blockEnd = value.indexOf("\n", searchEnd);
+    if (blockEnd === -1) blockEnd = value.length;
+
+    const block = value.slice(blockStart, blockEnd);
+
+    if (event.key === "ArrowUp") {
+      if (blockStart === 0) return;
+
+      const prevLineEnd = blockStart - 1;
+      const prevLineStart = value.lastIndexOf("\n", Math.max(0, prevLineEnd - 1)) + 1;
+      const prevLine = value.slice(prevLineStart, prevLineEnd);
+
+      const before = value.slice(0, prevLineStart);
+      const after = value.slice(blockEnd);
+
+      input.value = before + block + "\n" + prevLine + after;
+
+      const movedBy = blockStart - prevLineStart;
+      input.setSelectionRange(selStart - movedBy, selEnd - movedBy);
+    } else {
+      if (blockEnd >= value.length) return;
+
+      const nextLineStart = blockEnd + 1;
+      let nextLineEnd = value.indexOf("\n", nextLineStart);
+      if (nextLineEnd === -1) nextLineEnd = value.length;
+
+      const nextLine = value.slice(nextLineStart, nextLineEnd);
+
+      const before = value.slice(0, blockStart);
+      const after = value.slice(nextLineEnd);
+
+      input.value = before + nextLine + "\n" + block + after;
+
+      const movedBy = nextLineEnd - blockEnd;
+      input.setSelectionRange(selStart + movedBy, selEnd + movedBy);
+    }
+
+    input.focus();
+    update();
+  });
+
+
   if (newExpressionBtn) {
     newExpressionBtn.addEventListener("click", () => {
       if (mode.value !== "calculo") return;

@@ -34,6 +34,7 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-symbol:hover{border-color:var(--accent);color:var(--accent)}
 .query-grid{display:grid;grid-template-columns:1fr;gap:18px}
 .query-box h3{margin:0 0 8px;font-size:1rem}
+#queryNaturalLanguage{width:100%;min-height:100px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:14px;font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin-bottom:16px}
 #queryInput{width:100%;min-height:360px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:14px;font:15px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
 .query-preview{min-height:180px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;white-space:pre-wrap;overflow:auto;font:16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
 .query-latex{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:12px;white-space:pre-wrap;overflow:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
@@ -94,6 +95,11 @@ window.MathJax = {
   </div>
 
   <div class="card query-editor-card">
+    <div class="query-box">
+      <h3>Consulta en lenguaje natural</h3>
+      <textarea id="queryNaturalLanguage" placeholder="Pegá o escribí acá la consigna de la consulta..."></textarea>
+    </div>
+
     <div class="query-toolbar">
       <label for="queryMode">Formato</label>
       <select id="queryMode">
@@ -184,6 +190,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 <script>
 (() => {
   const mode = document.getElementById("queryMode");
+  const naturalInput = document.getElementById("queryNaturalLanguage");
   const input = document.getElementById("queryInput");
   const preview = document.getElementById("queryPreview");
   const previewPanel = document.getElementById("queryPreviewPanel");
@@ -493,9 +500,10 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   }
 
   clearBtn.addEventListener("click", () => {
+    if (naturalInput) naturalInput.value = "";
     input.value = "";
-    update();
     input.focus();
+    update();
   });
 
   copyBtn.addEventListener("click", async () => {

@@ -104,6 +104,7 @@ window.MathJax = {
     </div>
 
     <div class="query-actions">
+      <button id="newQueryExpression" class="btn secondary hidden" type="button">Nueva expresión</button>
       <button id="copyQueryLatex" class="btn primary" type="button">Copiar LaTeX</button>
       <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
       <span id="queryCopyStatus" class="query-copy-status"></span>
@@ -168,6 +169,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const symbolsBox = document.getElementById("querySymbols");
   const copyBtn = document.getElementById("copyQueryLatex");
   const clearBtn = document.getElementById("clearQuery");
+  const newExpressionBtn = document.getElementById("newQueryExpression");
   const status = document.getElementById("queryCopyStatus");
 
   if (!mode || !input || !preview || !symbolsBox) return;
@@ -268,6 +270,23 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     });
   }
 
+  function getExpressions() {
+    const text = input.value.trim();
+    if (!text) return [];
+
+    if (mode.value === "calculo") {
+      return text
+        .split(/\n\s*\n/)
+        .map(expr => expr.trim())
+        .filter(expr => expr.length > 0);
+    }
+
+    return text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+  }
+
   function buildLatex() {
     const text = input.value.trim();
     if (!text) return "";
@@ -276,13 +295,10 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       return "\\begin{verbatim}\n" + text + "\n\\end{verbatim}";
     }
 
-    const lines = text
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+    const expressions = getExpressions();
 
-    return lines
-      .map(line => "$$\n" + line + "\n$$")
+    return expressions
+      .map(expr => "$$\n" + expr + "\n$$")
       .join("\n\n");
   }
 
@@ -299,13 +315,15 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       return;
     }
 
-    const lines = text
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+    const expressions = getExpressions();
 
-    preview.innerHTML = lines
-      .map(line => "<div style='margin-bottom:12px'>\\[" + line + "\\]</div>")
+    preview.innerHTML = expressions
+      .map(expr => {
+        const renderExpr = mode.value === "calculo"
+          ? expr.replace(/\n+/g, " ")
+          : expr;
+        return "<div style='margin-bottom:12px'>\\[" + renderExpr + "\\]</div>";
+      })
       .join("");
 
     if (window.MathJax && MathJax.typesetPromise) {
@@ -321,10 +339,31 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   mode.addEventListener("change", () => {
     renderSymbols();
+    if (newExpressionBtn) {
+      newExpressionBtn.classList.toggle("hidden", mode.value !== "calculo");
+    }
     update();
   });
 
   input.addEventListener("input", update);
+
+  if (newExpressionBtn) {
+    newExpressionBtn.addEventListener("click", () => {
+      if (mode.value !== "calculo") return;
+
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const before = input.value.slice(0, start).replace(/\s*$/, "");
+      const after = input.value.slice(end).replace(/^\s*/, "");
+
+      input.value = before + "\n\n" + after;
+
+      const pos = before.length + 2;
+      input.focus();
+      input.setSelectionRange(pos, pos);
+      update();
+    });
+  }
 
   clearBtn.addEventListener("click", () => {
     input.value = "";
@@ -358,6 +397,9 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   });
 
   renderSymbols();
+  if (newExpressionBtn) {
+    newExpressionBtn.classList.toggle("hidden", mode.value !== "calculo");
+  }
   update();
 })();
 </script>

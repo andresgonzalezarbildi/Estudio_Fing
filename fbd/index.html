@@ -118,7 +118,7 @@ window.MathJax = {
         <textarea id="queryInput" spellcheck="false" placeholder="Escribí la consulta acá..."></textarea>
       </div>
 
-      <div class="query-box">
+      <div id="queryPreviewPanel" class="query-box">
         <h3>Vista previa</h3>
         <div id="queryPreview" class="query-preview">La vista previa aparecerá acá.</div>
       </div>
@@ -186,6 +186,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const mode = document.getElementById("queryMode");
   const input = document.getElementById("queryInput");
   const preview = document.getElementById("queryPreview");
+  const previewPanel = document.getElementById("queryPreviewPanel");
   const symbolsBox = document.getElementById("querySymbols");
   const copyBtn = document.getElementById("copyQueryLatex");
   const clearBtn = document.getElementById("clearQuery");
@@ -407,6 +408,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     // En cálculo mostramos Nueva expresión + Tab; en SQL solo Tab.
     if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
     if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+    if (previewPanel) previewPanel.classList.toggle("hidden", isSQL);
     if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
 
     update();
@@ -526,6 +528,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const isSQL = mode.value === "sql";
   if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
   if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+  if (previewPanel) previewPanel.classList.toggle("hidden", isSQL);
   if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
   update();
 })();

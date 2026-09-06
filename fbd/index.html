@@ -23,10 +23,29 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .eval-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.eval-group{padding:16px}.eval-group h3{margin:0 0 10px}.eval-item{padding:10px 0;border-bottom:1px solid var(--line)}.eval-item:last-child{border-bottom:0}.eval-links{display:flex;gap:8px;margin-top:5px;font-size:.88rem}.archive-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.phase{padding:17px}.phase b{color:var(--accent)}.phase h3{margin:6px 0}.phase p{color:var(--muted);margin:0}.notes{padding:18px}.notes textarea{width:100%;min-height:180px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:12px}.footer{padding:34px 0 56px;color:var(--muted);font-size:.9rem}.footer-inner{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.hidden{display:none!important}
 @media(max-width:900px){.stats,.priority-grid{grid-template-columns:repeat(2,1fr)}.topic-body,.review-grid,.course-grid{grid-template-columns:1fr}.eval-groups{grid-template-columns:repeat(2,1fr)}.timeline{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.topbar nav{display:none}.hero{padding-top:38px}.stats,.priority-grid,.eval-groups,.timeline{grid-template-columns:1fr}.search-row{grid-template-columns:1fr}.topic summary{grid-template-columns:auto 1fr}.topic-priority{grid-column:2}.section-head{display:block}.section-head p{margin-top:7px}.book-table{font-size:.88rem}.book-table th:nth-child(2),.book-table td:nth-child(2){display:none}.criterion{grid-template-columns:1fr}}
+
+/* Editor de consultas */
+.query-editor-card{padding:20px}
+.query-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.query-toolbar label{font-weight:800}
+.query-toolbar select{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:9px 11px}
+.query-symbols{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
+.query-symbol{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:9px;padding:7px 10px;min-width:40px;font-weight:750}
+.query-symbol:hover{border-color:var(--accent);color:var(--accent)}
+.query-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.query-box h3{margin:0 0 8px;font-size:1rem}
+#queryInput{width:100%;min-height:230px;resize:vertical;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:14px;font:15px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+.query-preview{min-height:230px;border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:14px;white-space:pre-wrap;overflow:auto;font:16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.query-latex{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);padding:12px;white-space:pre-wrap;overflow:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted)}
+.query-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.query-copy-status{color:var(--good);font-weight:800;font-size:.9rem}
+.query-hint{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+@media(max-width:800px){.query-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
-<header class="topbar"><div class="brand">FBD<span>·FING</span></div><nav aria-label="Navegación"><a href="#prioridades">Prioridades</a><a href="#curso">Curso 2026</a><a href="#buscar">Buscar</a><a href="#ruta">Ruta</a><a href="#libro">Libro</a><a href="#repaso">Repaso</a><a href="#evaluaciones">Evaluaciones</a></nav><button id="themeBtn" class="icon-btn" aria-label="Cambiar tema">◐</button></header>
+<header class="topbar"><div class="brand">FBD<span>·FING</span></div><nav aria-label="Navegación"><a href="#prioridades">Prioridades</a><a href="#curso">Curso 2026</a><a href="#buscar">Buscar</a><a href="#consultas">Escribir consultas</a><a href="#ruta">Ruta</a><a href="#libro">Libro</a><a href="#repaso">Repaso</a><a href="#evaluaciones">Evaluaciones</a></nav><button id="themeBtn" class="icon-btn" aria-label="Cambiar tema">◐</button></header>
 <main><div class="container">
 <section class="hero"><span class="eyebrow">HTML independiente · primera lectura → parciales y examen</span><h1>Aprender FBD sin <em>perderse entre modelos, consultas y pruebas</em></h1><p>Buscador de clases, diapositivas, prácticos y evaluaciones; ruta de estudio; prioridades según evaluaciones recientes; mapa del libro y repaso activo. Todo funciona dentro de este único archivo.</p><div class="hero-actions"><a class="btn primary" href="#ruta">Empezar por la ruta</a><a class="btn secondary" href="#buscar">Buscar un concepto</a></div><div class="stats"><div class="stat"><strong>19</strong><span>clases 2024 transcriptas</span></div><div class="stat"><strong>18</strong><span>presentaciones y documentos</span></div><div class="stat"><strong>10</strong><span>prácticos del curso</span></div><div class="stat"><strong>10</strong><span>evaluaciones 2023–2026 analizadas</span></div></div><div class="notice"><strong>Ojo con SQL:</strong> en la carpeta no aparecen las transcripciones de las clases 9 y 10. Para ese bloque usá como fuente principal la diapositiva 7 y el Práctico 4; no lo saltees porque aparece de forma recurrente en evaluaciones.</div></section>
 <section id="prioridades"><div class="section-head"><div><h2>Qué priorizar</h2><p>Presencia detectada por bloque en diez evaluaciones recientes: seis exámenes entre 2023 y 2026 y cuatro parciales entre 2024 y 2025.</p></div></div><div class="priority-grid">
@@ -39,6 +58,54 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 </div></section>
 <section id="curso"><div class="section-head"><div><h2>Cómo funciona el curso 2026</h2><p>Usá esto para planificar: el laboratorio no es un complemento separado y su contenido puede entrar en los parciales.</p></div></div><div class="course-grid"><article class="card course-card"><h3>Laboratorio</h3><ul><li>Es obligatorio y eliminatorio.</li><li>Se trabaja en grupos de tres y consta de cuatro tareas.</li><li>Hay que entregar todas las tareas y cumplir asistencia.</li><li>Los temas trabajados en laboratorio forman parte de la evaluación escrita.</li></ul><div class="warning">No postergues SQL ni la práctica con el DBMS hasta el laboratorio: llegá pudiendo leer esquemas, escribir consultas y justificar restricciones.</div></article><article class="card course-card"><h3>Resultado del curso</h3><div class="criteria"><div class="criterion"><b>Exonera</b><span>60% o más entre los dos parciales y laboratorio aprobado.</span></div><div class="criterion"><b>Va a examen</b><span>Entre 25% y menos de 60%, con laboratorio aprobado.</span></div><div class="criterion"><b>Recursa</b><span>Menos de 25% o laboratorio no aprobado.</span></div></div><div class="source-links" style="margin-top:14px"><a href="https://drive.google.com/file/d/1vMuz6ERyepEsOXj8q8KWnaFUpKi5yaeF/view?usp=sharing" target="_blank" rel="noopener">Presentación del curso 2026</a></div></article></div></section>
 <section id="buscar"><div class="section-head"><div><h2>Buscador global</h2><p>Busca dentro del texto de las transcripciones, diapositivas, prácticos, exámenes y soluciones incorporadas.</p></div></div><div class="card search-shell"><div class="search-row"><input id="searchInput" type="search" placeholder="Ej.: cubrimiento minimal, fórmula segura, join sin pérdida, 2PL..." autocomplete="off"><select id="typeFilter" aria-label="Filtrar por tipo"><option value="">Todos los tipos</option></select><select id="topicFilter" aria-label="Filtrar por tema"><option value="">Todos los temas</option></select></div><p class="search-help">Se ignoran tildes y mayúsculas. Con el campo vacío se muestran fuentes recomendadas; con dos o más palabras aparecen fragmentos más precisos.</p><div id="searchResults"></div></div></section>
+
+<section id="consultas">
+  <div class="section-head">
+    <div>
+      <h2>Escribir consultas</h2>
+      <p>Editor rápido para Álgebra Relacional, Cálculo Relacional y SQL. Escribís con símbolos normales y el botón de copiar genera el LaTeX.</p>
+    </div>
+  </div>
+
+  <div class="card query-editor-card">
+    <div class="query-toolbar">
+      <label for="queryMode">Formato</label>
+      <select id="queryMode">
+        <option value="algebra">Álgebra relacional</option>
+        <option value="calculo">Cálculo relacional</option>
+        <option value="sql">SQL</option>
+      </select>
+    </div>
+
+    <div id="querySymbols" class="query-symbols"></div>
+
+    <p class="query-hint">
+      Los símbolos se insertan tal como los ves. Por ejemplo, al tocar Π se escribe Π, no <code>\Pi</code>.
+    </p>
+
+    <div class="query-grid">
+      <div class="query-box">
+        <h3>Editor</h3>
+        <textarea id="queryInput" spellcheck="false" placeholder="Escribí la consulta acá..."></textarea>
+      </div>
+
+      <div class="query-box">
+        <h3>Vista previa</h3>
+        <div id="queryPreview" class="query-preview">La vista previa aparecerá acá.</div>
+      </div>
+    </div>
+
+    <div class="query-actions">
+      <button id="copyQueryLatex" class="btn primary" type="button">Copiar LaTeX</button>
+      <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
+      <span id="queryCopyStatus" class="query-copy-status"></span>
+    </div>
+
+    <h3 style="margin:18px 0 8px;font-size:1rem">LaTeX generado</h3>
+    <div id="queryLatexOutput" class="query-latex">Todavía no hay contenido.</div>
+  </div>
+</section>
+
 <section id="ruta"><div class="section-head"><div><h2>Ruta para aprenderla desde cero</h2><p>Marcá un bloque sólo cuando puedas explicar sus conceptos y resolver el práctico indicado sin seguir una solución paso a paso.</p></div></div><div class="route-toolbar"><div class="progress-wrap"><div class="progress-label"><span>Progreso guardado en este navegador</span><b id="progressText">0/10</b></div><div class="progress"><span id="progressBar"></span></div></div><button id="resetProgress" class="btn secondary">Reiniciar progreso</button></div><div id="topicList" class="topic-list"></div></section>
 <section id="libro"><div class="section-head"><div><h2>Qué leer del libro</h2><p>Libro base: Elmasri y Navathe, 7.ª edición. No conviene leerlo linealmente: las diapositivas delimitan el nivel y el libro sirve para entender pruebas, algoritmos y casos que quedaron compactados.</p></div></div><div class="card" style="overflow:auto"><table class="book-table"><thead><tr><th>Capítulos</th><th>Estado</th><th>Uso recomendado</th></tr></thead><tbody>
 <tr><td>1–2</td><td class="support">Selectivo</td><td>Introducción, usuarios, arquitectura e independencia de datos. Leé para aclarar conceptos, no para memorizar toda la terminología.</td></tr>
@@ -87,4 +154,155 @@ function initNotes(){const a=$('#notesArea'),status=$('#notesSaved');a.value=loc
 populateFilters();renderTopics();renderEvals();showQuestion();search();initTheme();initNotes();
 $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventListener('change',search);$('#topicFilter').addEventListener('change',search);$('#newQuestion').addEventListener('click',showQuestion);$('#quizTopic').addEventListener('change',showQuestion);$('#resetProgress').addEventListener('click',()=>{if(confirm('¿Reiniciar todo el progreso de la ruta?')){localStorage.removeItem('fbd-progress');renderTopics()}});
 </script>
+
+<script>
+(() => {
+  const mode = document.getElementById("queryMode");
+  const input = document.getElementById("queryInput");
+  const preview = document.getElementById("queryPreview");
+  const symbolsBox = document.getElementById("querySymbols");
+  const latexOutput = document.getElementById("queryLatexOutput");
+  const copyBtn = document.getElementById("copyQueryLatex");
+  const clearBtn = document.getElementById("clearQuery");
+  const status = document.getElementById("queryCopyStatus");
+
+  if (!mode || !input || !preview || !symbolsBox || !latexOutput) return;
+
+  const symbolSets = {
+    algebra: [
+      ["Π","Π"],["σ","σ"],["⋈","⋈"],["×","×"],["∪","∪"],["∩","∩"],
+      ["−","−"],["∧","∧"],["∨","∨"],["≠","≠"],["≥","≥"],["≤","≤"],
+      ["(", "("],[")", ")"],["_","_"]
+    ],
+    calculo: [
+      ["{ }","{ }"],["⟨ ⟩","⟨ ⟩"],["∃","∃"],["∀","∀"],["∧","∧"],["∨","∨"],
+      ["¬","¬"],["⇒","⇒"],["⇔","⇔"],["∈","∈"],["∉","∉"],["≠","≠"],
+      ["≥","≥"],["≤","≤"],["(", "("],[")", ")"],["/","/"],["_","_"]
+    ],
+    sql: [
+      ["SELECT","SELECT "],["FROM","FROM "],["WHERE","WHERE "],["JOIN","JOIN "],
+      ["ON","ON "],["AND","AND "],["OR","OR "],["DISTINCT","DISTINCT "],
+      ["GROUP BY","GROUP BY "],["HAVING","HAVING "],["ORDER BY","ORDER BY "],
+      ["COUNT","COUNT()"],["MIN","MIN()"],["MAX","MAX()"],["SUM","SUM()"],["AVG","AVG()"]
+    ]
+  };
+
+  const latexMap = [
+    ["⇔","\\\\Leftrightarrow "],
+    ["⇒","\\\\Rightarrow "],
+    ["∉","\\\\notin "],
+    ["≥","\\\\geq "],
+    ["≤","\\\\leq "],
+    ["≠","\\\\neq "],
+    ["Π","\\\\Pi"],
+    ["σ","\\\\sigma"],
+    ["⋈","\\\\bowtie"],
+    ["×","\\\\times"],
+    ["∪","\\\\cup"],
+    ["∩","\\\\cap"],
+    ["−","\\\\setminus"],
+    ["∧","\\\\land"],
+    ["∨","\\\\lor"],
+    ["¬","\\\\neg"],
+    ["∃","\\\\exists "],
+    ["∀","\\\\forall "],
+    ["∈","\\\\in "],
+    ["⟨","\\\\langle "],
+    ["⟩","\\\\rangle "]
+  ];
+
+  function insertAtCursor(text) {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.value = input.value.slice(0, start) + text + input.value.slice(end);
+
+    let pos = start + text.length;
+    if (text === "{ }" || text === "⟨ ⟩") pos = start + 1;
+    if (text.endsWith("()")) pos--;
+
+    input.focus();
+    input.setSelectionRange(pos, pos);
+    update();
+  }
+
+  function renderSymbols() {
+    symbolsBox.innerHTML = "";
+    symbolSets[mode.value].forEach(([label, value]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "query-symbol";
+      b.textContent = label;
+      b.addEventListener("click", () => insertAtCursor(value));
+      symbolsBox.appendChild(b);
+    });
+  }
+
+  function mathToLatex(text) {
+    let result = text;
+    latexMap.forEach(([symbol, latex]) => {
+      result = result.split(symbol).join(latex);
+    });
+    return result;
+  }
+
+  function buildLatex() {
+    const text = input.value.trim();
+    if (!text) return "";
+
+    if (mode.value === "sql") {
+      return "\\\\begin{verbatim}\\n" + text + "\\n\\\\end{verbatim}";
+    }
+
+    return "$$\\n" + mathToLatex(text) + "\\n$$";
+  }
+
+  function update() {
+    const text = input.value;
+    preview.textContent = text || "La vista previa aparecerá acá.";
+
+    const latex = buildLatex();
+    latexOutput.textContent = latex || "Todavía no hay contenido.";
+    status.textContent = "";
+  }
+
+  mode.addEventListener("change", () => {
+    renderSymbols();
+    update();
+  });
+
+  input.addEventListener("input", update);
+
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    update();
+    input.focus();
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    const latex = buildLatex();
+    if (!latex) {
+      status.textContent = "No hay contenido.";
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(latex);
+    } catch (e) {
+      const temp = document.createElement("textarea");
+      temp.value = latex;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+    }
+
+    status.textContent = "Copiado.";
+    setTimeout(() => status.textContent = "", 1600);
+  });
+
+  renderSymbols();
+  update();
+})();
+</script>
+
 </body></html>

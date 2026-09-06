@@ -115,6 +115,8 @@ window.MathJax = {
 
     <div class="query-actions">
       <button id="newQueryExpression" class="btn secondary hidden" type="button">Nueva expresión</button>
+      <button id="indentCalc" class="btn secondary hidden" type="button">Tab +</button>
+      <button id="outdentCalc" class="btn secondary hidden" type="button">Tab −</button>
       <button id="copyQueryLatex" class="btn primary" type="button">Copiar LaTeX</button>
       <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
       <span id="queryCopyStatus" class="query-copy-status"></span>
@@ -180,6 +182,8 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const copyBtn = document.getElementById("copyQueryLatex");
   const clearBtn = document.getElementById("clearQuery");
   const newExpressionBtn = document.getElementById("newQueryExpression");
+  const indentCalcBtn = document.getElementById("indentCalc");
+  const outdentCalcBtn = document.getElementById("outdentCalc");
   const status = document.getElementById("queryCopyStatus");
 
   if (!mode || !input || !preview || !symbolsBox) return;
@@ -307,6 +311,25 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
     const expressions = getExpressions();
 
+    if (mode.value === "calculo") {
+      return expressions
+        .map(expr => {
+          const lines = expr
+            .split("\n")
+            .map(line => line.trimEnd())
+            .filter(line => line.trim().length > 0);
+
+          const alignedLines = lines
+            .map(line => "&" + line)
+            .join(" \\\\n");
+
+          return "$$\n\\begin{aligned}\n" +
+            alignedLines +
+            "\n\\end{aligned}\n$$";
+        })
+        .join("\n\n");
+    }
+
     return expressions
       .map(expr => "$$\n" + expr + "\n$$")
       .join("\n\n");
@@ -359,9 +382,12 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   mode.addEventListener("change", () => {
     renderSymbols();
-    if (newExpressionBtn) {
-      newExpressionBtn.classList.toggle("hidden", mode.value !== "calculo");
-    }
+    const isCalc = mode.value === "calculo";
+
+    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+    if (indentCalcBtn) indentCalcBtn.classList.toggle("hidden", !isCalc);
+    if (outdentCalcBtn) outdentCalcBtn.classList.toggle("hidden", !isCalc);
+
     update();
   });
 
@@ -382,6 +408,52 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       input.focus();
       input.setSelectionRange(pos, pos);
       update();
+    });
+  }
+
+  function currentLineBounds() {
+    const pos = input.selectionStart;
+    const start = input.value.lastIndexOf("\n", pos - 1) + 1;
+    let end = input.value.indexOf("\n", pos);
+    if (end === -1) end = input.value.length;
+    return { start, end };
+  }
+
+  if (indentCalcBtn) {
+    indentCalcBtn.addEventListener("click", () => {
+      if (mode.value !== "calculo") return;
+
+      const { start } = currentLineBounds();
+      input.value =
+        input.value.slice(0, start) +
+        "\\quad " +
+        input.value.slice(start);
+
+      const newPos = input.selectionStart + 6;
+      input.focus();
+      input.setSelectionRange(newPos, newPos);
+      update();
+    });
+  }
+
+  if (outdentCalcBtn) {
+    outdentCalcBtn.addEventListener("click", () => {
+      if (mode.value !== "calculo") return;
+
+      const { start, end } = currentLineBounds();
+      const line = input.value.slice(start, end);
+
+      if (line.startsWith("\\quad ")) {
+        input.value =
+          input.value.slice(0, start) +
+          line.slice(6) +
+          input.value.slice(end);
+
+        const newPos = Math.max(start, input.selectionStart - 6);
+        input.focus();
+        input.setSelectionRange(newPos, newPos);
+        update();
+      }
     });
   }
 
@@ -417,9 +489,10 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   });
 
   renderSymbols();
-  if (newExpressionBtn) {
-    newExpressionBtn.classList.toggle("hidden", mode.value !== "calculo");
-  }
+  const isCalc = mode.value === "calculo";
+  if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+  if (indentCalcBtn) indentCalcBtn.classList.toggle("hidden", !isCalc);
+  if (outdentCalcBtn) outdentCalcBtn.classList.toggle("hidden", !isCalc);
   update();
 })();
 </script>

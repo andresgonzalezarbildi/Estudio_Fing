@@ -42,6 +42,16 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-hint{color:var(--muted);font-size:.9rem;margin:0 0 14px}
 @media(max-width:800px){.query-grid{grid-template-columns:1fr}}
 
+
+.query-editor-card{max-width:100%;overflow:hidden}
+.query-grid{min-width:0;max-width:100%}
+.query-box{min-width:0;max-width:100%}
+#queryInput{display:block;max-width:100%;overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.query-preview{display:block;max-width:100%;min-width:0;overflow-x:auto;overflow-y:visible;overflow-wrap:anywhere}
+.query-preview mjx-container{max-width:100%!important}
+.query-preview mjx-container[display="true"]{margin:.35em 0!important;text-align:left!important}
+.query-calc-line{max-width:100%;overflow-x:auto;margin:4px 0}
+
 </style>
 
 <script>
@@ -319,10 +329,20 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
     preview.innerHTML = expressions
       .map(expr => {
-        const renderExpr = mode.value === "calculo"
-          ? expr.replace(/\n+/g, " ")
-          : expr;
-        return "<div style='margin-bottom:12px'>\\[" + renderExpr + "\\]</div>";
+        if (mode.value === "calculo") {
+          const lines = expr
+            .split("\n")
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+          return "<div style='margin-bottom:12px'>" +
+            lines
+              .map(line => "<div class='query-calc-line'>\\(" + line + "\\)</div>")
+              .join("") +
+            "</div>";
+        }
+
+        return "<div style='margin-bottom:12px'>\\[" + expr + "\\]</div>";
       })
       .join("");
 

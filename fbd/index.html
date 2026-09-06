@@ -280,7 +280,14 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       return "\\begin{verbatim}\n" + text + "\n\\end{verbatim}";
     }
 
-    return "$$\n" + text + "\n$$";
+    const lines = text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    return lines
+      .map(line => "$$\n" + line + "\n$$")
+      .join("\n\n");
   }
 
   function updatePreview() {
@@ -296,7 +303,14 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       return;
     }
 
-    preview.innerHTML = "\\[" + text + "\\]";
+    const lines = text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+
+    preview.innerHTML = lines
+      .map(line => "<div style='margin-bottom:12px'>\\[" + line + "\\]</div>")
+      .join("");
 
     if (window.MathJax && MathJax.typesetPromise) {
       MathJax.typesetClear([preview]);

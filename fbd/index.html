@@ -246,13 +246,23 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       ["FROM","FROM "],
       ["WHERE","WHERE "],
       ["JOIN","JOIN "],
+      ["NATURAL JOIN","NATURAL JOIN "],
       ["ON","ON "],
       ["AND","AND "],
       ["OR","OR "],
+      ["EXISTS","EXISTS "],
+      ["NOT EXISTS","NOT EXISTS "],
+      ["IN","IN "],
+      ["NOT IN","NOT IN "],
       ["DISTINCT","DISTINCT "],
       ["GROUP BY","GROUP BY "],
       ["HAVING","HAVING "],
       ["ORDER BY","ORDER BY "],
+      ["UNION","UNION "],
+      ["EXCEPT","EXCEPT "],
+      ["INTERSECT","INTERSECT "],
+      ["IS NULL","IS NULL"],
+      ["IS NOT NULL","IS NOT NULL"],
       ["COUNT","COUNT()"],
       ["MIN","MIN()"],
       ["MAX","MAX()"],
@@ -394,7 +404,9 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     const isCalc = mode.value === "calculo";
     const isSQL = mode.value === "sql";
 
-    if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
+    // En cálculo mostramos Nueva expresión + Tab; en SQL solo Tab.
+    if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
+    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
     if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
 
     update();
@@ -430,19 +442,21 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   if (indentCalcBtn) {
     indentCalcBtn.addEventListener("click", () => {
-      if (mode.value !== "calculo") return;
+      if (mode.value !== "calculo" && mode.value !== "sql") return;
 
       const originalStart = input.selectionStart;
       const originalEnd = input.selectionEnd;
       const { start } = currentLineBounds();
 
+      const indent = mode.value === "calculo" ? "\\quad " : "    ";
+
       input.value =
         input.value.slice(0, start) +
-        "\\quad " +
+        indent +
         input.value.slice(start);
 
       // Mantener el cursor exactamente sobre el mismo contenido lógico.
-      const added = 6;
+      const added = indent.length;
       input.focus();
       input.setSelectionRange(originalStart + added, originalEnd + added);
       update();
@@ -451,20 +465,21 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   if (outdentCalcBtn) {
     outdentCalcBtn.addEventListener("click", () => {
-      if (mode.value !== "calculo") return;
+      if (mode.value !== "calculo" && mode.value !== "sql") return;
 
       const originalStart = input.selectionStart;
       const originalEnd = input.selectionEnd;
       const { start, end } = currentLineBounds();
       const line = input.value.slice(start, end);
+      const indent = mode.value === "calculo" ? "\\quad " : "    ";
 
-      if (line.startsWith("\\quad ")) {
+      if (line.startsWith(indent)) {
         input.value =
           input.value.slice(0, start) +
-          line.slice(6) +
+          line.slice(indent.length) +
           input.value.slice(end);
 
-        const removed = 6;
+        const removed = indent.length;
         input.focus();
         input.setSelectionRange(
           Math.max(start, originalStart - removed),
@@ -509,7 +524,8 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   renderSymbols();
   const isCalc = mode.value === "calculo";
   const isSQL = mode.value === "sql";
-  if (calcTools) calcTools.classList.toggle("hidden", !isCalc);
+  if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
+  if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
   if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
   update();
 })();

@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.09.03-15");
+assert.equal(data.version, "2026.09.07-16");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 160);
 
@@ -35,6 +35,17 @@ assert.ok(!data.items.some((item) => item.type === "discussion"), "No deben qued
 assert.ok(!data.items.some((item) => item.type === "consultation"), "No deben quedar tarjetas de consulta");
 assert.ok(!data.items.some((item) => ["holiday", "no-class", "notice"].includes(item.type)), "No deben quedar avisos administrativos de poco valor");
 assert.ok(!data.items.some((item) => item.subject === "redes" && item.type === "course-class" && item.details === "Actividad de clase indicada en el cronograma"), "No deben quedar actividades de clase redundantes en Redes");
+
+
+const fuaa = data.items.filter((item) => item.subject === "fuaa");
+assert.equal(fuaa.filter((item) => item.type === "openfing").length, 0, "FuAA no debe mostrar clases OpenFing");
+const fuaaThemes = fuaa.filter((item) => item.type === "reading" && /^Tema \d+ ·/.test(item.title));
+assert.equal(fuaaThemes.length, 20, "FuAA debe mostrar los 20 temas del temario como lecturas");
+assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20260810-01" && item.title === "Tema 1 · Introducción al problema de aprendizaje" && /1\.1, 1\.2/.test(item.details)));
+assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20260907-03" && item.title === "Tema 11 · Regularización" && /4\.2/.test(item.details)));
+assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20261109-01" && item.title === "Tema 20 · Ingeniería de características"));
+assert.ok(!fuaa.some((item) => item.title === "Secciones del libro asignadas"), "No debe duplicarse la lectura con tarjetas agregadas por semana");
+assert.match(data.subjects.fuaa.scheduleUrl, /FuAA_2026_cronograma\.pdf/);
 
 const fbd = data.items.filter((item) => item.subject === "fbd");
 assert.ok(fbd.length > 40);

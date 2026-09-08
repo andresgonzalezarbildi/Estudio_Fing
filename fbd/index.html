@@ -430,6 +430,48 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   input.addEventListener("input", update);
 
+
+  // Tab / Shift+Tab: indentar dentro del editor sin cambiar el foco.
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+
+    event.preventDefault();
+
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const indent = mode.value === "sql" ? "    " : "\\quad ";
+
+    if (event.shiftKey) {
+      const lineStart = input.value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+      const lineEndPos = input.value.indexOf("\n", start);
+      const lineEnd = lineEndPos === -1 ? input.value.length : lineEndPos;
+      const line = input.value.slice(lineStart, lineEnd);
+
+      if (line.startsWith(indent)) {
+        input.value =
+          input.value.slice(0, lineStart) +
+          line.slice(indent.length) +
+          input.value.slice(lineEnd);
+
+        input.setSelectionRange(
+          Math.max(lineStart, start - indent.length),
+          Math.max(lineStart, end - indent.length)
+        );
+        update();
+      }
+      return;
+    }
+
+    input.value =
+      input.value.slice(0, start) +
+      indent +
+      input.value.slice(end);
+
+    const cursor = start + indent.length;
+    input.setSelectionRange(cursor, cursor);
+    update();
+  });
+
   // Alt + ↑ / Alt + ↓: mover la línea actual o el bloque de líneas seleccionado.
   input.addEventListener("keydown", (event) => {
     if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;

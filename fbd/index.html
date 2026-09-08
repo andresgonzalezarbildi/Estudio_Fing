@@ -329,44 +329,25 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 
   function buildLatex() {
     const text = input.value.trim();
+
     if (!text) return "";
 
     if (mode.value === "sql") {
       return text;
     }
 
-    const expressions = getExpressions();
-
-    if (mode.value === "calculo") {
-      return expressions
-        .map(expr => {
-          const lines = expr
-            .split("\n")
-            .map(line => line.trimEnd())
-            .filter(line => line.trim().length > 0);
-
-          const alignedLines = lines
-            .map(line => "&" + line)
-            .join(" \\\\" + "\n");
-
-          return "$$\n\\begin{aligned}\n" +
-            alignedLines +
-            "\n\\end{aligned}\n$$";
-        })
-        .join("\n\n");
-    }
-
-    const lines = expressions
+    const lines = text
+      .split("\n")
       .map(line => line.trimEnd())
-      .filter(line => line.trim().length > 0);
+      .filter(line => line.trim() !== "");
 
     const alignedLines = lines
       .map(line => "&" + line)
-      .join(" \\\\" + "\n");
+      .join(" \\\\ ");
 
-    return "$$\n\\begin{aligned}\n" +
+    return "$$\\begin{aligned}" +
       alignedLines +
-      "\n\\end{aligned}\n$$";
+      "\\end{aligned}$$";
   }
 
   function updatePreview() {

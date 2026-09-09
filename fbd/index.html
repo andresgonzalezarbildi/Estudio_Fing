@@ -336,9 +336,19 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       return text;
     }
 
-    // Álgebra y Cálculo:
-    // - Enter normal = continuar la misma expresión
-    // - línea en blanco = nueva expresión
+    if (mode.value === "calculo") {
+      const lines = text
+        .split("\n")
+        .map(line => line.trimEnd())
+        .filter(line => line.trim() !== "");
+
+      const rendered = lines.join(" \\\\ ");
+
+      return "$$\\begin{array}{l}" +
+        rendered +
+        "\\end{array}$$";
+    }
+
     const expressions = text
       .split(/\n\s*\n/)
       .map(group =>

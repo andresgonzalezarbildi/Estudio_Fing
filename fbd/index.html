@@ -337,18 +337,21 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     }
 
     if (mode.value === "calculo") {
-      const lines = text
-        .split("\n")
-        .map(line => line.trimEnd())
-        .filter(line => line.trim() !== "");
+      // Mantener exactamente los saltos de línea del editor.
+      const lines = text.split("\n");
 
-      const rendered = lines.join(" \\\\ ");
+      const rendered = lines
+        .map(line => "&" + line)
+        .join(" \\\\\n");
 
-      return "$$\\begin{array}{l}" +
+      return "$$\n\\begin{aligned}\n" +
         rendered +
-        "\\end{array}$$";
+        "\n\\end{aligned}\n$$";
     }
 
+    // Álgebra:
+    // Enter normal continúa la misma expresión.
+    // Una línea en blanco separa expresiones.
     const expressions = text
       .split(/\n\s*\n/)
       .map(group =>

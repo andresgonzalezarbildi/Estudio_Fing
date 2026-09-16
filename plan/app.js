@@ -50,6 +50,7 @@
     driveStatus: document.querySelector("#driveStatus"),
     driveButton: document.querySelector("#driveButton"),
     driveDisconnectButton: document.querySelector("#driveDisconnectButton"),
+    driveRecoveryButton: document.querySelector("#driveRecoveryButton"),
     driveAccount: document.querySelector("#driveAccount"),
     driveMenuButton: document.querySelector("#driveMenuButton"),
     driveMenu: document.querySelector("#driveMenu"),
@@ -283,7 +284,6 @@
     const fresh = initialState();
     if (!saved || !Array.isArray(saved.items)) return fresh;
 
-    const fallbackUpdatedAt = validTimestamp(saved.savedAt) ? saved.savedAt : "";
     const savedById = new Map(saved.items.map((item) => [String(item.id || ""), item]));
     fresh.items = fresh.items.map((item) => {
       const previous = savedById.get(item.id);
@@ -294,13 +294,13 @@
         deleted: Boolean(previous.deleted),
         important: Boolean(previous.important),
         order: finiteOrder(previous.order, item.order),
-        updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : fallbackUpdatedAt
+        updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : ""
       };
       if (previous.edited) {
         Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
           edited: true,
           manual: false,
-          updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : fallbackUpdatedAt
+          updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : ""
         });
       }
       return merged;
@@ -314,7 +314,7 @@
         deleted: Boolean(item.deleted),
         edited: true,
         manual: true,
-        updatedAt: validTimestamp(item.updatedAt) ? item.updatedAt : fallbackUpdatedAt
+        updatedAt: validTimestamp(item.updatedAt) ? item.updatedAt : ""
       }));
     fresh.items.push(...manualItems);
     fresh.savedAt = validTimestamp(saved.savedAt) ? saved.savedAt : "";
@@ -359,6 +359,70 @@
     return JSON.stringify({ dataVersion: candidate.dataVersion, items });
   }
 
+  function semanticStateFingerprint(candidate) {
+    const items = candidate.items
+      .map((item) => {
+        const copy = { ...item };
+        delete copy.updatedAt;
+        return copy;
+      })
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    return JSON.stringify({ dataVersion: candidate.dataVersion, items });
+  }
+
+  function recoveryStorageKey(storageKey = currentStorageKey) {
+    return `${storageKey}_backup_before_remote`;
+  }
+
+  function updateRecoveryButton() {
+    if (!elements.driveRecoveryButton) return;
+    elements.driveRecoveryButton.hidden = !safeStorageGet(recoveryStorageKey());
+  }
+
+  function saveRecoveryBackup(candidate) {
+    safeStorageSet(recoveryStorageKey(), JSON.stringify(candidate));
+    updateRecoveryButton();
+  }
+
+  function restoreRecoveryBackup() {
+    const raw = safeStorageGet(recoveryStorageKey());
+    if (!raw) return;
+    try {
+      const backup = stateFromSaved(JSON.parse(raw));
+      const currentById = new Map(state.items.map((item) => [item.id, item]));
+      const backupById = new Map(backup.items.map((item) => [item.id, item]));
+      const differingIds = new Set();
+      for (const [id, backupItem] of backupById) {
+        const currentItem = currentById.get(id);
+        if (!currentItem || semanticStateFingerprint({ dataVersion: DATA.version, items: [currentItem] }) !== semanticStateFingerprint({ dataVersion: DATA.version, items: [backupItem] })) {
+          differingIds.add(id);
+        }
+      }
+      if (!differingIds.size) {
+        showToast("La copia local no tiene diferencias para recuperar");
+        return;
+      }
+      if (!window.confirm(`Se recuperarán ${differingIds.size} cambios desde la copia local de esta computadora y se subirán a Drive. ¿Continuar?`)) return;
+
+      state = mergeStates(state, backup, differingIds);
+      for (const id of differingIds) {
+        const item = state.items.find((entry) => entry.id === id);
+        if (item) {
+          item.updatedAt = nowTimestamp();
+          markItemDirty(item);
+        }
+      }
+      persistLocalState(state);
+      render();
+      setDriveMenuOpen(false);
+      setDriveStatus("pending", "Copia local recuperada · pendiente de sincronizar");
+      syncDriveState();
+    } catch (error) {
+      console.error(error);
+      showToast("No se pudo recuperar la copia local");
+    }
+  }
+
   function mergeStates(localState, remoteState, preferLocalIds = new Set()) {
     const localById = new Map(localState.items.map((item) => [item.id, item]));
     const remoteById = new Map(remoteState.items.map((item) => [item.id, item]));
@@ -380,9 +444,10 @@
         mergedItems.push(clone(localItem));
         continue;
       }
-      const localTime = validTimestamp(localItem.updatedAt) ? localItem.updatedAt : "";
-      const remoteTime = validTimestamp(remoteItem.updatedAt) ? remoteItem.updatedAt : "";
-      mergedItems.push(clone(remoteTime > localTime ? remoteItem : localItem));
+      // Si este dispositivo no modificó explícitamente el elemento, Drive es
+      // la fuente de verdad. Así una copia local vieja nunca puede pisar el
+      // progreso ya sincronizado de otra computadora.
+      mergedItems.push(clone(remoteItem));
     }
 
     const savedAt = [localState.savedAt, remoteState.savedAt]
@@ -478,6 +543,13 @@
       const canonical = stateFromSaved(result.state);
       const remoteFingerprint = stateFingerprint(canonical);
 
+      // Antes de aceptar un estado remoto distinto, guardamos una copia local.
+      // No se sube automáticamente: queda solo como red de seguridad para
+      // recuperar progreso desde esta PC si alguna vez fuera necesario.
+      if (semanticStateFingerprint(state) !== semanticStateFingerprint(canonical)) {
+        saveRecoveryBackup(state);
+      }
+
       // Si no hubo nuevos cambios mientras la petición estaba en curso, se adopta
       // el estado canónico que devuelve el servidor. Si sí los hubo, primero se
       // mezclan para no borrar una acción que el usuario acaba de hacer.
@@ -561,6 +633,7 @@
     elements.driveAccount.hidden = false;
     elements.driveDisconnectButton.hidden = false;
     elements.driveButton.textContent = "Sincronizar ahora";
+    updateRecoveryButton();
     setDriveStatus("synced", "Sesión de Google activa");
     render();
     startDrivePulling();
@@ -1303,6 +1376,7 @@
     connectOrSyncDrive();
   });
   elements.driveDisconnectButton.addEventListener("click", disconnectDrive);
+  elements.driveRecoveryButton?.addEventListener("click", restoreRecoveryBackup);
   document.addEventListener("click", (event) => {
     if (!elements.driveSync.contains(event.target)) setDriveMenuOpen(false);
   });

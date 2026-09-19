@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.09.18-19");
+assert.equal(data.version, "2026.09.19-20");
 assert.ok(Array.isArray(data.items));
 const ids = data.items.map((item) => item.id);
 assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
@@ -18,16 +18,17 @@ assert.ok(data.items.every((item) => !item.week || /^\d{4}-\d{2}-\d{2}$/.test(it
 assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
 const daily = data.items.filter((item) => /Plan diario de parciales/.test(item.source || ""));
-assert.ok(daily.length >= 25, "Debe existir el plan diario detallado");
-for (const day of ["2026-09-18","2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23"]) {
+assert.ok(daily.length >= 23, "Debe existir el plan diario detallado");
+for (const day of ["2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23"]) {
   assert.ok(daily.some((i) => i.subject === "fuaa" && i.eventDate === day), `Falta FuAA ${day}`);
   assert.ok(daily.some((i) => i.subject === "redes" && i.eventDate === day), `Falta Redes ${day}`);
 }
-assert.ok(daily.some((i) => i.id === "plan-fuaa-dia-20260919" && /2\.1, 2\.2 y 2\.3/.test(i.details)));
-assert.ok(daily.some((i) => i.id === "plan-fuaa-dia-20260920" && /4\.1 y 4\.2/.test(i.details)));
-assert.ok(daily.some((i) => i.id === "plan-redes-dia-20260918" && /OpenFing 8/.test(i.title)));
-assert.ok(daily.some((i) => i.id === "plan-redes-dia-20260921" && /OpenFing 11/.test(i.title)));
-assert.ok(daily.some((i) => i.id === "plan-fbd-entregable-20260918"));
+assert.ok(daily.some((i) => i.id === "plan-fuaa-dia-20260919" && /2\.1\.4/.test(i.details) && /2\.2/.test(i.details)));
+assert.ok(daily.some((i) => i.id === "plan-fuaa-dia-20260920" && /2\.3/.test(i.details) && /3\.3/.test(i.details)));
+assert.ok(!daily.some((i) => i.id === "plan-redes-dia-20260918"));
+assert.ok(daily.some((i) => i.id === "plan-redes-dia-20260919" && /OpenFing 10/.test(i.title) && /8 y 9 ya vistos/.test(i.details)));
+assert.ok(daily.some((i) => i.id === "plan-redes-dia-20260920" && /OpenFing 11/.test(i.title)));
+assert.ok(!daily.some((i) => i.id === "plan-fbd-entregable-20260918"));
 assert.ok(daily.some((i) => i.id === "plan-fbd-entregable-20260919"));
 assert.ok(data.items.some((i) => i.id === "plan-fbd-entregable-20260920" && i.eventDate === "2026-09-20"));
 for (const day of ["2026-09-24","2026-09-25","2026-09-26","2026-09-27","2026-09-28"]) assert.ok(daily.some((i)=>i.subject==="fbd" && i.eventDate===day), `Falta FBD ${day}`);

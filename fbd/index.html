@@ -656,9 +656,34 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     showStatus(mode.value === "sql" ? "SQL copiado." : "LaTeX copiado.");
   });
 
-  mode.addEventListener("change", setModeUI);
+  // La barra de símbolos no depende de MathLive: se muestra desde el primer momento.
+  // Así los botones siguen disponibles aunque el componente matemático tarde en cargar.
+  renderSymbols();
 
-  // Esperar a que el componente visual esté disponible antes de iniciar.
+  mode.addEventListener("change", () => {
+    renderSymbols();
+
+    const isSQL = mode.value === "sql";
+    const isCalc = mode.value === "calculo";
+    if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
+    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+    if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
+
+    visualEditor.classList.toggle("hidden", isSQL);
+    sqlEditor.classList.toggle("hidden", !isSQL);
+    status.textContent = "";
+
+    // Si MathLive ya cargó, aplicamos también el comportamiento del editor visual.
+    if (isSQL) {
+      requestAnimationFrame(() => sqlEditor.focus());
+    } else if (customElements.get("math-field")) {
+      ensureMathLine();
+      requestAnimationFrame(() => ensureMathLine().focus());
+    }
+  });
+
+  // Esperar a que el componente visual esté disponible para inicializar la fórmula,
+  // pero no para mostrar la barra de símbolos.
   const init = async () => {
     if (!customElements.get("math-field")) {
       try { await customElements.whenDefined("math-field"); }

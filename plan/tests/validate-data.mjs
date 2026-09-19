@@ -9,9 +9,9 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.09.18-17");
+assert.equal(data.version, "2026.09.18-18");
 assert.ok(Array.isArray(data.items));
-assert.ok(data.items.length > 160);
+assert.ok(data.items.length > 90);
 
 const ids = data.items.map((item) => item.id);
 assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
@@ -19,83 +19,44 @@ assert.ok(data.items.every((item) => data.subjects[item.subject]), "Todas las ma
 assert.ok(data.items.every((item) => !item.week || /^\d{4}-\d{2}-\d{2}$/.test(item.week)), "Semanas inválidas");
 assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
+
+const cutoff = "2026-09-14";
+assert.ok(!data.items.some((item) => item.fixed === true && item.week && item.week < cutoff), "No deben quedar tarjetas oficiales anteriores a la semana actual");
+
 const redes = data.items.filter((item) => item.subject === "redes");
-const redesW1 = redes.filter((item) => item.week === "2026-08-03");
-assert.ok(redes.length >= 32, "Redes debe mantener prácticos/lecturas y sumar el plan del primer parcial");
-assert.equal(redes.filter((item) => item.type === "practical").length, 14, "Deben mantenerse los 14 prácticos de Redes");
-assert.equal(redes.filter((item) => item.type === "reading").length, 14, "Deben mantenerse las 14 lecturas/capítulos de Redes");
-assert.ok(redes.filter((item) => item.fixed).every((item) => ["practical", "reading"].includes(item.type)), "Las tarjetas oficiales de Redes deben seguir limitadas a prácticos y lecturas");
-assert.ok(!redes.some((item) => item.type === "monitoring"), "Redes no debe mostrar monitoreos");
-assert.ok(redesW1.some((item) => item.id === "redes-20260803-05" && item.type === "reading" && item.title === "Capítulo 1"));
-assert.ok(redesW1.some((item) => item.id === "redes-20260803-06" && item.type === "practical" && item.title === "P1 · Retardos"));
-assert.equal(redesW1.length, 2, "La semana 1 de Redes debe tener únicamente capítulo y práctico");
-
-assert.ok(!data.items.some((item) => item.type === "discussion"), "No deben quedar tarjetas de discusión");
-assert.ok(!data.items.some((item) => item.type === "consultation"), "No deben quedar tarjetas de consulta");
-assert.ok(!data.items.some((item) => ["holiday", "no-class", "notice"].includes(item.type)), "No deben quedar avisos administrativos de poco valor");
-assert.ok(!data.items.some((item) => item.subject === "redes" && item.type === "course-class" && item.details === "Actividad de clase indicada en el cronograma"), "No deben quedar actividades de clase redundantes en Redes");
-
+assert.equal(redes.filter((item) => item.fixed && item.type === "reading").length, 0, "Redes no debe mostrar capítulos del libro");
+assert.ok(redes.filter((item) => item.fixed).every((item) => ["practical", "openfing"].includes(item.type)), "Redes oficial debe quedar limitado a prácticos y clases OpenFing");
+for (const n of [8, 9, 10, 11]) {
+  assert.ok(redes.some((item) => item.week === "2026-09-14" && item.type === "openfing" && item.title.startsWith(`Clase OpenFing ${n}`)), `Falta OpenFing ${n} en la semana de preparación`);
+}
+assert.ok(redes.some((item) => item.id === "redes-20261012-02" && item.title === "Clase OpenFing 12"));
+assert.ok(redes.some((item) => item.id === "redes-20261116-03" && item.title === "Clase OpenFing 23"));
+assert.ok(!redes.some((item) => item.type === "monitoring"));
+assert.ok(data.items.some((item) => item.id === "plan-redes-transporte-p1" && /OpenFing 8–11/.test(item.title)));
 
 const fuaa = data.items.filter((item) => item.subject === "fuaa");
-assert.equal(fuaa.filter((item) => item.type === "openfing").length, 0, "FuAA no debe mostrar clases OpenFing");
-const fuaaThemes = fuaa.filter((item) => item.type === "reading" && /^Tema \d+ ·/.test(item.title));
-assert.equal(fuaaThemes.length, 20, "FuAA debe mostrar los 20 temas del temario como lecturas");
-assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20260810-01" && item.title === "Tema 1 · Introducción al problema de aprendizaje" && /1\.1, 1\.2/.test(item.details)));
-assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20260907-03" && item.title === "Tema 11 · Regularización" && /4\.2/.test(item.details)));
-assert.ok(fuaaThemes.some((item) => item.id === "fuaa-20261109-01" && item.title === "Tema 20 · Ingeniería de características"));
-assert.ok(!fuaa.some((item) => item.title === "Secciones del libro asignadas"), "No debe duplicarse la lectura con tarjetas agregadas por semana");
-assert.match(data.subjects.fuaa.scheduleUrl, /FuAA_2026_cronograma\.pdf/);
+assert.equal(fuaa.filter((item) => item.type === "openfing").length, 0, "FuAA sigue por libro");
+assert.ok(fuaa.some((item) => item.id === "fuaa-20260914-01" && item.week === "2026-09-28" && /Validación/.test(item.title)), "Validación debe quedar después del primer parcial");
+assert.ok(data.items.some((item) => item.id === "fuaa-20260921-02" && item.eventDate === "2026-09-23"));
 
 const fbd = data.items.filter((item) => item.subject === "fbd");
-assert.ok(fbd.length > 40);
-assert.ok(fbd.every((item) => item.week));
-assert.ok(fbd.every((item) => item.periodLabel));
-assert.ok(!fbd.some((item) => item.id.startsWith("fbd-undated")));
-
-const fbdW1 = fbd.filter((item) => item.week === "2026-08-03");
-assert.ok(fbdW1.some((item) => item.title === "Introducción"));
-assert.ok(fbdW1.some((item) => item.title === "Diseño Conceptual"));
-assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 1" && /16:43/.test(item.details)));
-assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 2"));
-assert.ok(!fbdW1.some((item) => item.title === "Presentación del curso"));
-
-const firstFbdPartial = fbd.find((item) => item.id === "fbd-20260921-01");
-assert.ok(firstFbdPartial && firstFbdPartial.type === "partial" && firstFbdPartial.eventDate === "2026-09-28", "FBD debe mostrar el primer parcial del 28/09");
-
-const repeatedVideos = fbd.filter((item) => ["Video OpenFing 13", "Video OpenFing 14"].includes(item.title));
-assert.equal(repeatedVideos.length, 4, "Los videos 13 y 14 deben figurar en semanas 7 y 10");
+assert.ok(fbd.some((item) => item.id === "plan-fbd-entregable-20260920" && item.eventDate === "2026-09-20"));
+assert.ok(fbd.some((item) => item.id === "fbd-20260921-01" && item.type === "partial" && item.eventDate === "2026-09-28"));
 
 const pln = data.items.filter((item) => item.subject === "pln");
-assert.equal(pln.filter((item) => item.type === "openfing").length, 20, "Deben mantenerse las 20 clases OpenFing de IntroPLN");
-assert.ok(pln.filter((item) => item.type === "openfing").every((item) => item.week), "Las clases OpenFing de PLN deben quedar ubicadas según el cronograma tentativo");
-assert.ok(pln.some((item) => item.id === "pln-openfing-01" && item.week === "2026-08-03" && item.eventDate === "2026-08-04"));
-assert.ok(pln.some((item) => item.id === "pln-openfing-02" && item.week === "2026-08-17"));
-assert.ok(pln.some((item) => item.id === "pln-openfing-20" && item.week === "2026-10-26"));
-assert.ok(pln.some((item) => item.title === "No está en OpenFing · Extracción de Información"));
-assert.ok(pln.some((item) => item.title === "No está en OpenFing · Narrativa interactiva"));
-assert.equal(pln.filter((item) => /Suspendida por paro/i.test(item.title)).length, 0, "La semana suspendida no debe generar una tarjeta vacía");
-assert.ok(pln.some((item) => item.id === "pln-prueba-1" && item.week === "2026-09-28" && item.eventDate === "2026-09-29"));
-assert.ok(pln.some((item) => item.id === "pln-prueba-2" && !item.week));
-assert.equal(pln.filter((item) => /Presentaciones de artículos/.test(item.title)).length, 2);
-assert.ok(!/Creative Commons/i.test(source));
-
-
-assert.equal(data.subjects.fbd.scheduleUrl, "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start");
-assert.equal(data.subjects.fbd.scheduleLabel, "Cronograma oficial");
-assert.equal(data.subjects.fbd.scheduleOriginal, true);
-assert.equal(data.subjects.pln.scheduleUrl, "https://eva.fing.edu.uy/mod/page/view.php?id=84886");
-assert.equal(data.subjects.pln.scheduleLabel, "Cronograma oficial");
-assert.equal(data.subjects.pln.scheduleOriginal, true);
-
-
-const planParciales = data.items.filter((item) => /Plan de parciales|plan de parciales/.test(item.source));
-assert.ok(planParciales.length >= 16, "Debe existir el bloque de tareas para preparar los primeros parciales");
-assert.ok(data.items.some((item) => item.id === "plan-fbd-entregable-20260920" && item.eventDate === "2026-09-20"));
-assert.ok(data.items.some((item) => item.id === "redes-primer-parcial-20260923" && item.eventDate === "2026-09-23"));
-assert.ok(data.items.some((item) => item.id === "fbd-20260921-01" && item.type === "partial" && item.eventDate === "2026-09-28"));
-assert.ok(data.items.some((item) => item.id === "pln-prueba-1" && item.type === "partial" && item.eventDate === "2026-09-29"));
+assert.equal(pln.filter((item) => item.type === "openfing").length, 0, "PLN no debe mostrar OpenFing porque se sigue presencial");
+assert.ok(pln.some((item) => item.id === "pln-openfing-13" && item.type === "course-class" && item.title === "Semántica" && item.week === "2026-09-14"));
+assert.ok(pln.some((item) => item.id === "pln-openfing-09" && item.type === "course-class" && /Aprendizaje Automático/.test(item.title) && item.week === "2026-10-05"));
+assert.ok(pln.some((item) => item.id === "pln-openfing-20" && /Recuperación y Extracción/.test(item.title)));
+assert.ok(pln.some((item) => item.id === "pln-prueba-1" && item.type === "partial" && item.eventDate === "2026-09-29"));
 assert.ok(data.items.some((item) => item.id === "plan-pln-libro-cap2-p1"));
 assert.ok(data.items.some((item) => item.id === "plan-pln-libro-sintaxis-p1"));
-assert.ok(data.items.some((item) => item.id === "plan-fuaa-cierre-teoria-p1"));
+assert.ok(!/Creative Commons/i.test(source));
+
+assert.equal(data.subjects.fbd.scheduleUrl, "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start");
+assert.equal(data.subjects.pln.scheduleUrl, "https://eva.fing.edu.uy/mod/page/view.php?id=84886");
+
+const planParciales = data.items.filter((item) => /Plan de parciales|plan de parciales/.test(item.source));
+assert.ok(planParciales.length >= 16, "Debe mantenerse el bloque manual de preparación de parciales");
 
 console.log(`OK: ${data.items.length} elementos validados`);

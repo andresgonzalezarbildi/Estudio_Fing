@@ -225,20 +225,20 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       ["σ","\\sigma_{\\placeholder{}}"],
       ["⋈","\\bowtie_{\\placeholder{}}"],
       ["ρ","\\rho_{\\placeholder{}}"],
-      ["←","\\leftarrow"],
-      ["→","\\rightarrow"],
-      ["×","\\times"],
-      ["∪","\\cup"],
-      ["∩","\\cap"],
-      ["−","\\setminus"],
-      ["∧","\\land"],
-      ["∨","\\lor"],
-      ["=","="],
-      ["≠","\\neq"],
-      [">",">"],
-      ["<","<"],
-      ["≥","\\geq"],
-      ["≤","\\leq"],
+      ["←","\\;\\leftarrow\\;"],
+      ["→","\\;\\rightarrow\\;"],
+      ["×","\\;\\times\\;"],
+      ["∪","\\;\\cup\\;"],
+      ["∩","\\;\\cap\\;"],
+      ["−","\\;\\setminus\\;"],
+      ["∧","\\;\\land\\;"],
+      ["∨","\\;\\lor\\;"],
+      ["="," = "],
+      ["≠","\\;\\neq\\;"],
+      [">"," > "],
+      ["<"," < "],
+      ["≥","\\;\\geq\\;"],
+      ["≤","\\;\\leq\\;"],
       ["(","("],
       [")",")"],
       ["_","\\_"]
@@ -248,19 +248,19 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       ["⟨ ⟩","\\left\\langle\\placeholder{}\\right\\rangle"],
       ["∃","\\exists\\;"],
       ["∀","\\forall\\;"],
-      ["∧","\\land"],
-      ["∨","\\lor"],
+      ["∧","\\;\\land\\;"],
+      ["∨","\\;\\lor\\;"],
       ["¬","\\neg"],
-      ["⇒","\\Rightarrow"],
-      ["⇔","\\Leftrightarrow"],
-      ["∈","\\in"],
-      ["∉","\\notin"],
-      ["=","="],
-      ["≠","\\neq"],
-      [">",">"],
-      ["<","<"],
-      ["≥","\\geq"],
-      ["≤","\\leq"],
+      ["⇒","\\;\\Rightarrow\\;"],
+      ["⇔","\\;\\Leftrightarrow\\;"],
+      ["∈","\\;\\in\\;"],
+      ["∉","\\;\\notin\\;"],
+      ["="," = "],
+      ["≠","\\;\\neq\\;"],
+      [">"," > "],
+      ["<"," < "],
+      ["≥","\\;\\geq\\;"],
+      ["≤","\\;\\leq\\;"],
       ["/","/"],
       ["(","("],
       [")",")"],
@@ -279,7 +279,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       ["DISTINCT","DISTINCT "],
       ["AS","AS "],
       ["<>","<>"],
-      ["=","="],
+      ["="," = "],
       ["GROUP BY","GROUP BY "],
       ["HAVING","HAVING "],
       ["ORDER BY","ORDER BY "],
@@ -336,6 +336,11 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     mf.setAttribute("aria-label", "Línea de fórmula");
     mf.mathModeSpace = "\\;";
     mf.smartFence = true;
+    // No interpretar texto dentro de identificadores como atajos matemáticos.
+    // Ej.: "pasaporte" debe seguir siendo "pasaporte", nunca "pasap\\lor te".
+    mf.inlineShortcuts = {};
+    mf.inlineShortcutTimeout = 0;
+    mf.smartMode = false;
     mf.value = value;
 
     mf.addEventListener("focus", () => activeMathField = mf);
@@ -382,8 +387,25 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     return mf;
   }
 
+  function cleanPastedText(text) {
+    return String(text)
+      .replace(/\r/g, "")
+      // Si algo fue copiado como LaTeX por otra aplicación, quitamos solo
+      // los envoltorios. El contenido visible se conserva.
+      .replace(/^\s*\$\$\s*/, "")
+      .replace(/\s*\$\$\s*$/, "")
+      .replace(/^\s*\\\[\s*/, "")
+      .replace(/\s*\\\]\s*$/, "")
+      .replace(/^\s*\\\(\s*/, "")
+      .replace(/\s*\\\)\s*$/, "")
+      .replace(/\\begin\{aligned\}/g, "")
+      .replace(/\\end\{aligned\}/g, "")
+      .replace(/^\s*&/gm, "")
+      .replace(/\\\\\s*$/gm, "");
+  }
+
   function pasteIntoMathField(mf, plain) {
-    const lines = String(plain).replace(/\r/g, "").split("\n");
+    const lines = cleanPastedText(plain).split("\n");
     const first = unicodeToLatex(lines.shift() || "");
     mf.focus();
     mf.insert(first, {focus:true});
@@ -395,6 +417,34 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     current.focus();
     activeMathField = current;
   }
+
+  // Dentro del editor, copiar significa copiar lo que el usuario VE, no el
+  // LaTeX interno de MathLive. "en_contra" se copia como "en_contra".
+  // El LaTeX completo solo se genera con el botón "Copiar LaTeX".
+  document.addEventListener("copy", (event) => {
+    if (mode.value === "sql") return;
+
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    let mf = path.find(node => node && node.tagName === "MATH-FIELD");
+    if (!mf && activeMathField && activeMathField.isConnected) mf = activeMathField;
+    if (!mf || mf.parentNode !== visualEditor) return;
+
+    let selectedLatex = "";
+    try {
+      selectedLatex = mf.getValue(mf.selection) || "";
+    } catch {}
+
+    // Si por algún motivo MathLive no expone la selección, no reemplazamos
+    // el portapapeles con toda la línea.
+    if (!selectedLatex) return;
+
+    const visibleText = latexLineToSheets(selectedLatex);
+    if (!visibleText) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    event.clipboardData?.setData("text/plain", visibleText);
+  }, true);
 
   // MathLive maneja el portapapeles dentro de su Shadow DOM. Capturamos el
   // pegado antes que el componente para aceptar texto normal, Unicode o LaTeX.
@@ -435,6 +485,8 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     sel.addRange(range);
   }
 
+  // Los botones de operadores insertan separación visual a ambos lados;
+  // los identificadores se escriben literalmente, sin conversiones por palabras.
   function insertAtCursor(text) {
     if (mode.value === "sql") {
       insertSqlAtCaret(text);

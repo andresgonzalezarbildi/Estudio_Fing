@@ -132,6 +132,7 @@ window.MathJax = {
 
     <div class="query-actions">
       <button id="copyQueryLatex" class="btn primary" type="button">Copiar LaTeX</button>
+      <button id="copyQuerySheets" class="btn secondary" type="button" title="Copia texto Unicode editable para pegar en Google Sheets">Copiar para Sheets</button>
       <button id="clearQuery" class="btn secondary" type="button">Limpiar</button>
       <span id="queryCopyStatus" class="query-copy-status"></span>
     </div>
@@ -196,6 +197,7 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const previewPanel = document.getElementById("queryPreviewPanel");
   const symbolsBox = document.getElementById("querySymbols");
   const copyBtn = document.getElementById("copyQueryLatex");
+  const copySheetsBtn = document.getElementById("copyQuerySheets");
   const clearBtn = document.getElementById("clearQuery");
   const newExpressionBtn = document.getElementById("newQueryExpression");
   const indentCalcBtn = document.getElementById("indentCalc");
@@ -368,6 +370,85 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     return "$$\\begin{array}{l}" +
       rendered +
       "\\end{array}$$";
+  }
+
+  function buildSheetsText() {
+    const text = input.value.trim();
+    if (!text) return "";
+
+    // SQL ya es texto plano y se puede pegar directamente en Sheets.
+    if (mode.value === "sql") return text;
+
+    let result = text;
+
+    // Proteger llaves que el usuario escribió como símbolos de conjunto.
+    result = result
+      .replace(/\\\{/g, "__LITERAL_LBRACE__")
+      .replace(/\\\}/g, "__LITERAL_RBRACE__");
+
+    const replacements = [
+      [/\\Pi\b/g, "Π"],
+      [/\\sigma\b/g, "σ"],
+      [/\\rho\b/g, "ρ"],
+      [/\\bowtie\b/g, "⋈"],
+      [/\\times\b/g, "×"],
+      [/\\cup\b/g, "∪"],
+      [/\\cap\b/g, "∩"],
+      [/\\setminus\b/g, "−"],
+      [/\\leftarrow\b/g, "←"],
+      [/\\rightarrow\b/g, "→"],
+      [/\\Rightarrow\b/g, "⇒"],
+      [/\\Leftrightarrow\b/g, "⇔"],
+      [/\\land\b/g, "∧"],
+      [/\\lor\b/g, "∨"],
+      [/\\neg\b/g, "¬"],
+      [/\\exists\b/g, "∃"],
+      [/\\forall\b/g, "∀"],
+      [/\\notin\b/g, "∉"],
+      [/\\in\b/g, "∈"],
+      [/\\neq\b/g, "≠"],
+      [/\\geq\b/g, "≥"],
+      [/\\leq\b/g, "≤"],
+      [/\\langle\b/g, "⟨"],
+      [/\\rangle\b/g, "⟩"],
+      [/\\quad\b/g, "    "],
+      [/\\_/g, "_"]
+    ];
+
+    replacements.forEach(([pattern, value]) => {
+      result = result.replace(pattern, value);
+    });
+
+    // Los subíndices de los operadores relacionales se vuelven corchetes:
+    // \sigma_{condición}(R) -> σ[condición](R)
+    // \Pi_{atributos}(R)   -> Π[atributos](R)
+    let previous;
+    do {
+      previous = result;
+      result = result.replace(/([Πσρ⋈])_\{([^{}]*)\}/g, "$1[$2]");
+    } while (result !== previous);
+
+    // Si quedó algún subíndice TeX genérico, conservarlo de forma legible.
+    result = result.replace(/_\{([^{}]*)\}/g, "[$1]");
+
+    // Quitar llaves usadas solamente para agrupar en LaTeX.
+    // Se repite para resolver agrupaciones simples anidadas.
+    do {
+      previous = result;
+      result = result.replace(/\{([^{}\n]*)\}/g, "$1");
+    } while (result !== previous);
+
+    result = result
+      .replace(/__LITERAL_LBRACE__/g, "{")
+      .replace(/__LITERAL_RBRACE__/g, "}")
+      .replace(/\$\$/g, "")
+      .replace(/\\begin\{(?:aligned|array)\}/g, "")
+      .replace(/\\end\{(?:aligned|array)\}/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    return result;
   }
 
   function updatePreview() {
@@ -614,6 +695,36 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     input.focus();
     update();
   });
+
+  async function copyPlainText(textToCopy) {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+    } catch {
+      const temp = document.createElement("textarea");
+      temp.value = textToCopy;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+    }
+  }
+
+  if (copySheetsBtn) {
+    copySheetsBtn.addEventListener("click", async () => {
+      const sheetsText = buildSheetsText();
+
+      if (!sheetsText) {
+        status.textContent = "No hay contenido.";
+        return;
+      }
+
+      await copyPlainText(sheetsText);
+      status.textContent = "Copiado para Sheets.";
+      setTimeout(() => {
+        status.textContent = "";
+      }, 1600);
+    });
+  }
 
   copyBtn.addEventListener("click", async () => {
     const latex = buildLatex();

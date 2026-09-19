@@ -999,7 +999,7 @@
         <div class="task-meta">
           <span class="subject-badge">${escapeHtml(subject.short)}</span>
           <span>${escapeHtml(typeLabel(item.type))}</span>
-          <span>${item.fixed ? "cronograma oficial" : "agregado manualmente"}</span>
+          <span>${item.fixed ? "cronograma oficial" : (item.source.includes("Plan de parciales") || item.source.includes("plan de parciales") ? "plan de estudio" : "agregado manualmente")}</span>
           ${item.eventDate ? `<span class="exact-date">fecha ${dateLabel(item.eventDate)}</span>` : ""}
         </div>
         <h3>${escapeHtml(item.title)}</h3>

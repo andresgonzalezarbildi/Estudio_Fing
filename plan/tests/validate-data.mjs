@@ -9,7 +9,7 @@ vm.runInContext(source, context);
 const data = context.window.PLAN_DATA;
 
 assert.ok(data);
-assert.equal(data.version, "2026.09.07-16");
+assert.equal(data.version, "2026.09.18-17");
 assert.ok(Array.isArray(data.items));
 assert.ok(data.items.length > 160);
 
@@ -17,15 +17,14 @@ const ids = data.items.map((item) => item.id);
 assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
 assert.ok(data.items.every((item) => data.subjects[item.subject]), "Todas las materias deben existir");
 assert.ok(data.items.every((item) => !item.week || /^\d{4}-\d{2}-\d{2}$/.test(item.week)), "Semanas inválidas");
-assert.ok(data.items.every((item) => !/sugerencia|preparar|repaso para/i.test(`${item.source} ${item.title}`)), "No debe haber bloques de estudio inventados");
 assert.ok(data.items.every((item) => !Object.hasOwn(item, "minutes")), "No debe haber duraciones sugeridas");
 
 const redes = data.items.filter((item) => item.subject === "redes");
 const redesW1 = redes.filter((item) => item.week === "2026-08-03");
-assert.equal(redes.length, 28, "Redes debe quedar reducido a prácticos y lecturas del libro");
+assert.ok(redes.length >= 32, "Redes debe mantener prácticos/lecturas y sumar el plan del primer parcial");
 assert.equal(redes.filter((item) => item.type === "practical").length, 14, "Deben mantenerse los 14 prácticos de Redes");
 assert.equal(redes.filter((item) => item.type === "reading").length, 14, "Deben mantenerse las 14 lecturas/capítulos de Redes");
-assert.ok(redes.every((item) => ["practical", "reading"].includes(item.type)), "Redes no debe mostrar monitoreos, OpenFing, parciales, obligatorios ni otras tarjetas oficiales");
+assert.ok(redes.filter((item) => item.fixed).every((item) => ["practical", "reading"].includes(item.type)), "Las tarjetas oficiales de Redes deben seguir limitadas a prácticos y lecturas");
 assert.ok(!redes.some((item) => item.type === "monitoring"), "Redes no debe mostrar monitoreos");
 assert.ok(redesW1.some((item) => item.id === "redes-20260803-05" && item.type === "reading" && item.title === "Capítulo 1"));
 assert.ok(redesW1.some((item) => item.id === "redes-20260803-06" && item.type === "practical" && item.title === "P1 · Retardos"));
@@ -60,9 +59,8 @@ assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 1" && /16:43/.test
 assert.ok(fbdW1.some((item) => item.title === "Video OpenFing 2"));
 assert.ok(!fbdW1.some((item) => item.title === "Presentación del curso"));
 
-const partials = fbd.filter((item) => item.title === "Parciales");
-assert.equal(partials.length, 1, "El período conjunto no debe separarse artificialmente");
-assert.equal(partials[0].periodLabel, "Semanas 8 y 9 · 19/09–03/10");
+const firstFbdPartial = fbd.find((item) => item.id === "fbd-20260921-01");
+assert.ok(firstFbdPartial && firstFbdPartial.type === "partial" && firstFbdPartial.eventDate === "2026-09-28", "FBD debe mostrar el primer parcial del 28/09");
 
 const repeatedVideos = fbd.filter((item) => ["Video OpenFing 13", "Video OpenFing 14"].includes(item.title));
 assert.equal(repeatedVideos.length, 4, "Los videos 13 y 14 deben figurar en semanas 7 y 10");
@@ -76,7 +74,7 @@ assert.ok(pln.some((item) => item.id === "pln-openfing-20" && item.week === "202
 assert.ok(pln.some((item) => item.title === "No está en OpenFing · Extracción de Información"));
 assert.ok(pln.some((item) => item.title === "No está en OpenFing · Narrativa interactiva"));
 assert.equal(pln.filter((item) => /Suspendida por paro/i.test(item.title)).length, 0, "La semana suspendida no debe generar una tarjeta vacía");
-assert.ok(pln.some((item) => item.id === "pln-prueba-1" && !item.week));
+assert.ok(pln.some((item) => item.id === "pln-prueba-1" && item.week === "2026-09-28" && item.eventDate === "2026-09-29"));
 assert.ok(pln.some((item) => item.id === "pln-prueba-2" && !item.week));
 assert.equal(pln.filter((item) => /Presentaciones de artículos/.test(item.title)).length, 2);
 assert.ok(!/Creative Commons/i.test(source));
@@ -88,5 +86,16 @@ assert.equal(data.subjects.fbd.scheduleOriginal, true);
 assert.equal(data.subjects.pln.scheduleUrl, "https://eva.fing.edu.uy/mod/page/view.php?id=84886");
 assert.equal(data.subjects.pln.scheduleLabel, "Cronograma oficial");
 assert.equal(data.subjects.pln.scheduleOriginal, true);
+
+
+const planParciales = data.items.filter((item) => /Plan de parciales|plan de parciales/.test(item.source));
+assert.ok(planParciales.length >= 16, "Debe existir el bloque de tareas para preparar los primeros parciales");
+assert.ok(data.items.some((item) => item.id === "plan-fbd-entregable-20260920" && item.eventDate === "2026-09-20"));
+assert.ok(data.items.some((item) => item.id === "redes-primer-parcial-20260923" && item.eventDate === "2026-09-23"));
+assert.ok(data.items.some((item) => item.id === "fbd-20260921-01" && item.type === "partial" && item.eventDate === "2026-09-28"));
+assert.ok(data.items.some((item) => item.id === "pln-prueba-1" && item.type === "partial" && item.eventDate === "2026-09-29"));
+assert.ok(data.items.some((item) => item.id === "plan-pln-libro-cap2-p1"));
+assert.ok(data.items.some((item) => item.id === "plan-pln-libro-sintaxis-p1"));
+assert.ok(data.items.some((item) => item.id === "plan-fuaa-cierre-teoria-p1"));
 
 console.log(`OK: ${data.items.length} elementos validados`);

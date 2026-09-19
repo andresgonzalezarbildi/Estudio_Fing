@@ -57,6 +57,17 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-symbols-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
 #queryCalcTools{margin-top:10px}
 
+/* Editor visual editable */
+.query-visual-shell{min-width:0;max-width:100%}
+.query-visual-editor{min-height:360px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:12px 14px;overflow:auto;cursor:text}
+.query-visual-editor:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
+.query-math-line{display:block;width:100%;min-height:42px;margin:0;padding:7px 4px;border:0!important;outline:0!important;background:transparent!important;color:var(--ink);font-size:1.12rem}
+.query-math-line::part(container){border:0;background:transparent}
+.query-math-line:focus{outline:none}
+.query-sql-editor{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;outline:none}
+.query-visual-help{margin:0 0 9px;color:var(--muted);font-size:.9rem}
+.query-visual-help code{background:var(--surface2);padding:1px 5px;border-radius:5px;color:var(--ink)}
+
 </style>
 
 <script>
@@ -69,6 +80,7 @@ window.MathJax = {
 };
 </script>
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
 
 </head>
 <body>
@@ -118,15 +130,12 @@ window.MathJax = {
       </div>
     </div>
 
-    <div class="query-grid">
+    <div class="query-visual-shell">
       <div class="query-box">
-        <h3>Editor</h3>
-        <textarea id="queryInput" spellcheck="false" placeholder="Escribí la consulta acá..."></textarea>
-      </div>
-
-      <div id="queryPreviewPanel" class="query-box">
-        <h3>Vista previa</h3>
-        <div id="queryPreview" class="query-preview">La vista previa aparecerá acá.</div>
+        <h3>Vista editable</h3>
+        <p id="queryVisualHelp" class="query-visual-help">Escribí directamente sobre la fórmula. Los detalles de LaTeX se generan solo al copiar; por ejemplo, <code>_</code> se ve como <code>_</code> pero se copia como <code>\_</code>.</p>
+        <div id="queryVisualEditor" class="query-visual-editor" aria-label="Editor visual de consulta"></div>
+        <div id="querySqlEditor" class="query-visual-editor query-sql-editor hidden" contenteditable="true" spellcheck="false" data-placeholder="Escribí SQL acá..."></div>
       </div>
     </div>
 
@@ -192,9 +201,9 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
 (() => {
   const mode = document.getElementById("queryMode");
   const naturalInput = document.getElementById("queryNaturalLanguage");
-  const input = document.getElementById("queryInput");
-  const preview = document.getElementById("queryPreview");
-  const previewPanel = document.getElementById("queryPreviewPanel");
+  const visualEditor = document.getElementById("queryVisualEditor");
+  const sqlEditor = document.getElementById("querySqlEditor");
+  const visualHelp = document.getElementById("queryVisualHelp");
   const symbolsBox = document.getElementById("querySymbols");
   const copyBtn = document.getElementById("copyQueryLatex");
   const copySheetsBtn = document.getElementById("copyQuerySheets");
@@ -205,14 +214,16 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const calcTools = document.getElementById("queryCalcTools");
   const status = document.getElementById("queryCopyStatus");
 
-  if (!mode || !input || !preview || !symbolsBox) return;
+  if (!mode || !visualEditor || !sqlEditor || !symbolsBox) return;
+
+  let activeMathField = null;
 
   const symbolSets = {
     algebra: [
-      ["Π","\\Pi_{}"],
-      ["σ","\\sigma_{}"],
-      ["⋈","\\bowtie_{}"],
-      ["ρ","\\rho_{}"],
+      ["Π","\\Pi_{\\placeholder{}}"],
+      ["σ","\\sigma_{\\placeholder{}}"],
+      ["⋈","\\bowtie_{\\placeholder{}}"],
+      ["ρ","\\rho_{\\placeholder{}}"],
       ["←","\\leftarrow"],
       ["→","\\rightarrow"],
       ["×","\\times"],
@@ -232,10 +243,10 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       ["_","\\_"]
     ],
     calculo: [
-      ["{ }","\\{ \\}"],
-      ["⟨ ⟩","\\langle \\rangle"],
-      ["∃","\\exists "],
-      ["∀","\\forall "],
+      ["{ }","\\left\\{\\placeholder{}\\right\\}"],
+      ["⟨ ⟩","\\left\\langle\\placeholder{}\\right\\rangle"],
+      ["∃","\\exists\\;"],
+      ["∀","\\forall\\;"],
       ["∧","\\land"],
       ["∨","\\lor"],
       ["¬","\\neg"],
@@ -280,420 +291,324 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     ]
   };
 
+  function showStatus(text) {
+    status.textContent = text;
+    if (text) setTimeout(() => {
+      if (status.textContent === text) status.textContent = "";
+    }, 1600);
+  }
+
+  function escapeTypedUnderscores(text) {
+    // Conserva los _ que forman subíndices de comandos LaTeX (\sigma_{...}, \Pi_{...}, etc.)
+    // y convierte el resto en guiones bajos literales visibles.
+    const protectedSubscripts = [];
+    let out = text.replace(/(\\[A-Za-z]+)_/g, (_, command) => {
+      const token = `__FBD_SUB_${protectedSubscripts.length}__`;
+      protectedSubscripts.push(command + "_");
+      return token;
+    });
+    out = out.replace(/(^|[^\\])_/g, "$1\\_");
+    protectedSubscripts.forEach((value, index) => {
+      out = out.replace(`__FBD_SUB_${index}__`, value);
+    });
+    return out;
+  }
+
+  function unicodeToLatex(text) {
+    const replacements = [
+      [/Π/g, "\\Pi"], [/σ/g, "\\sigma"], [/ρ/g, "\\rho"], [/⋈/g, "\\bowtie"],
+      [/×/g, "\\times"], [/∪/g, "\\cup"], [/∩/g, "\\cap"], [/−/g, "\\setminus"],
+      [/←/g, "\\leftarrow"], [/→/g, "\\rightarrow"], [/⇒/g, "\\Rightarrow"], [/⇔/g, "\\Leftrightarrow"],
+      [/∧/g, "\\land"], [/∨/g, "\\lor"], [/¬/g, "\\neg"], [/∃/g, "\\exists"], [/∀/g, "\\forall"],
+      [/∉/g, "\\notin"], [/∈/g, "\\in"], [/≠/g, "\\neq"], [/≥/g, "\\geq"], [/≤/g, "\\leq"],
+      [/⟨/g, "\\langle"], [/⟩/g, "\\rangle"]
+    ];
+    let out = text;
+    replacements.forEach(([re, value]) => out = out.replace(re, value));
+    return escapeTypedUnderscores(out);
+  }
+
+  function createMathLine(value = "", after = null) {
+    const mf = document.createElement("math-field");
+    mf.className = "query-math-line";
+    mf.setAttribute("math-virtual-keyboard-policy", "manual");
+    mf.setAttribute("aria-label", "Línea de fórmula");
+    mf.mathModeSpace = "\\;";
+    mf.smartFence = true;
+    mf.value = value;
+
+    mf.addEventListener("focus", () => activeMathField = mf);
+    mf.addEventListener("input", () => status.textContent = "");
+
+    // El usuario escribe _ como carácter normal. Internamente guardamos \\_.
+    mf.addEventListener("keydown", (event) => {
+      if (event.key === "_") {
+        event.preventDefault();
+        mf.insert("\\_", {focus:true});
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const next = createMathLine("", mf);
+        next.focus();
+        return;
+      }
+
+      if (event.key === "Backspace" && !mf.value && visualEditor.querySelectorAll("math-field").length > 1) {
+        event.preventDefault();
+        const prev = mf.previousElementSibling;
+        const next = mf.nextElementSibling;
+        mf.remove();
+        (prev || next)?.focus();
+      }
+    });
+
+    // Al pegar texto común, los _ también se tratan como literales.
+    mf.addEventListener("paste", (event) => {
+      const plain = event.clipboardData?.getData("text/plain");
+      if (plain == null) return;
+      event.preventDefault();
+
+      const lines = plain.replace(/\r/g, "").split("\n");
+      const first = unicodeToLatex(lines.shift() || "");
+      mf.insert(first, {focus:true});
+
+      let current = mf;
+      lines.forEach(line => {
+        current = createMathLine(unicodeToLatex(line), current);
+      });
+      current.focus();
+    });
+
+    if (after && after.parentNode === visualEditor) {
+      after.insertAdjacentElement("afterend", mf);
+    } else {
+      visualEditor.appendChild(mf);
+    }
+    activeMathField = mf;
+    return mf;
+  }
+
+  function ensureMathLine() {
+    let mf = activeMathField;
+    if (!mf || !mf.isConnected || mf.parentNode !== visualEditor) {
+      mf = visualEditor.querySelector("math-field") || createMathLine();
+    }
+    return mf;
+  }
+
+  function insertSqlAtCaret(text) {
+    sqlEditor.focus();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) {
+      sqlEditor.append(document.createTextNode(text));
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!sqlEditor.contains(range.commonAncestorContainer)) {
+      sqlEditor.append(document.createTextNode(text));
+      return;
+    }
+    range.deleteContents();
+    const node = document.createTextNode(text);
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
   function insertAtCursor(text) {
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-
-    input.value =
-      input.value.slice(0, start) +
-      text +
-      input.value.slice(end);
-
-    let pos = start + text.length;
-
-    if (text.endsWith("{}")) pos -= 1;
-    else if (text.endsWith("()")) pos -= 1;
-
-    input.focus();
-    input.setSelectionRange(pos, pos);
-    update();
+    if (mode.value === "sql") {
+      insertSqlAtCaret(text);
+      return;
+    }
+    const mf = ensureMathLine();
+    mf.focus();
+    mf.insert(text, {focus:true, selectionMode:"placeholder"});
   }
 
   function renderSymbols() {
     symbolsBox.innerHTML = "";
-
     symbolSets[mode.value].forEach(([label, value]) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "query-symbol";
       button.textContent = label;
+      button.addEventListener("mousedown", event => event.preventDefault());
       button.addEventListener("click", () => insertAtCursor(value));
       symbolsBox.appendChild(button);
     });
   }
 
-  function getExpressions() {
-    const text = input.value.trim();
-    if (!text) return [];
+  function mathLines() {
+    return [...visualEditor.querySelectorAll("math-field")].map(mf => mf.value || "");
+  }
 
-    if (mode.value === "calculo") {
-      return text
-        .split(/\n\s*\n/)
-        .map(expr => expr.trim())
-        .filter(expr => expr.length > 0);
-    }
-
-    return text
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
+  function currentText() {
+    return mode.value === "sql"
+      ? (sqlEditor.innerText || "").replace(/\u00a0/g, " ").trimEnd()
+      : mathLines().join("\n");
   }
 
   function buildLatex() {
-    const text = input.value.trim();
+    if (mode.value === "sql") return currentText().trim();
 
-    if (!text) return "";
+    const lines = mathLines();
+    if (!lines.some(line => line.trim())) return "";
 
-    if (mode.value === "sql") {
-      return text;
-    }
+    const rendered = lines
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => "&" + line)
+      .join(" \\\\\n");
 
-    if (mode.value === "calculo") {
-      // Mantener exactamente los saltos de línea del editor.
-      const lines = text.split("\n");
-
-      const rendered = lines
-        .map(line => "&" + line)
-        .join(" \\\\\n");
-
-      return "$$\n\\begin{aligned}\n" +
-        rendered +
-        "\n\\end{aligned}\n$$";
-    }
-
-    // Álgebra:
-    // Enter normal continúa la misma expresión.
-    // Una línea en blanco separa expresiones.
-    const expressions = text
-      .split(/\n\s*\n/)
-      .map(group =>
-        group
-          .split("\n")
-          .map(line => line.trim())
-          .filter(Boolean)
-          .join(" ")
-      )
-      .filter(Boolean);
-
-    const rendered = expressions.join(" \\\\ ");
-
-    return "$$\\begin{array}{l}" +
-      rendered +
-      "\\end{array}$$";
+    return "$$\n\\begin{aligned}\n" + rendered + "\n\\end{aligned}\n$$";
   }
 
-  function buildSheetsText() {
-    const text = input.value.trim();
-    if (!text) return "";
-
-    // SQL ya es texto plano y se puede pegar directamente en Sheets.
-    if (mode.value === "sql") return text;
-
-    let result = text;
-
-    // Proteger llaves que el usuario escribió como símbolos de conjunto.
+  function latexLineToSheets(line) {
+    let result = line;
     result = result
-      .replace(/\\\{/g, "__LITERAL_LBRACE__")
-      .replace(/\\\}/g, "__LITERAL_RBRACE__");
+      .replace(/\\left/g, "")
+      .replace(/\\right/g, "")
+      .replace(/\\placeholder\{\}/g, "")
+      .replace(/\\Pi\b/g, "Π")
+      .replace(/\\sigma\b/g, "σ")
+      .replace(/\\rho\b/g, "ρ")
+      .replace(/\\bowtie\b/g, "⋈")
+      .replace(/\\times\b/g, "×")
+      .replace(/\\cup\b/g, "∪")
+      .replace(/\\cap\b/g, "∩")
+      .replace(/\\setminus\b/g, "−")
+      .replace(/\\leftarrow\b/g, "←")
+      .replace(/\\rightarrow\b/g, "→")
+      .replace(/\\Rightarrow\b/g, "⇒")
+      .replace(/\\Leftrightarrow\b/g, "⇔")
+      .replace(/\\land\b/g, "∧")
+      .replace(/\\lor\b/g, "∨")
+      .replace(/\\neg\b/g, "¬")
+      .replace(/\\exists\b/g, "∃")
+      .replace(/\\forall\b/g, "∀")
+      .replace(/\\notin\b/g, "∉")
+      .replace(/\\in\b/g, "∈")
+      .replace(/\\neq\b/g, "≠")
+      .replace(/\\geq\b/g, "≥")
+      .replace(/\\leq\b/g, "≤")
+      .replace(/\\langle\b/g, "⟨")
+      .replace(/\\rangle\b/g, "⟩")
+      .replace(/\\quad\b|\\;|\\:|\\,/g, " ")
+      .replace(/\\_/g, "_");
 
-    const replacements = [
-      [/\\Pi\b/g, "Π"],
-      [/\\sigma\b/g, "σ"],
-      [/\\rho\b/g, "ρ"],
-      [/\\bowtie\b/g, "⋈"],
-      [/\\times\b/g, "×"],
-      [/\\cup\b/g, "∪"],
-      [/\\cap\b/g, "∩"],
-      [/\\setminus\b/g, "−"],
-      [/\\leftarrow\b/g, "←"],
-      [/\\rightarrow\b/g, "→"],
-      [/\\Rightarrow\b/g, "⇒"],
-      [/\\Leftrightarrow\b/g, "⇔"],
-      [/\\land\b/g, "∧"],
-      [/\\lor\b/g, "∨"],
-      [/\\neg\b/g, "¬"],
-      [/\\exists\b/g, "∃"],
-      [/\\forall\b/g, "∀"],
-      [/\\notin\b/g, "∉"],
-      [/\\in\b/g, "∈"],
-      [/\\neq\b/g, "≠"],
-      [/\\geq\b/g, "≥"],
-      [/\\leq\b/g, "≤"],
-      [/\\langle\b/g, "⟨"],
-      [/\\rangle\b/g, "⟩"],
-      [/\\quad\b/g, "    "],
-      [/\\_/g, "_"]
-    ];
-
-    replacements.forEach(([pattern, value]) => {
-      result = result.replace(pattern, value);
-    });
-
-    // Los subíndices de los operadores relacionales se vuelven corchetes:
-    // \sigma_{condición}(R) -> σ[condición](R)
-    // \Pi_{atributos}(R)   -> Π[atributos](R)
+    // Subíndices visuales de operadores se expresan con corchetes en Sheets.
     let previous;
     do {
       previous = result;
       result = result.replace(/([Πσρ⋈])_\{([^{}]*)\}/g, "$1[$2]");
     } while (result !== previous);
 
-    // Si quedó algún subíndice TeX genérico, conservarlo de forma legible.
-    result = result.replace(/_\{([^{}]*)\}/g, "[$1]");
-
-    // Quitar llaves usadas solamente para agrupar en LaTeX.
-    // Se repite para resolver agrupaciones simples anidadas.
-    do {
-      previous = result;
-      result = result.replace(/\{([^{}\n]*)\}/g, "$1");
-    } while (result !== previous);
-
     result = result
-      .replace(/__LITERAL_LBRACE__/g, "{")
-      .replace(/__LITERAL_RBRACE__/g, "}")
-      .replace(/\$\$/g, "")
-      .replace(/\\begin\{(?:aligned|array)\}/g, "")
-      .replace(/\\end\{(?:aligned|array)\}/g, "")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
+      .replace(/_\{([^{}]*)\}/g, "[$1]")
+      .replace(/\\\{/g, "{")
+      .replace(/\\\}/g, "}")
+      .replace(/\{([^{}]*)\}/g, "$1")
+      .replace(/[ \t]+/g, " ")
       .trim();
 
     return result;
   }
 
-  function updatePreview() {
-    const text = input.value.trim();
-
-    if (!text) {
-      preview.innerHTML = "La vista previa aparecerá acá.";
-      return;
-    }
-
-    if (mode.value === "sql") {
-      preview.textContent = text;
-      return;
-    }
-
-    const expressions = getExpressions();
-
-    preview.innerHTML = expressions
-      .map(expr => {
-        if (mode.value === "calculo") {
-          const lines = expr
-            .split("\n")
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
-
-          return "<div style='margin-bottom:12px'>" +
-            lines
-              .map(line => "<div class='query-calc-line'>\\(" + line + "\\)</div>")
-              .join("") +
-            "</div>";
-        }
-
-        return "<div style='margin-bottom:12px'>\\[" + expr + "\\]</div>";
-      })
-      .join("");
-
-    if (window.MathJax && MathJax.typesetPromise) {
-      MathJax.typesetClear([preview]);
-      MathJax.typesetPromise([preview]);
-    }
+  function buildSheetsText() {
+    if (mode.value === "sql") return currentText().trim();
+    const lines = mathLines();
+    if (!lines.some(line => line.trim())) return "";
+    return lines.map(latexLineToSheets).join("\n").trim();
   }
 
-  function update() {
-    updatePreview();
-    status.textContent = "";
-  }
-
-  mode.addEventListener("change", () => {
-    renderSymbols();
-    const isCalc = mode.value === "calculo";
+  function setModeUI() {
     const isSQL = mode.value === "sql";
+    const isCalc = mode.value === "calculo";
 
-    // En cálculo mostramos Nueva expresión + Tab; en SQL solo Tab.
+    visualEditor.classList.toggle("hidden", isSQL);
+    sqlEditor.classList.toggle("hidden", !isSQL);
     if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
     if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
-    if (previewPanel) previewPanel.classList.toggle("hidden", isSQL);
     if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
 
-    update();
-  });
-
-  input.addEventListener("input", update);
-
-
-  // Tab / Shift+Tab: indentar dentro del editor sin cambiar el foco.
-  input.addEventListener("keydown", (event) => {
-    if (event.key !== "Tab") return;
-
-    event.preventDefault();
-
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const indent = mode.value === "sql" ? "    " : "\\quad ";
-
-    if (event.shiftKey) {
-      const lineStart = input.value.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
-      const lineEndPos = input.value.indexOf("\n", start);
-      const lineEnd = lineEndPos === -1 ? input.value.length : lineEndPos;
-      const line = input.value.slice(lineStart, lineEnd);
-
-      if (line.startsWith(indent)) {
-        input.value =
-          input.value.slice(0, lineStart) +
-          line.slice(indent.length) +
-          input.value.slice(lineEnd);
-
-        input.setSelectionRange(
-          Math.max(lineStart, start - indent.length),
-          Math.max(lineStart, end - indent.length)
-        );
-        update();
-      }
-      return;
+    if (visualHelp) {
+      visualHelp.innerHTML = isSQL
+        ? "Escribí SQL directamente acá. Esta misma superficie es el editor y la vista final."
+        : 'Escribí directamente sobre la fórmula. Los detalles de LaTeX se generan solo al copiar; por ejemplo, <code>_</code> se ve como <code>_</code> pero se copia como <code>\\_</code>.';
     }
 
-    input.value =
-      input.value.slice(0, start) +
-      indent +
-      input.value.slice(end);
+    renderSymbols();
+    status.textContent = "";
 
-    const cursor = start + indent.length;
-    input.setSelectionRange(cursor, cursor);
-    update();
-  });
-
-  // Alt + ↑ / Alt + ↓: mover la línea actual o el bloque de líneas seleccionado.
-  input.addEventListener("keydown", (event) => {
-    if (!event.altKey || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
-
-    event.preventDefault();
-
-    const value = input.value;
-    const selStart = input.selectionStart;
-    const selEnd = input.selectionEnd;
-
-    const blockStart = value.lastIndexOf("\n", Math.max(0, selStart - 1)) + 1;
-
-    let searchEnd = selEnd;
-    if (selEnd > selStart && value[selEnd - 1] === "\n") {
-      searchEnd = selEnd - 1;
-    }
-
-    let blockEnd = value.indexOf("\n", searchEnd);
-    if (blockEnd === -1) blockEnd = value.length;
-
-    const block = value.slice(blockStart, blockEnd);
-
-    if (event.key === "ArrowUp") {
-      if (blockStart === 0) return;
-
-      const prevLineEnd = blockStart - 1;
-      const prevLineStart = value.lastIndexOf("\n", Math.max(0, prevLineEnd - 1)) + 1;
-      const prevLine = value.slice(prevLineStart, prevLineEnd);
-
-      const before = value.slice(0, prevLineStart);
-      const after = value.slice(blockEnd);
-
-      input.value = before + block + "\n" + prevLine + after;
-
-      const movedBy = blockStart - prevLineStart;
-      input.setSelectionRange(selStart - movedBy, selEnd - movedBy);
+    if (!isSQL) {
+      ensureMathLine();
+      requestAnimationFrame(() => ensureMathLine().focus());
     } else {
-      if (blockEnd >= value.length) return;
-
-      const nextLineStart = blockEnd + 1;
-      let nextLineEnd = value.indexOf("\n", nextLineStart);
-      if (nextLineEnd === -1) nextLineEnd = value.length;
-
-      const nextLine = value.slice(nextLineStart, nextLineEnd);
-
-      const before = value.slice(0, blockStart);
-      const after = value.slice(nextLineEnd);
-
-      input.value = before + nextLine + "\n" + block + after;
-
-      const movedBy = nextLineEnd - blockEnd;
-      input.setSelectionRange(selStart + movedBy, selEnd + movedBy);
+      requestAnimationFrame(() => sqlEditor.focus());
     }
+  }
 
-    input.focus();
-    update();
-  });
-
+  function currentMathField() {
+    return ensureMathLine();
+  }
 
   if (newExpressionBtn) {
     newExpressionBtn.addEventListener("click", () => {
       if (mode.value !== "calculo") return;
-
-      const start = input.selectionStart;
-      const end = input.selectionEnd;
-      const before = input.value.slice(0, start).replace(/\s*$/, "");
-      const after = input.value.slice(end).replace(/^\s*/, "");
-
-      input.value = before + "\n\n" + after;
-
-      const pos = before.length + 2;
-      input.focus();
-      input.setSelectionRange(pos, pos);
-      update();
+      const current = currentMathField();
+      const blank = createMathLine("", current);
+      const next = createMathLine("", blank);
+      next.focus();
     });
-  }
-
-  function currentLineBounds() {
-    const pos = input.selectionStart;
-    const start = input.value.lastIndexOf("\n", pos - 1) + 1;
-    let end = input.value.indexOf("\n", pos);
-    if (end === -1) end = input.value.length;
-    return { start, end };
   }
 
   if (indentCalcBtn) {
     indentCalcBtn.addEventListener("click", () => {
-      if (mode.value !== "calculo" && mode.value !== "sql") return;
-
-      const originalStart = input.selectionStart;
-      const originalEnd = input.selectionEnd;
-      const { start } = currentLineBounds();
-
-      const indent = mode.value === "calculo" ? "\\quad " : "    ";
-
-      input.value =
-        input.value.slice(0, start) +
-        indent +
-        input.value.slice(start);
-
-      // Mantener el cursor exactamente sobre el mismo contenido lógico.
-      const added = indent.length;
-      input.focus();
-      input.setSelectionRange(originalStart + added, originalEnd + added);
-      update();
+      if (mode.value === "sql") {
+        insertSqlAtCaret("    ");
+        return;
+      }
+      currentMathField().insert("\\quad ", {focus:true});
     });
   }
 
   if (outdentCalcBtn) {
     outdentCalcBtn.addEventListener("click", () => {
-      if (mode.value !== "calculo" && mode.value !== "sql") return;
-
-      const originalStart = input.selectionStart;
-      const originalEnd = input.selectionEnd;
-      const { start, end } = currentLineBounds();
-      const line = input.value.slice(start, end);
-      const indent = mode.value === "calculo" ? "\\quad " : "    ";
-
-      if (line.startsWith(indent)) {
-        input.value =
-          input.value.slice(0, start) +
-          line.slice(indent.length) +
-          input.value.slice(end);
-
-        const removed = indent.length;
-        input.focus();
-        input.setSelectionRange(
-          Math.max(start, originalStart - removed),
-          Math.max(start, originalEnd - removed)
-        );
-        update();
+      if (mode.value === "sql") {
+        const text = sqlEditor.innerText || "";
+        sqlEditor.innerText = text.replace(/^ {1,4}/m, "");
+        sqlEditor.focus();
+        return;
+      }
+      const mf = currentMathField();
+      if ((mf.value || "").startsWith("\\quad ")) {
+        mf.value = mf.value.slice(6);
+        mf.focus();
       }
     });
   }
 
+  sqlEditor.addEventListener("keydown", event => {
+    if (event.key === "Tab") {
+      event.preventDefault();
+      insertSqlAtCaret(event.shiftKey ? "" : "    ");
+    }
+  });
+
+  sqlEditor.addEventListener("input", () => status.textContent = "");
+
   clearBtn.addEventListener("click", () => {
     if (naturalInput) naturalInput.value = "";
-    input.value = "";
-    input.focus();
-    update();
+    sqlEditor.innerHTML = "";
+    visualEditor.innerHTML = "";
+    activeMathField = null;
+    if (mode.value !== "sql") createMathLine().focus();
+    else sqlEditor.focus();
+    status.textContent = "";
   });
 
   async function copyPlainText(textToCopy) {
@@ -712,53 +627,32 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   if (copySheetsBtn) {
     copySheetsBtn.addEventListener("click", async () => {
       const sheetsText = buildSheetsText();
-
-      if (!sheetsText) {
-        status.textContent = "No hay contenido.";
-        return;
-      }
-
+      if (!sheetsText) return showStatus("No hay contenido.");
       await copyPlainText(sheetsText);
-      status.textContent = "Copiado para Sheets.";
-      setTimeout(() => {
-        status.textContent = "";
-      }, 1600);
+      showStatus("Copiado para Sheets.");
     });
   }
 
   copyBtn.addEventListener("click", async () => {
     const latex = buildLatex();
-
-    if (!latex) {
-      status.textContent = "No hay contenido.";
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(latex);
-    } catch {
-      const temp = document.createElement("textarea");
-      temp.value = latex;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      temp.remove();
-    }
-
-    status.textContent = "Copiado.";
-    setTimeout(() => {
-      status.textContent = "";
-    }, 1600);
+    if (!latex) return showStatus("No hay contenido.");
+    await copyPlainText(latex);
+    showStatus(mode.value === "sql" ? "SQL copiado." : "LaTeX copiado.");
   });
 
-  renderSymbols();
-  const isCalc = mode.value === "calculo";
-  const isSQL = mode.value === "sql";
-  if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
-  if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
-  if (previewPanel) previewPanel.classList.toggle("hidden", isSQL);
-  if (copyBtn) copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
-  update();
+  mode.addEventListener("change", setModeUI);
+
+  // Esperar a que el componente visual esté disponible antes de iniciar.
+  const init = async () => {
+    if (!customElements.get("math-field")) {
+      try { await customElements.whenDefined("math-field"); }
+      catch {}
+    }
+    if (!visualEditor.querySelector("math-field")) createMathLine();
+    setModeUI();
+  };
+
+  init();
 })();
 </script>
 

@@ -68,6 +68,9 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 .query-visual-help{margin:0 0 9px;color:var(--muted);font-size:.9rem}
 .query-visual-help code{background:var(--surface2);padding:1px 5px;border-radius:5px;color:var(--ink)}
 
+/* Interfaz compacta: ocultar textos descriptivos */
+.section-head p,.hero>p,.search-help,.query-hint,.query-visual-help{display:none!important}
+
 </style>
 
 <script>
@@ -132,8 +135,7 @@ window.MathJax = {
 
     <div class="query-visual-shell">
       <div class="query-box">
-        <h3>Vista editable</h3>
-        <p id="queryVisualHelp" class="query-visual-help">Escribí directamente sobre la fórmula. Los detalles de LaTeX se generan solo al copiar; por ejemplo, <code>_</code> se ve como <code>_</code> pero se copia como <code>\_</code>.</p>
+        <h3>Consulta</h3>
         <div id="queryVisualEditor" class="query-visual-editor" aria-label="Editor visual de consulta"></div>
         <div id="querySqlEditor" class="query-visual-editor query-sql-editor hidden" contenteditable="true" spellcheck="false" data-placeholder="Escribí SQL acá..."></div>
       </div>
@@ -203,7 +205,6 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
   const naturalInput = document.getElementById("queryNaturalLanguage");
   const visualEditor = document.getElementById("queryVisualEditor");
   const sqlEditor = document.getElementById("querySqlEditor");
-  const visualHelp = document.getElementById("queryVisualHelp");
   const symbolsBox = document.getElementById("querySymbols");
   const copyBtn = document.getElementById("copyQueryLatex");
   const copySheetsBtn = document.getElementById("copyQuerySheets");
@@ -364,23 +365,6 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       }
     });
 
-    // Al pegar texto común, los _ también se tratan como literales.
-    mf.addEventListener("paste", (event) => {
-      const plain = event.clipboardData?.getData("text/plain");
-      if (plain == null) return;
-      event.preventDefault();
-
-      const lines = plain.replace(/\r/g, "").split("\n");
-      const first = unicodeToLatex(lines.shift() || "");
-      mf.insert(first, {focus:true});
-
-      let current = mf;
-      lines.forEach(line => {
-        current = createMathLine(unicodeToLatex(line), current);
-      });
-      current.focus();
-    });
-
     if (after && after.parentNode === visualEditor) {
       after.insertAdjacentElement("afterend", mf);
     } else {
@@ -397,6 +381,38 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     }
     return mf;
   }
+
+  function pasteIntoMathField(mf, plain) {
+    const lines = String(plain).replace(/\r/g, "").split("\n");
+    const first = unicodeToLatex(lines.shift() || "");
+    mf.focus();
+    mf.insert(first, {focus:true});
+
+    let current = mf;
+    lines.forEach(line => {
+      current = createMathLine(unicodeToLatex(line), current);
+    });
+    current.focus();
+    activeMathField = current;
+  }
+
+  // MathLive maneja el portapapeles dentro de su Shadow DOM. Capturamos el
+  // pegado antes que el componente para aceptar texto normal, Unicode o LaTeX.
+  document.addEventListener("paste", (event) => {
+    if (mode.value === "sql") return;
+
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    let mf = path.find(node => node && node.tagName === "MATH-FIELD");
+    if (!mf && activeMathField && activeMathField.isConnected) mf = activeMathField;
+    if (!mf || mf.parentNode !== visualEditor) return;
+
+    const plain = event.clipboardData?.getData("text/plain");
+    if (plain == null) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    pasteIntoMathField(mf, plain);
+  }, true);
 
   function insertSqlAtCaret(text) {
     sqlEditor.focus();

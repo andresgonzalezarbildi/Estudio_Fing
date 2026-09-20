@@ -60,6 +60,10 @@ section{padding:42px 0;scroll-margin-top:72px}.section-head{display:flex;justify
 /* Editor visual editable */
 .query-visual-shell{min-width:0;max-width:100%}
 .query-visual-editor{min-height:360px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);padding:12px 14px;overflow:auto;cursor:text;white-space:pre-wrap;overflow-wrap:anywhere;outline:none;font:16px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+.query-visual-editor sub,.query-visual-editor sup{font-size:.78em;line-height:0}
+.query-visual-editor sub{vertical-align:-.35em}.query-visual-editor sup{vertical-align:.55em}
+.query-symbol.format-btn{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.query-symbol.format-btn sub,.query-symbol.format-btn sup{font-size:.72em}
 .query-visual-editor:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
 .query-math-line{display:block;width:100%;min-height:42px;margin:0;padding:7px 4px;border:0!important;outline:0!important;background:transparent!important;color:var(--ink);font-size:1.12rem}
 .query-math-line::part(container){border:0;background:transparent}
@@ -242,54 +246,159 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
     ]
   };
 
+  let savedRange = null;
+
   function showStatus(text) {
     if (!status) return;
     status.textContent = text;
     if (text) setTimeout(() => {
       if (status.textContent === text) status.textContent = "";
-    }, 1600);
+    }, 1700);
   }
 
-  function currentText() {
-    return (editor.innerText || "").replace(/\u00a0/g, " ").replace(/\r/g, "").trimEnd();
+  function rangeInsideEditor(range) {
+    if (!range) return false;
+    const node = range.commonAncestorContainer;
+    return node === editor || editor.contains(node.nodeType === 3 ? node.parentNode : node);
   }
 
-  function placeCaretAfter(node) {
+  function rememberSelection() {
     const sel = window.getSelection();
-    if (!sel) return;
-    const range = document.createRange();
-    range.setStartAfter(node);
-    range.collapse(true);
+    if (!sel || !sel.rangeCount) return;
+    const r = sel.getRangeAt(0);
+    if (rangeInsideEditor(r)) savedRange = r.cloneRange();
+  }
+
+  function restoreSelection() {
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel) return null;
     sel.removeAllRanges();
-    sel.addRange(range);
+    if (savedRange && rangeInsideEditor(savedRange)) {
+      try { sel.addRange(savedRange); return savedRange; } catch {}
+    }
+    const r = document.createRange();
+    r.selectNodeContents(editor);
+    r.collapse(false);
+    sel.addRange(r);
+    savedRange = r.cloneRange();
+    return r;
   }
 
   function insertTextAtCaret(text) {
-    editor.focus();
-
-    // En contenteditable, insertText conserva correctamente saltos de línea y
-    // reemplaza la selección actual. Es ideal para escritura/pegado como texto plano.
+    restoreSelection();
     try {
-      if (document.execCommand("insertText", false, text)) return;
+      if (document.execCommand("insertText", false, text)) {
+        rememberSelection();
+        return;
+      }
     } catch {}
 
     const sel = window.getSelection();
-    if (!sel || !sel.rangeCount || !editor.contains(sel.anchorNode)) {
-      const node = document.createTextNode(text);
-      editor.appendChild(node);
-      placeCaretAfter(node);
-      return;
-    }
-    const range = sel.getRangeAt(0);
+    const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+    if (!range || !rangeInsideEditor(range)) return;
     range.deleteContents();
+    const frag = document.createDocumentFragment();
     const parts = String(text).split("\n");
-    parts.forEach((part, index) => {
-      if (index) range.insertNode(document.createElement("br"));
-      if (part) range.insertNode(document.createTextNode(part));
-      range.collapse(false);
+    let last = null;
+    parts.forEach((part, i) => {
+      if (i) { last = document.createElement("br"); frag.appendChild(last); }
+      if (part) { last = document.createTextNode(part); frag.appendChild(last); }
     });
-    sel.removeAllRanges();
-    sel.addRange(range);
+    range.insertNode(frag);
+    if (last) {
+      range.setStartAfter(last);
+      range.collapse(true);
+      sel.removeAllRanges(); sel.addRange(range);
+    }
+    rememberSelection();
+  }
+
+  function placeCaretInside(el) {
+    const sel = window.getSelection();
+    const r = document.createRange();
+    if (!el.firstChild) el.appendChild(document.createTextNode("\u200B"));
+    r.setStart(el.firstChild, el.firstChild.nodeValue.length);
+    r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    savedRange = r.cloneRange();
+  }
+
+  function placeNormalCaretAfter(el) {
+    const span = document.createElement("span");
+    const prefix = el?.dataset?.afterSpace === "1" ? " " : "";
+    const t = document.createTextNode(prefix + "\u200B");
+    span.appendChild(t);
+    el.insertAdjacentElement("afterend", span);
+    const sel = window.getSelection();
+    const r = document.createRange();
+    r.setStart(t, t.nodeValue.length); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    savedRange = r.cloneRange();
+    editor.focus();
+  }
+
+  function inlineFormatAncestor() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return null;
+    let n = sel.anchorNode;
+    if (n && n.nodeType === 3) n = n.parentNode;
+    while (n && n !== editor && n.tagName !== "SUB" && n.tagName !== "SUP") n = n.parentNode;
+    return n && n !== editor ? n : null;
+  }
+
+  function caretAtEndOf(el) {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount || !sel.isCollapsed) return false;
+    const probe = document.createRange();
+    probe.selectNodeContents(el);
+    probe.setStart(sel.anchorNode, sel.anchorOffset);
+    return probe.toString().replace(/\u200B/g, "").length === 0;
+  }
+
+  function insertOperatorWithSubscript(operator) {
+    const range = restoreSelection();
+    if (!range) return;
+    range.deleteContents();
+
+    const frag = document.createDocumentFragment();
+    if (operator === "⋈") frag.appendChild(document.createTextNode(" "));
+    frag.appendChild(document.createTextNode(operator));
+
+    const sub = document.createElement("sub");
+    sub.dataset.afterSpace = operator === "⋈" ? "1" : "0";
+    sub.appendChild(document.createTextNode("\u200B"));
+    frag.appendChild(sub);
+
+    range.insertNode(frag);
+    placeCaretInside(sub);
+  }
+
+  function applyFormat(tagName) {
+    const range = restoreSelection();
+    if (!range) return;
+    const wrapper = document.createElement(tagName);
+    if (range.collapsed) {
+      wrapper.appendChild(document.createTextNode("\u200B"));
+      range.insertNode(wrapper);
+      placeCaretInside(wrapper);
+    } else {
+      const content = range.extractContents();
+      wrapper.appendChild(content);
+      range.insertNode(wrapper);
+      placeNormalCaretAfter(wrapper);
+    }
+  }
+
+  function exitInlineFormat() {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    let n = sel.anchorNode;
+    if (n && n.nodeType === 3) n = n.parentNode;
+    while (n && n !== editor && n.tagName !== "SUB" && n.tagName !== "SUP") n = n.parentNode;
+    if (!n || n === editor) return;
+    placeNormalCaretAfter(n);
   }
 
   function renderSymbols() {
@@ -299,21 +408,132 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       button.type = "button";
       button.className = "query-symbol";
       button.textContent = label;
-      // No perder la posición del cursor del editor al presionar un símbolo.
       button.addEventListener("mousedown", event => event.preventDefault());
-      button.addEventListener("click", () => insertTextAtCaret(value));
+      button.addEventListener("click", () => {
+        if (mode.value === "algebra" && ["Π", "σ", "ρ", "⋈"].includes(label)) {
+          insertOperatorWithSubscript(label);
+        } else {
+          insertTextAtCaret(value);
+        }
+      });
       symbolsBox.appendChild(button);
     });
+
+    if (mode.value !== "sql") {
+      const sub = document.createElement("button");
+      sub.type = "button"; sub.className = "query-symbol format-btn";
+      sub.innerHTML = "x<sub>n</sub>"; sub.title = "Subíndice (Ctrl+=)";
+      sub.addEventListener("mousedown", e => e.preventDefault());
+      sub.addEventListener("click", () => applyFormat("sub"));
+      symbolsBox.appendChild(sub);
+
+      const sup = document.createElement("button");
+      sup.type = "button"; sup.className = "query-symbol format-btn";
+      sup.innerHTML = "x<sup>n</sup>"; sup.title = "Superíndice (Ctrl+Shift+=)";
+      sup.addEventListener("mousedown", e => e.preventDefault());
+      sup.addEventListener("click", () => applyFormat("sup"));
+      symbolsBox.appendChild(sup);
+
+      const normal = document.createElement("button");
+      normal.type = "button"; normal.className = "query-symbol format-btn";
+      normal.textContent = "Normal"; normal.title = "Salir de subíndice/superíndice";
+      normal.addEventListener("mousedown", e => e.preventDefault());
+      normal.addEventListener("click", exitInlineFormat);
+      symbolsBox.appendChild(normal);
+    }
+  }
+
+  function latexCommandsToUnicode(text) {
+    const replacements = [
+      [/\\Pi(?![A-Za-z])/g, "Π"], [/\\sigma(?![A-Za-z])/g, "σ"], [/\\rho(?![A-Za-z])/g, "ρ"], [/\\bowtie(?![A-Za-z])/g, "⋈"],
+      [/\\times(?![A-Za-z])/g, "×"], [/\\cup(?![A-Za-z])/g, "∪"], [/\\cap(?![A-Za-z])/g, "∩"], [/\\setminus(?![A-Za-z])/g, "−"],
+      [/\\leftarrow(?![A-Za-z])/g, "←"], [/\\rightarrow(?![A-Za-z])/g, "→"], [/\\Rightarrow(?![A-Za-z])/g, "⇒"], [/\\Leftrightarrow(?![A-Za-z])/g, "⇔"],
+      [/\\land(?![A-Za-z])/g, "∧"], [/\\lor(?![A-Za-z])/g, "∨"], [/\\neg(?![A-Za-z])/g, "¬"], [/\\exists(?![A-Za-z])/g, "∃"], [/\\forall(?![A-Za-z])/g, "∀"],
+      [/\\notin(?![A-Za-z])/g, "∉"], [/\\in(?![A-Za-z])/g, "∈"], [/\\neq(?![A-Za-z])/g, "≠"], [/\\geq(?![A-Za-z])/g, "≥"], [/\\leq(?![A-Za-z])/g, "≤"],
+      [/\\langle(?![A-Za-z])/g, "⟨"], [/\\rangle(?![A-Za-z])/g, "⟩"]
+    ];
+    let out = String(text)
+      .replace(/\r/g, "")
+      .replace(/^\s*\$\$\s*/, "").replace(/\s*\$\$\s*$/, "")
+      .replace(/\\begin\{(?:aligned|array)(?:\}\{[^}]*\})?\}/g, "")
+      .replace(/\\end\{(?:aligned|array)\}/g, "")
+      .replace(/^\s*&/gm, "").replace(/\\\\\s*$/gm, "")
+      .replace(/\\left|\\right/g, "")
+      .replace(/\\quad\b|\\;|\\:|\\,/g, " ")
+      .replace(/\\_/g, "\uE000")
+      .replace(/\\\{/g, "\uE001").replace(/\\\}/g, "\uE002");
+    replacements.forEach(([re, value]) => { out = out.replace(re, value); });
+    return out;
+  }
+
+  function parseFormulaText(text) {
+    const src = latexCommandsToUnicode(text);
+    let i = 0;
+    function parseUntil(endChar = null) {
+      const frag = document.createDocumentFragment();
+      let buf = "";
+      const flush = () => {
+        if (!buf) return;
+        frag.appendChild(document.createTextNode(buf.replace(/\uE000/g, "_").replace(/\uE001/g, "{").replace(/\uE002/g, "}")));
+        buf = "";
+      };
+      while (i < src.length) {
+        if (endChar && src[i] === endChar) { i++; break; }
+        if ((src[i] === "_" || src[i] === "^") && src[i + 1] === "{") {
+          const tag = src[i] === "_" ? "sub" : "sup";
+          flush(); i += 2;
+          const el = document.createElement(tag);
+          el.appendChild(parseUntil("}"));
+          frag.appendChild(el);
+          continue;
+        }
+        if (src[i] === "\n") {
+          flush(); frag.appendChild(document.createElement("br")); i++; continue;
+        }
+        buf += src[i++];
+      }
+      flush();
+      return frag;
+    }
+    return parseUntil();
+  }
+
+  function insertFragmentAtCaret(fragment) {
+    const range = restoreSelection();
+    if (!range) return;
+    range.deleteContents();
+    const marker = document.createTextNode("");
+    fragment.appendChild(marker);
+    range.insertNode(fragment);
+    const sel = window.getSelection();
+    const r = document.createRange();
+    r.setStartAfter(marker); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    marker.remove();
+    savedRange = r.cloneRange();
+    editor.normalize();
+  }
+
+  function nodeToText(node) {
+    if (node.nodeType === Node.TEXT_NODE) return node.nodeValue.replace(/\u200B/g, "");
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    if (node.tagName === "BR") return "\n";
+    let out = "";
+    for (const child of node.childNodes) out += nodeToText(child);
+    if ((node.tagName === "DIV" || node.tagName === "P") && node !== editor) out = "\n" + out + (out.endsWith("\n") ? "" : "\n");
+    return out;
+  }
+
+  function currentText() {
+    return nodeToText(editor).replace(/\u00a0/g, " ").replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "").trimEnd();
   }
 
   function escapeLatexText(text) {
-    // Lo visible queda intacto en el editor. Los escapes existen únicamente al copiar LaTeX.
     let out = text.replace(/\\/g, "\\textbackslash{}")
       .replace(/_/g, "\\_")
       .replace(/#/g, "\\#")
       .replace(/%/g, "\\%")
       .replace(/&/g, "\\&");
-
     const replacements = [
       [/Π/g, "\\Pi"], [/σ/g, "\\sigma"], [/ρ/g, "\\rho"], [/⋈/g, "\\bowtie"],
       [/×/g, "\\times"], [/∪/g, "\\cup"], [/∩/g, "\\cap"], [/−/g, "\\setminus"],
@@ -323,108 +543,162 @@ $('#searchInput').addEventListener('input',search);$('#typeFilter').addEventList
       [/⟨/g, "\\langle"], [/⟩/g, "\\rangle"]
     ];
     replacements.forEach(([re, value]) => { out = out.replace(re, value); });
+    return out.replace(/\{/g, "\\{").replace(/\}/g, "\\}");
+  }
 
-    // Llaves escritas por el usuario son llaves visibles, no agrupadores de LaTeX.
-    out = out.replace(/\{/g, "\\{").replace(/\}/g, "\\}");
-    return out;
+  function nodeToLatex(node) {
+    if (node.nodeType === Node.TEXT_NODE) return escapeLatexText(node.nodeValue.replace(/\u200B/g, ""));
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    if (node.tagName === "BR") return "\n";
+    let inner = "";
+    for (const child of node.childNodes) inner += nodeToLatex(child);
+    if (node.tagName === "SUB") return `_{${inner}}`;
+    if (node.tagName === "SUP") return `^{${inner}}`;
+    if ((node.tagName === "DIV" || node.tagName === "P") && node !== editor) inner = "\n" + inner + (inner.endsWith("\n") ? "" : "\n");
+    return inner;
   }
 
   function buildLatex() {
-    const text = currentText();
+    if (mode.value === "sql") return currentText().trim();
+    const text = nodeToLatex(editor).replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "").trimEnd();
     if (!text.trim()) return "";
-    if (mode.value === "sql") return text.trim();
-
-    const lines = text.split("\n");
-    const rendered = lines.map(line => "&" + escapeLatexText(line)).join(" \\\\\n");
+    const rendered = text.split("\n").map(line => "&" + line).join(" \\\\\n");
     return "$$\n\\begin{aligned}\n" + rendered + "\n\\end{aligned}\n$$";
   }
 
+  function encodeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function nodeToSheetsHtml(node) {
+    if (node.nodeType === Node.TEXT_NODE) return encodeHtml(node.nodeValue.replace(/\u200B/g, ""));
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+    if (node.tagName === "BR") return "\n";
+    let inner = "";
+    for (const child of node.childNodes) inner += nodeToSheetsHtml(child);
+    if (node.tagName === "SUB") return `<sub>${inner}</sub>`;
+    if (node.tagName === "SUP") return `<sup>${inner}</sup>`;
+    if ((node.tagName === "DIV" || node.tagName === "P") && node !== editor) return "\n" + inner + (inner.endsWith("\n") ? "" : "\n");
+    return inner;
+  }
+
+  function prettySheetsText(text) {
+    // Respeta la sangría que escribió el usuario y limpia espacios accidentales al final.
+    return text.split("\n").map(line => line.replace(/[ \t]+$/g, "")).join("\n").trimEnd();
+  }
+
   async function copyPlainText(textToCopy) {
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-    } catch {
-      const temp = document.createElement("textarea");
-      temp.value = textToCopy;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      temp.remove();
+    try { await navigator.clipboard.writeText(textToCopy); return true; } catch {}
+    const temp = document.createElement("textarea");
+    temp.value = textToCopy; temp.style.position = "fixed"; temp.style.opacity = "0";
+    document.body.appendChild(temp); temp.select();
+    const ok = document.execCommand("copy"); temp.remove(); return ok;
+  }
+
+  async function copyRichForSheets(plain, htmlBody) {
+    const rich = `<pre style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:12pt;margin:0">${htmlBody}</pre>`;
+    if (navigator.clipboard && window.ClipboardItem) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({
+          "text/plain": new Blob([plain], {type:"text/plain"}),
+          "text/html": new Blob([rich], {type:"text/html"})
+        })]);
+        return true;
+      } catch {}
     }
+    const temp = document.createElement("div");
+    temp.contentEditable = "true";
+    temp.style.position = "fixed"; temp.style.left = "-99999px"; temp.style.whiteSpace = "pre-wrap";
+    temp.innerHTML = rich;
+    document.body.appendChild(temp);
+    const sel = window.getSelection(); const r = document.createRange();
+    r.selectNodeContents(temp); sel.removeAllRanges(); sel.addRange(r);
+    let ok = false;
+    const handler = e => {
+      e.preventDefault();
+      e.clipboardData.setData("text/plain", plain);
+      e.clipboardData.setData("text/html", rich);
+    };
+    document.addEventListener("copy", handler, true);
+    try { ok = document.execCommand("copy"); } catch {}
+    document.removeEventListener("copy", handler, true);
+    sel.removeAllRanges(); temp.remove(); editor.focus();
+    return ok;
   }
 
   function updateModeUI() {
     const isSQL = mode.value === "sql";
-    const isCalc = mode.value === "calculo";
-    if (calcTools) calcTools.classList.toggle("hidden", !(isCalc || isSQL));
-    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", !isCalc);
+    if (calcTools) calcTools.classList.remove("hidden");
+    if (newExpressionBtn) newExpressionBtn.classList.toggle("hidden", isSQL);
     copyBtn.textContent = isSQL ? "Copiar SQL" : "Copiar LaTeX";
-    renderSymbols();
-    showStatus("");
-    editor.focus();
+    renderSymbols(); showStatus(""); editor.focus(); rememberSelection();
   }
 
-  editor.addEventListener("input", () => {
-    if (status) status.textContent = "";
-  });
+  ["keyup","mouseup","focus","input"].forEach(evt => editor.addEventListener(evt, rememberSelection));
 
-  // Pegado siempre como texto plano. "en_contra" entra y queda exactamente "en_contra".
   editor.addEventListener("paste", event => {
     const plain = event.clipboardData?.getData("text/plain");
     if (plain == null) return;
     event.preventDefault();
-    insertTextAtCaret(plain.replace(/\r/g, ""));
+    if (mode.value === "sql") insertTextAtCaret(plain.replace(/\r/g, ""));
+    else insertFragmentAtCaret(parseFormulaText(plain));
   });
 
   editor.addEventListener("keydown", event => {
-    if (event.key === "Tab") {
+    const inline = inlineFormatAncestor();
+
+    if (inline && event.key === "Tab") {
       event.preventDefault();
-      insertTextAtCaret("    ");
+      placeNormalCaretAfter(inline);
+      return;
+    }
+
+    if (inline && event.key === "ArrowRight" && caretAtEndOf(inline)) {
+      event.preventDefault();
+      placeNormalCaretAfter(inline);
+      return;
+    }
+
+    if (event.key === "Tab") {
+      event.preventDefault(); insertTextAtCaret("    "); return;
+    }
+    if (mode.value !== "sql" && event.ctrlKey && event.key === "=") {
+      event.preventDefault();
+      if (event.shiftKey) applyFormat("sup"); else applyFormat("sub");
     }
   });
 
-  if (newExpressionBtn) {
-    newExpressionBtn.addEventListener("click", () => {
-      if (mode.value !== "calculo") return;
-      insertTextAtCaret("\n\n");
-    });
-  }
-
-  if (indentCalcBtn) {
-    indentCalcBtn.addEventListener("click", () => insertTextAtCaret("    "));
-  }
-
-  if (outdentCalcBtn) {
-    outdentCalcBtn.addEventListener("click", () => {
-      const text = currentText();
-      const replaced = text.replace(/(^|\n) {1,4}/, "$1");
-      if (replaced !== text) {
-        editor.textContent = replaced;
-        editor.focus();
-        const sel = window.getSelection();
-        const range = document.createRange();
-        range.selectNodeContents(editor);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+  if (newExpressionBtn) newExpressionBtn.addEventListener("click", () => insertTextAtCaret("\n\n"));
+  if (indentCalcBtn) indentCalcBtn.addEventListener("click", () => insertTextAtCaret("    "));
+  if (outdentCalcBtn) outdentCalcBtn.addEventListener("click", () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const r = sel.getRangeAt(0);
+    // Quita hasta cuatro espacios antes del cursor en la misma línea.
+    if (r.startContainer.nodeType === Node.TEXT_NODE) {
+      const t = r.startContainer; const pos = r.startOffset;
+      const before = t.nodeValue.slice(0, pos); const m = before.match(/ {1,4}$/);
+      if (m) {
+        t.nodeValue = before.slice(0, -m[0].length) + t.nodeValue.slice(pos);
+        const nr = document.createRange(); nr.setStart(t, pos - m[0].length); nr.collapse(true);
+        sel.removeAllRanges(); sel.addRange(nr); savedRange = nr.cloneRange();
       }
-    });
-  }
+    }
+  });
 
   clearBtn.addEventListener("click", () => {
     if (naturalInput) naturalInput.value = "";
-    editor.textContent = "";
-    editor.focus();
-    showStatus("");
+    editor.innerHTML = ""; editor.focus(); savedRange = null; rememberSelection(); showStatus("");
   });
 
-  if (copySheetsBtn) {
-    copySheetsBtn.addEventListener("click", async () => {
-      const text = currentText();
-      if (!text.trim()) return showStatus("No hay contenido.");
-      await copyPlainText(text);
-      showStatus("Copiado para Sheets.");
-    });
-  }
+  if (copySheetsBtn) copySheetsBtn.addEventListener("click", async () => {
+    const plain = prettySheetsText(currentText());
+    if (!plain.trim()) return showStatus("No hay contenido.");
+    const html = nodeToSheetsHtml(editor).replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "").replace(/\u200B/g, "");
+    await copyRichForSheets(plain, html);
+    showStatus("Copiado para Sheets con formato.");
+  });
 
   copyBtn.addEventListener("click", async () => {
     const output = buildLatex();

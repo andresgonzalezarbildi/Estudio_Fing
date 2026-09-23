@@ -1,0 +1,6 @@
+Actualización banco de preguntas – Redes – 2026-09-23
+Primer parcial: 22 preguntas (10 de parciales 2024/2025 + 12 de exámenes recientes compatibles).
+Segundo parcial: 24 preguntas (10 de parciales 2024/2025 + 14 de exámenes recientes compatibles).
+Fuente de preguntas/respuestas: redes.json aportado por el usuario.
+Archivo histórico verificado: https://drive.google.com/drive/folders/1gDx1XNRr5JM9Whlo0J5_ZXKnoVAKixvp
+Alcance: Cronograma_redes_2026.pdf incluido en plan/cronogramas/.

@@ -7,8 +7,8 @@ const css = fs.readFileSync(new URL("../style.css", import.meta.url), "utf8");
 const syncFn = fs.readFileSync(new URL("../../netlify/functions/drive-sync.js", import.meta.url), "utf8");
 const googleLib = fs.readFileSync(new URL("../../netlify/functions/_lib/google.js", import.meta.url), "utf8");
 
-assert.match(html, /Cronograma del semestre/);
-assert.doesNotMatch(html, /bloques sugeridos|Plan de estudio|Temarios/i);
+assert.match(html, /Cronograma · FBD \+ IntroPLN/);
+assert.match(html, /24–29 de septiembre/);
 assert.match(html, /Todas juntas/);
 assert.match(html, /Entregas, prácticos y laboratorios/);
 assert.match(html, /Semana actual/);
@@ -20,10 +20,17 @@ assert.match(html, /driveRecoveryButton/);
 assert.match(html, /driveMenuButton/);
 assert.match(html, /driveMenu/);
 assert.doesNotMatch(html, /google-drive-config\.js/);
-assert.match(html, /app\.js\?v=20/);
+assert.match(html, /data\.js\?v=31/);
+assert.match(html, /app\.js\?v=21/);
 assert.match(html, /accounts\.google\.com\/gsi\/client/);
-assert.doesNotMatch(html, /Contenido de los cronogramas agrupado por semana/i);
-assert.doesNotMatch(html, /Exportar|Importar|Restaurar cronograma/i);
+
+assert.match(js, /isVisibleInCurrentFocus/);
+assert.match(js, /visibleFocusItems/);
+assert.match(js, /item\.manual \|\| item\.done/);
+assert.match(js, /focus: item\.focus/);
+assert.match(js, /\.filter\(isVisibleInCurrentFocus\)/);
+assert.match(js, /DATA\.focus\?\.subjects/);
+
 assert.match(js, /defaultWeekOpen/);
 assert.match(js, /weekOpenOverrides/);
 assert.match(js, /completedZoneOpen = false/);
@@ -64,4 +71,4 @@ assert.match(css, /\.drive-menu-button/);
 assert.match(css, /\.drive-menu/);
 assert.match(css, /width:\s*168px/);
 
-console.log("OK: interfaz validada");
+console.log("OK: interfaz y foco validados");

@@ -1,5 +1,5 @@
 window.PLAN_DATA = {
-  "version": "2026.09.19-20",
+  "version": "2026.09.24-21",
   "semester": {
     "title": "Cronograma · segundo semestre 2026",
     "start": "2026-08-03",
@@ -30,7 +30,7 @@ window.PLAN_DATA = {
       "name": "Fundamentos de Bases de Datos",
       "short": "FBD",
       "color": "#ff9a3c",
-      "status": "Cronograma oficial cargado",
+      "status": "Foco actual · parcial 28/09 · prácticos P1–P6 y P8",
       "source": "Cronograma FBD 2026 proporcionado",
       "scheduleUrl": "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start",
       "scheduleLabel": "Cronograma oficial",
@@ -40,8 +40,8 @@ window.PLAN_DATA = {
       "name": "Introducción al Procesamiento de Lenguaje Natural",
       "short": "IntroPLN",
       "color": "#ff4fcf",
-      "status": "Cronograma tentativo 2026 + clases OpenFing cargadas",
-      "source": "Cronograma tentativo PLN 2026 + OpenFing",
+      "status": "Foco actual · parcial 29/09 · clases presenciales + P1–P3",
+      "source": "Cronograma IntroPLN 2026 + material presencial",
       "scheduleUrl": "https://eva.fing.edu.uy/mod/page/view.php?id=84886",
       "scheduleLabel": "Cronograma oficial",
       "scheduleOriginal": true
@@ -131,7 +131,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "critical",
-      "order": 2310
+      "order": 2310,
+      "focus": true
     },
     {
       "id": "redes-20261005-04",
@@ -969,7 +970,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "critical",
-      "order": 3110
+      "order": 3110,
+      "focus": true
     },
     {
       "id": "pln-prueba-2",
@@ -1474,28 +1476,30 @@ window.PLAN_DATA = {
       "subject": "fbd",
       "type": "study",
       "title": "Jueves 24 · FBD — MER + modelo relacional",
-      "details": "Repasar diseño conceptual y Modelo Entidad-Relación: entidades, relaciones, cardinalidades, participación y restricciones; después pasaje conceptual al modelo relacional, claves y claves foráneas. Usar el Práctico 1 y el MER del Mundial como referencia, pero intentar justificar cada decisión sin mirar respuestas.",
+      "details": "Repasar MER: entidades, relaciones, cardinalidades, participación, categorizaciones y RNE. Práctica: P1, priorizar los ejercicios marcados 1, 4, 6 y 11. Después pasaje al modelo relacional: claves, claves foráneas/dependencias de inclusión y transformación de relaciones/categorizaciones; hacer P8, empezando por ejercicios 1 y 2. Usar el MER del Mundial solo para contrastar decisiones.",
       "periodLabel": "24/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1200
+      "order": 1200,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260924",
       "week": "2026-09-21",
       "eventDate": "2026-09-24",
       "subject": "pln",
-      "type": "reading",
-      "title": "Jueves 24 · IntroPLN — Libro cap. 2 · primera pasada",
-      "details": "Libro: capítulo 2. Leer Análisis Léxico y preprocesamiento de textos, tomando notas de tokenización/normalización y del flujo de preprocesamiento. Llegar hasta DME si el capítulo avanza con ritmo; no abrir OpenFing porque estás siguiendo las clases presenciales.",
+      "type": "study",
+      "title": "Jueves 24 · IntroPLN — Introducción + Gramática",
+      "details": "Repasar material presencial de Introducción al PLN y Gramática del español; no usar OpenFing. Hacer P1: ejercicios 1–3, identificando categorías gramaticales, oraciones/sintagmas y estructura de sintagmas nominales. Si queda tiempo, comenzar capítulo 2 del libro por análisis léxico y preprocesamiento.",
       "periodLabel": "24/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "high",
-      "order": 1210
+      "order": 1210,
+      "focus": true
     },
     {
       "id": "plan-fbd-dia-20260925",
@@ -1503,29 +1507,31 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-25",
       "subject": "fbd",
       "type": "study",
-      "title": "Viernes 25 · FBD — Álgebra + Cálculo Relacional",
-      "details": "Rehacer consultas representativas primero en álgebra y después en cálculo: selección, proyección, join/producto, diferencia y cuantificación. Practicar especialmente “algún”, “todos” y “ninguno”, traduciendo la lógica antes de escribir símbolos. Usar P2/P3 y las consultas del Mundial que ya trabajaste.",
+      "title": "Viernes 25 · FBD — Álgebra + Cálculo + SQL",
+      "details": "Álgebra: P2, priorizar ejercicios 2, 3 y 7; practicar selección, proyección, join/producto, diferencia y consultas con “todos/ninguno”. Cálculo: P3, priorizar 1 y 7, escribiendo primero la condición lógica y luego cuantificadores. SQL: hacer una selección de P4 con joins, subconsultas y EXISTS/NOT EXISTS; comprobar en PostgreSQL cuando corresponda.",
       "periodLabel": "25/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1220
+      "order": 1220,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260925",
       "week": "2026-09-21",
       "eventDate": "2026-09-25",
       "subject": "pln",
-      "type": "reading",
-      "title": "Viernes 25 · IntroPLN — Libro cap. 2 · DME y cierre",
-      "details": "Libro: terminar capítulo 2. Cerrar Distancia de Mínima Edición y cualquier parte pendiente de análisis léxico/preprocesamiento. Hacer un resumen de una página con definiciones y pasos; el objetivo es que el sábado puedas pasar a Sintaxis sin arrastrar capítulos pendientes.",
+      "type": "study",
+      "title": "Viernes 25 · IntroPLN — Cap. 2 + P2 (léxico)",
+      "details": "Libro, capítulo 2: análisis léxico, preprocesamiento, expresiones regulares, tokenización y morfología. Hacer P2 ejercicios 1–3: ER, conteo de palabras/tokens/tipos y morfemas. Dejar DME para mañana. No abrir clases OpenFing: usar el libro y lo visto presencialmente.",
       "periodLabel": "25/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "high",
-      "order": 1230
+      "order": 1230,
+      "focus": true
     },
     {
       "id": "plan-fbd-dia-20260926",
@@ -1533,29 +1539,31 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-26",
       "subject": "fbd",
       "type": "study",
-      "title": "Sábado 26 · FBD — SQL + Dependencias Funcionales",
-      "details": "SQL: rehacer consultas con joins, subconsultas y EXISTS/NOT EXISTS sin mirar soluciones; comprobarlas en PostgreSQL. Después empezar/cerrar Dependencias Funcionales: cierres de atributos, superclaves, claves candidatas e identificación de dependencias. Usar P4 y P5 como guía del alcance.",
+      "title": "Sábado 26 · FBD — Dependencias Funcionales + Normalización",
+      "details": "P5: trabajar dependencias funcionales, cierres, superclaves/claves, equivalencia y cubrimiento minimal; priorizar 2, 3, 7, 8 y 9. Luego P6: join sin pérdida, preservación de dependencias y formas normales; priorizar 1, 3, 7, 9, 12, 15 y 17. Terminar el día con una hoja de procedimiento: cierre → claves → cubrimiento → forma normal → descomposición.",
       "periodLabel": "26/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1240
+      "order": 1240,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260926",
       "week": "2026-09-21",
       "eventDate": "2026-09-26",
       "subject": "pln",
-      "type": "reading",
-      "title": "Sábado 26 · IntroPLN — Sintaxis",
-      "details": "Libro: capítulos 18 y 19 de la edición enero 2025, o 19 y 20 de la edición agosto 2026. Leer Sintaxis y Análisis Sintáctico siguiendo lo dado en clase presencial. Al terminar, poder distinguir la representación sintáctica y el proceso de análisis; anotar dudas concretas para el repaso del lunes.",
+      "type": "study",
+      "title": "Sábado 26 · IntroPLN — DME + comienzo de Sintaxis",
+      "details": "Cerrar capítulo 2 con Distancia de Mínima Edición/Levenshtein y hacer P2 ejercicios 4–5. Después empezar Sintaxis: caps. 18 y 19 (ed. enero 2025) o 19 y 20 (ed. agosto 2026). Priorizar gramáticas libres de contexto, constituyentes y representación sintáctica; sin OpenFing.",
       "periodLabel": "26/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "high",
-      "order": 1250
+      "order": 1250,
+      "focus": true
     },
     {
       "id": "plan-fbd-dia-20260927",
@@ -1563,14 +1571,15 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-27",
       "subject": "fbd",
       "type": "study",
-      "title": "Domingo 27 · FBD — Normalización + simulacro",
-      "details": "Cerrar Dependencias Funcionales y Normalización: claves/cierres, dependencias relevantes y descomposición según lo trabajado en el curso. Después resolver un parcial viejo o una selección completa de ejercicios mezclando MER, álgebra/cálculo/SQL y normalización. Corregir y dejar una hoja final solo con errores frecuentes.",
+      "title": "Domingo 27 · FBD — simulacro + repaso de errores",
+      "details": "No agregar contenido nuevo. Resolver un parcial viejo completo o una selección equivalente, con tiempo y sin mirar material, incluyendo MER/modelo relacional, álgebra, cálculo, SQL, dependencias funcionales y normalización. Corregirlo y clasificar errores. Rehacer únicamente ejercicios de P1–P6/P8 vinculados a esos errores y cerrar una hoja final de fallos frecuentes.",
       "periodLabel": "27/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1260
+      "order": 1260,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260927",
@@ -1578,14 +1587,15 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-27",
       "subject": "pln",
       "type": "study",
-      "title": "Domingo 27 · IntroPLN — Introducción, Gramática y Semántica",
-      "details": "Repasar apuntes/material de las clases presenciales de Introducción al PLN, Gramática del español y Semántica. El cronograma no asigna capítulo de libro a Semántica, así que usar el material de clase. Integrar con lo leído de léxico y sintaxis; no mirar OpenFing.",
+      "title": "Domingo 27 · IntroPLN — Sintaxis + P3",
+      "details": "Continuar/terminar Sintaxis en caps. 18–19 (ed. enero 2025) o 19–20 (ed. agosto 2026). Hacer P3 ejercicios 1–2: construir GLC para frases y grupos nominales, detectar sobregeneración y proponer ajustes. Mantener este bloque más corto que FBD; Semántica queda para el lunes con el material presencial.",
       "periodLabel": "27/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "high",
-      "order": 1270
+      "order": 1270,
+      "focus": true
     },
     {
       "id": "plan-fbd-dia-20260928",
@@ -1593,14 +1603,15 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-28",
       "subject": "fbd",
       "type": "study",
-      "title": "Lunes 28 · FBD — repaso final pre-parcial",
-      "details": "Nada nuevo. Revisar la hoja de errores del simulacro y comprobar que podés pasar de un enunciado a MER/relaciones y de una consulta a álgebra, cálculo y SQL; repasar cierres/claves y normalización. Hacer solo ejercicios cortos donde ayer hayas fallado.",
+      "title": "Lunes 28 · FBD — repaso corto pre-parcial",
+      "details": "Nada nuevo. Revisar la hoja de errores del simulacro y los procedimientos que todavía cuesten: MER→modelo relacional, consultas en álgebra/cálculo/SQL, cierres y claves, cubrimiento y normalización. Hacer solo 1–2 ejercicios cortos de los temas fallados; no abrir prácticos completos antes del parcial.",
       "periodLabel": "28/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1280
+      "order": 1280,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260928",
@@ -1608,14 +1619,15 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-28",
       "subject": "pln",
       "type": "study",
-      "title": "Lunes 28 · IntroPLN — integración final después de FBD",
-      "details": "Después del parcial de FBD, hacer el repaso principal de IntroPLN: cap. 2 (léxico, preprocesamiento, DME), Sintaxis (caps. 18–19 / 19–20 según edición), y apuntes de Gramática + Semántica. Armar una única hoja de relaciones entre temas y revisar preguntas/material de evaluación disponible.",
+      "title": "Lunes 28 · IntroPLN — bloque fuerte después de FBD",
+      "details": "Después de rendir FBD, IntroPLN pasa a prioridad total. P3 ejercicios 3–4: árboles de dependencias y análisis de ambigüedades/adjunción. Repasar Semántica únicamente con clases/material presencial. Integrar Introducción, Gramática, cap. 2 y Sintaxis en una hoja final; volver a P1/P2 solo donde aparezcan dudas concretas.",
       "periodLabel": "28/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1290
+      "order": 1290,
+      "focus": true
     },
     {
       "id": "plan-pln-dia-20260929",
@@ -1623,14 +1635,25 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-29",
       "subject": "pln",
       "type": "study",
-      "title": "Martes 29 · IntroPLN — repaso pre-parcial",
-      "details": "No leer capítulos nuevos. Revisar la hoja del lunes y comprobar definiciones/procedimientos de análisis léxico, DME, sintaxis y semántica, más Introducción/Gramática. Concentrarse en dudas concretas y llegar al parcial sin abrir OpenFing.",
+      "title": "Martes 29 · IntroPLN — repaso corto pre-parcial",
+      "details": "Nada nuevo. Repasar la hoja final y los errores detectados en P1–P3: categorías/gramática, tokenización y morfología, DME, GLC, sintaxis/árboles de dependencias y Semántica de clase. Revisar definiciones o un procedimiento puntual si falla; no abrir capítulos completos ni OpenFing.",
       "periodLabel": "29/09",
-      "source": "Plan diario de parciales",
+      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1300
+      "order": 1300,
+      "focus": true
     }
-  ]
+  ],
+  "focus": {
+    "active": true,
+    "label": "Preparación parciales FBD + IntroPLN · 24–29/09/2026",
+    "subjects": [
+      "fbd",
+      "pln"
+    ],
+    "start": "2026-09-24",
+    "end": "2026-09-29"
+  }
 };

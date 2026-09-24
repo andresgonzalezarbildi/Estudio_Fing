@@ -257,6 +257,7 @@
       fixed: Boolean(item.fixed),
       important: Boolean(item.important),
       priority: ["normal", "high", "critical"].includes(item.priority) ? item.priority : "normal",
+      focus: Boolean(item.focus),
       order: finiteOrder(item.order, fallbackOrder),
       updatedAt: validTimestamp(item.updatedAt) ? item.updatedAt : ""
     };
@@ -300,6 +301,7 @@
         Object.assign(merged, sanitizeItem(previous, item.id, item.order), {
           edited: true,
           manual: false,
+          focus: item.focus,
           updatedAt: validTimestamp(previous.updatedAt) ? previous.updatedAt : ""
         });
       }
@@ -786,6 +788,16 @@
     return !INFORMATIONAL_TYPES.has(item.type);
   }
 
+  function isVisibleInCurrentFocus(item) {
+    if (!DATA.focus?.active) return true;
+    if (item.manual || item.done || pendingCompletionIds.has(item.id)) return true;
+    return Boolean(item.focus);
+  }
+
+  function visibleFocusItems() {
+    return state.items.filter((item) => !item.deleted && isVisibleInCurrentFocus(item));
+  }
+
   function itemDateForSorting(item) {
     return item.eventDate || item.week || "9999-12-31";
   }
@@ -814,7 +826,11 @@
 
   function visibleItems() {
     const query = elements.searchInput.value.trim().toLocaleLowerCase("es");
-    return state.items.filter(itemMatchesFilter).filter((item) => itemMatchesSearch(item, query)).sort(compareItems);
+    return state.items
+      .filter(isVisibleInCurrentFocus)
+      .filter(itemMatchesFilter)
+      .filter((item) => itemMatchesSearch(item, query))
+      .sort(compareItems);
   }
 
   function render() {
@@ -827,8 +843,13 @@
 
   function renderSubjectOverview() {
     elements.subjectOverview.replaceChildren();
-    Object.entries(DATA.subjects).forEach(([key, subject]) => {
-      const subjectItems = state.items.filter((item) => item.subject === key && !item.deleted);
+    const focusSubjects = new Set(DATA.focus?.subjects || []);
+    Object.entries(DATA.subjects)
+      .filter(([key]) => !DATA.focus?.active
+        || focusSubjects.has(key)
+        || state.items.some((item) => item.subject === key && item.manual && !item.deleted && !item.done))
+      .forEach(([key, subject]) => {
+      const subjectItems = state.items.filter((item) => item.subject === key && !item.deleted && isVisibleInCurrentFocus(item));
       const actionable = subjectItems.filter(isActionable);
       const pending = actionable.filter((item) => !item.done);
       const deliverables = pending.filter((item) => DELIVERABLE_TYPES.has(item.type));
@@ -876,7 +897,7 @@
   }
 
   function renderSummary() {
-    const actionable = state.items.filter((item) => !item.deleted && isActionable(item));
+    const actionable = visibleFocusItems().filter(isActionable);
     const completed = actionable.filter((item) => item.done);
     const pending = actionable.filter((item) => !item.done);
     const currentWeek = startOfWeekISO(todayISO());

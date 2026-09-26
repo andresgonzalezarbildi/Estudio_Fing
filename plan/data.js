@@ -1,5 +1,5 @@
 window.PLAN_DATA = {
-  "version": "2026.09.24-21",
+  "version": "2026.09.26-22",
   "semester": {
     "title": "Cronograma · segundo semestre 2026",
     "start": "2026-08-03",
@@ -30,7 +30,7 @@ window.PLAN_DATA = {
       "name": "Fundamentos de Bases de Datos",
       "short": "FBD",
       "color": "#ff9a3c",
-      "status": "Foco actual · parcial 28/09 · prácticos P1–P6 y P8",
+      "status": "Foco actual · parcial 29/09 · MER, modelo relacional, álgebra, cálculo y SQL",
       "source": "Cronograma FBD 2026 proporcionado",
       "scheduleUrl": "https://eva.fing.edu.uy/course/view.php?id=330&section=3#tabs-tree-start",
       "scheduleLabel": "Cronograma oficial",
@@ -40,7 +40,7 @@ window.PLAN_DATA = {
       "name": "Introducción al Procesamiento de Lenguaje Natural",
       "short": "IntroPLN",
       "color": "#ff4fcf",
-      "status": "Foco actual · parcial 29/09 · clases presenciales + P1–P3",
+      "status": "Foco actual · parcial 28/09 · clases presenciales + libro + P1–P3",
       "source": "Cronograma IntroPLN 2026 + material presencial",
       "scheduleUrl": "https://eva.fing.edu.uy/mod/page/view.php?id=84886",
       "scheduleLabel": "Cronograma oficial",
@@ -102,7 +102,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1805
+      "order": 1805,
+      "focus": false
     },
     {
       "id": "fuaa-20260921-02",
@@ -116,22 +117,23 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "critical",
-      "order": 1740
+      "order": 1740,
+      "focus": false
     },
     {
       "id": "fbd-20260921-01",
       "week": "2026-09-28",
-      "periodLabel": "Lunes 28/09",
-      "eventDate": "2026-09-28",
+      "periodLabel": "Martes 29/09",
+      "eventDate": "2026-09-29",
       "subject": "fbd",
       "type": "partial",
       "title": "Primer parcial",
-      "details": "Primer parcial de FBD · contenido de la primera parte del semestre.",
+      "details": "Primer parcial de FBD · MER/diseño conceptual, modelo relacional, álgebra relacional, cálculo relacional y SQL.",
       "source": "Fecha de parcial informada",
       "fixed": true,
       "important": true,
       "priority": "critical",
-      "order": 2310,
+      "order": 3120,
       "focus": true
     },
     {
@@ -146,7 +148,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 640
+      "order": 640,
+      "focus": false
     },
     {
       "id": "fuaa-20261005-01",
@@ -160,7 +163,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1380
+      "order": 1380,
+      "focus": false
     },
     {
       "id": "fuaa-20261005-02",
@@ -174,7 +178,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1390
+      "order": 1390,
+      "focus": false
     },
     {
       "id": "fuaa-20261005-03",
@@ -188,7 +193,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1400
+      "order": 1400,
+      "focus": false
     },
     {
       "id": "fuaa-20261005-06",
@@ -202,7 +208,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1770
+      "order": 1770,
+      "focus": false
     },
     {
       "id": "fuaa-20261005-07",
@@ -216,7 +223,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1780
+      "order": 1780,
+      "focus": false
     },
     {
       "id": "fbd-20261005-01",
@@ -231,7 +239,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2320
+      "order": 2320,
+      "focus": false
     },
     {
       "id": "fbd-20261005-02",
@@ -246,7 +255,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2330
+      "order": 2330,
+      "focus": false
     },
     {
       "id": "fbd-20261005-03",
@@ -261,7 +271,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2340
+      "order": 2340,
+      "focus": false
     },
     {
       "id": "fbd-20261005-04",
@@ -276,7 +287,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2350
+      "order": 2350,
+      "focus": false
     },
     {
       "id": "redes-20261012-05",
@@ -290,7 +302,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 720
+      "order": 720,
+      "focus": false
     },
     {
       "id": "fuaa-20261012-02",
@@ -304,7 +317,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1800
+      "order": 1800,
+      "focus": false
     },
     {
       "id": "fuaa-20261012-03",
@@ -318,7 +332,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1810
+      "order": 1810,
+      "focus": false
     },
     {
       "id": "fbd-20261012-01",
@@ -333,7 +348,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2360
+      "order": 2360,
+      "focus": false
     },
     {
       "id": "fbd-20261012-02",
@@ -348,7 +364,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2370
+      "order": 2370,
+      "focus": false
     },
     {
       "id": "fbd-20261012-03",
@@ -363,7 +380,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2380
+      "order": 2380,
+      "focus": false
     },
     {
       "id": "fbd-20261012-04",
@@ -378,7 +396,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2390
+      "order": 2390,
+      "focus": false
     },
     {
       "id": "fbd-20261012-05",
@@ -393,7 +412,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2400
+      "order": 2400,
+      "focus": false
     },
     {
       "id": "redes-20261019-06",
@@ -407,7 +427,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 810
+      "order": 810,
+      "focus": false
     },
     {
       "id": "fuaa-20261019-01",
@@ -421,7 +442,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1420
+      "order": 1420,
+      "focus": false
     },
     {
       "id": "fuaa-20261019-02",
@@ -435,7 +457,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1430
+      "order": 1430,
+      "focus": false
     },
     {
       "id": "fuaa-20261019-05",
@@ -449,7 +472,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "high",
-      "order": 1830
+      "order": 1830,
+      "focus": false
     },
     {
       "id": "fuaa-20261019-06",
@@ -463,7 +487,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1840
+      "order": 1840,
+      "focus": false
     },
     {
       "id": "fuaa-20261019-07",
@@ -477,7 +502,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1850
+      "order": 1850,
+      "focus": false
     },
     {
       "id": "fbd-20261019-01",
@@ -492,7 +518,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2410
+      "order": 2410,
+      "focus": false
     },
     {
       "id": "fbd-20261019-02",
@@ -507,7 +534,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2420
+      "order": 2420,
+      "focus": false
     },
     {
       "id": "fbd-20261019-03",
@@ -522,7 +550,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2430
+      "order": 2430,
+      "focus": false
     },
     {
       "id": "redes-20261026-05",
@@ -536,7 +565,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 890
+      "order": 890,
+      "focus": false
     },
     {
       "id": "fuaa-20261026-01",
@@ -550,7 +580,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1450
+      "order": 1450,
+      "focus": false
     },
     {
       "id": "fuaa-20261026-02",
@@ -564,7 +595,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1460
+      "order": 1460,
+      "focus": false
     },
     {
       "id": "fuaa-20261026-05",
@@ -578,7 +610,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "high",
-      "order": 1870
+      "order": 1870,
+      "focus": false
     },
     {
       "id": "fuaa-20261026-06",
@@ -592,7 +625,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1880
+      "order": 1880,
+      "focus": false
     },
     {
       "id": "fuaa-20261026-07",
@@ -606,7 +640,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1890
+      "order": 1890,
+      "focus": false
     },
     {
       "id": "fbd-20261026-01",
@@ -621,7 +656,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2440
+      "order": 2440,
+      "focus": false
     },
     {
       "id": "fbd-20261026-02",
@@ -636,7 +672,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2450
+      "order": 2450,
+      "focus": false
     },
     {
       "id": "fbd-20261026-03",
@@ -651,7 +688,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2460
+      "order": 2460,
+      "focus": false
     },
     {
       "id": "fbd-20261026-04",
@@ -666,7 +704,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2470
+      "order": 2470,
+      "focus": false
     },
     {
       "id": "redes-20261102-05",
@@ -680,7 +719,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 970
+      "order": 970,
+      "focus": false
     },
     {
       "id": "fuaa-20261102-02",
@@ -694,7 +734,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1910
+      "order": 1910,
+      "focus": false
     },
     {
       "id": "fuaa-20261102-03",
@@ -708,7 +749,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1920
+      "order": 1920,
+      "focus": false
     },
     {
       "id": "fbd-20261102-01",
@@ -723,7 +765,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2480
+      "order": 2480,
+      "focus": false
     },
     {
       "id": "fbd-20261102-02",
@@ -738,7 +781,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2490
+      "order": 2490,
+      "focus": false
     },
     {
       "id": "fbd-20261102-03",
@@ -753,7 +797,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2500
+      "order": 2500,
+      "focus": false
     },
     {
       "id": "fbd-20261102-04",
@@ -768,7 +813,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2510
+      "order": 2510,
+      "focus": false
     },
     {
       "id": "fbd-20261102-05",
@@ -783,7 +829,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2520
+      "order": 2520,
+      "focus": false
     },
     {
       "id": "redes-20261109-05",
@@ -797,7 +844,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1050
+      "order": 1050,
+      "focus": false
     },
     {
       "id": "fuaa-20261109-01",
@@ -811,7 +859,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1480
+      "order": 1480,
+      "focus": false
     },
     {
       "id": "fuaa-20261109-03",
@@ -825,7 +874,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1940
+      "order": 1940,
+      "focus": false
     },
     {
       "id": "fuaa-20261109-04",
@@ -839,7 +889,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "high",
-      "order": 1950
+      "order": 1950,
+      "focus": false
     },
     {
       "id": "fuaa-20261109-05",
@@ -853,7 +904,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1960
+      "order": 1960,
+      "focus": false
     },
     {
       "id": "fbd-20261109-01",
@@ -868,7 +920,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2530
+      "order": 2530,
+      "focus": false
     },
     {
       "id": "fbd-20261109-02",
@@ -883,7 +936,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2540
+      "order": 2540,
+      "focus": false
     },
     {
       "id": "redes-20261116-05",
@@ -897,7 +951,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1140
+      "order": 1140,
+      "focus": false
     },
     {
       "id": "pln-presentacion-articulos-17",
@@ -912,7 +967,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3230
+      "order": 3230,
+      "focus": false
     },
     {
       "id": "pln-presentacion-articulos-19",
@@ -927,7 +983,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3240
+      "order": 3240,
+      "focus": false
     },
     {
       "id": "fuaa-20261123-01",
@@ -941,7 +998,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": true,
       "priority": "critical",
-      "order": 1990
+      "order": 1990,
+      "focus": false
     },
     {
       "id": "fuaa-20261123-02",
@@ -955,17 +1013,18 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 2000
+      "order": 2000,
+      "focus": false
     },
     {
       "id": "pln-prueba-1",
       "week": "2026-09-28",
-      "periodLabel": "Martes 29/09",
-      "eventDate": "2026-09-29",
+      "periodLabel": "Lunes 28/09",
+      "eventDate": "2026-09-28",
       "subject": "pln",
       "type": "partial",
       "title": "Prueba 1 / primer parcial",
-      "details": "Primer parcial de IntroPLN · hasta Semántica.",
+      "details": "Primer parcial de IntroPLN · Introducción, Gramática del español, capítulo 2, Sintaxis y Semántica.",
       "source": "Fecha de parcial informada",
       "fixed": true,
       "important": true,
@@ -986,7 +1045,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3250
+      "order": 3250,
+      "focus": false
     },
     {
       "id": "plan-fbd-entregable-20260920",
@@ -1001,7 +1061,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 952
+      "order": 952,
+      "focus": false
     },
     {
       "id": "redes-primer-parcial-20260923",
@@ -1016,7 +1077,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1020
+      "order": 1020,
+      "focus": false
     },
     {
       "id": "redes-20261005-02",
@@ -1030,7 +1092,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 620
+      "order": 620,
+      "focus": false
     },
     {
       "id": "redes-20261012-02",
@@ -1044,7 +1107,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 690
+      "order": 690,
+      "focus": false
     },
     {
       "id": "redes-20261012-03",
@@ -1058,7 +1122,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 700
+      "order": 700,
+      "focus": false
     },
     {
       "id": "redes-20261019-02",
@@ -1072,7 +1137,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 770
+      "order": 770,
+      "focus": false
     },
     {
       "id": "redes-20261019-03",
@@ -1086,7 +1152,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 780
+      "order": 780,
+      "focus": false
     },
     {
       "id": "redes-20261019-04",
@@ -1100,7 +1167,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 790
+      "order": 790,
+      "focus": false
     },
     {
       "id": "redes-20261026-02",
@@ -1114,7 +1182,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 860
+      "order": 860,
+      "focus": false
     },
     {
       "id": "redes-20261026-03",
@@ -1128,7 +1197,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 870
+      "order": 870,
+      "focus": false
     },
     {
       "id": "redes-20261102-02",
@@ -1142,7 +1212,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 940
+      "order": 940,
+      "focus": false
     },
     {
       "id": "redes-20261102-03",
@@ -1156,7 +1227,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 950
+      "order": 950,
+      "focus": false
     },
     {
       "id": "redes-20261109-02",
@@ -1170,7 +1242,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1020
+      "order": 1020,
+      "focus": false
     },
     {
       "id": "redes-20261109-03",
@@ -1184,7 +1257,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1030
+      "order": 1030,
+      "focus": false
     },
     {
       "id": "redes-20261116-02",
@@ -1198,7 +1272,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1110
+      "order": 1110,
+      "focus": false
     },
     {
       "id": "redes-20261116-03",
@@ -1212,7 +1287,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 1120
+      "order": 1120,
+      "focus": false
     },
     {
       "id": "pln-openfing-09",
@@ -1227,7 +1303,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3130
+      "order": 3130,
+      "focus": false
     },
     {
       "id": "pln-openfing-15",
@@ -1242,7 +1319,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3150
+      "order": 3150,
+      "focus": false
     },
     {
       "id": "pln-openfing-07",
@@ -1257,7 +1335,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3160
+      "order": 3160,
+      "focus": false
     },
     {
       "id": "pln-openfing-20",
@@ -1272,7 +1351,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3170
+      "order": 3170,
+      "focus": false
     },
     {
       "id": "pln-no-openfing-narrativa-interactiva",
@@ -1287,7 +1367,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3180
+      "order": 3180,
+      "focus": false
     },
     {
       "id": "pln-openfing-16",
@@ -1302,7 +1383,8 @@ window.PLAN_DATA = {
       "fixed": true,
       "important": false,
       "priority": "normal",
-      "order": 3190
+      "order": 3190,
+      "focus": false
     },
     {
       "id": "plan-fuaa-dia-20260919",
@@ -1317,7 +1399,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1030
+      "order": 1030,
+      "focus": false
     },
     {
       "id": "plan-redes-dia-20260919",
@@ -1332,7 +1415,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1040
+      "order": 1040,
+      "focus": false
     },
     {
       "id": "plan-fbd-entregable-20260919",
@@ -1347,7 +1431,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "high",
-      "order": 1050
+      "order": 1050,
+      "focus": false
     },
     {
       "id": "plan-fuaa-dia-20260920",
@@ -1362,7 +1447,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1060
+      "order": 1060,
+      "focus": false
     },
     {
       "id": "plan-redes-dia-20260920",
@@ -1377,7 +1463,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1070
+      "order": 1070,
+      "focus": false
     },
     {
       "id": "plan-fuaa-dia-20260921",
@@ -1392,7 +1479,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1080
+      "order": 1080,
+      "focus": false
     },
     {
       "id": "plan-redes-dia-20260921",
@@ -1407,7 +1495,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1090
+      "order": 1090,
+      "focus": false
     },
     {
       "id": "plan-fuaa-dia-20260922",
@@ -1422,7 +1511,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1100
+      "order": 1100,
+      "focus": false
     },
     {
       "id": "plan-redes-dia-20260922",
@@ -1437,7 +1527,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1110
+      "order": 1110,
+      "focus": false
     },
     {
       "id": "plan-fuaa-dia-20260923",
@@ -1452,7 +1543,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1120
+      "order": 1120,
+      "focus": false
     },
     {
       "id": "plan-redes-dia-20260923",
@@ -1467,7 +1559,8 @@ window.PLAN_DATA = {
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1130
+      "order": 1130,
+      "focus": false
     },
     {
       "id": "plan-fbd-dia-20260924",
@@ -1483,7 +1576,7 @@ window.PLAN_DATA = {
       "important": true,
       "priority": "critical",
       "order": 1200,
-      "focus": true
+      "focus": false
     },
     {
       "id": "plan-pln-dia-20260924",
@@ -1499,7 +1592,7 @@ window.PLAN_DATA = {
       "important": true,
       "priority": "high",
       "order": 1210,
-      "focus": true
+      "focus": false
     },
     {
       "id": "plan-fbd-dia-20260925",
@@ -1515,7 +1608,7 @@ window.PLAN_DATA = {
       "important": true,
       "priority": "critical",
       "order": 1220,
-      "focus": true
+      "focus": false
     },
     {
       "id": "plan-pln-dia-20260925",
@@ -1531,7 +1624,7 @@ window.PLAN_DATA = {
       "important": true,
       "priority": "high",
       "order": 1230,
-      "focus": true
+      "focus": false
     },
     {
       "id": "plan-fbd-dia-20260926",
@@ -1539,14 +1632,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-26",
       "subject": "fbd",
       "type": "study",
-      "title": "Sábado 26 · FBD — Dependencias Funcionales + Normalización",
-      "details": "P5: trabajar dependencias funcionales, cierres, superclaves/claves, equivalencia y cubrimiento minimal; priorizar 2, 3, 7, 8 y 9. Luego P6: join sin pérdida, preservación de dependencias y formas normales; priorizar 1, 3, 7, 9, 12, 15 y 17. Terminar el día con una hoja de procedimiento: cierre → claves → cubrimiento → forma normal → descomposición.",
+      "title": "Sábado 26 · FBD — MER + modelo relacional",
+      "details": "Bloque secundario. Repasar MER/diseño conceptual: entidades, relaciones, cardinalidades, participación, atributos, categorizaciones y RNE. Practicar P1 con ejercicios representativos (priorizar 1, 4, 6 y 11). Después repasar modelo relacional y pasaje MER→relacional con P8: relaciones, claves primarias y dependencias de inclusión.",
       "periodLabel": "26/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
-      "priority": "critical",
-      "order": 1240,
+      "priority": "high",
+      "order": 1250,
       "focus": true
     },
     {
@@ -1555,14 +1648,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-26",
       "subject": "pln",
       "type": "study",
-      "title": "Sábado 26 · IntroPLN — DME + comienzo de Sintaxis",
-      "details": "Cerrar capítulo 2 con Distancia de Mínima Edición/Levenshtein y hacer P2 ejercicios 4–5. Después empezar Sintaxis: caps. 18 y 19 (ed. enero 2025) o 19 y 20 (ed. agosto 2026). Priorizar gramáticas libres de contexto, constituyentes y representación sintáctica; sin OpenFing.",
+      "title": "Sábado 26 · IntroPLN — base completa + práctica P1/P2",
+      "details": "Prioridad del día. 1) Material presencial: Introducción al PLN + Gramática del español. Hacer P1, priorizando categorías gramaticales, sintagmas, sujeto/verbo principal y coordinación/subordinación. 2) Libro cap. 2: análisis léxico, preprocesamiento, tokenización, morfología y DME. Hacer P2 ej. 1–5, incluyendo la matriz de Levenshtein. 3) Si queda tiempo, empezar Sintaxis en caps. 18–19 (ene. 2025) o 19–20 (ago. 2026).",
       "periodLabel": "26/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
-      "priority": "high",
-      "order": 1250,
+      "priority": "critical",
+      "order": 1240,
       "focus": true
     },
     {
@@ -1571,14 +1664,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-27",
       "subject": "fbd",
       "type": "study",
-      "title": "Domingo 27 · FBD — simulacro + repaso de errores",
-      "details": "No agregar contenido nuevo. Resolver un parcial viejo completo o una selección equivalente, con tiempo y sin mirar material, incluyendo MER/modelo relacional, álgebra, cálculo, SQL, dependencias funcionales y normalización. Corregirlo y clasificar errores. Rehacer únicamente ejercicios de P1–P6/P8 vinculados a esos errores y cerrar una hoja final de fallos frecuentes.",
+      "title": "Domingo 27 · FBD — Álgebra + Cálculo + SQL",
+      "details": "Bloque más corto que IntroPLN. Álgebra: P2, practicar selección, proyección, join/producto, diferencia y consultas con “todos/ninguno” (priorizar ej. 2, 3 y 7). Cálculo: P3, priorizar ej. 1 y 7, armando primero la condición lógica y luego los cuantificadores. SQL: P4 con JOIN, subconsultas, EXISTS/NOT EXISTS, GROUP BY/HAVING y consultas equivalentes a álgebra/cálculo.",
       "periodLabel": "27/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
-      "priority": "critical",
-      "order": 1260,
+      "priority": "high",
+      "order": 1270,
       "focus": true
     },
     {
@@ -1587,14 +1680,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-27",
       "subject": "pln",
       "type": "study",
-      "title": "Domingo 27 · IntroPLN — Sintaxis + P3",
-      "details": "Continuar/terminar Sintaxis en caps. 18–19 (ed. enero 2025) o 19–20 (ed. agosto 2026). Hacer P3 ejercicios 1–2: construir GLC para frases y grupos nominales, detectar sobregeneración y proponer ajustes. Mantener este bloque más corto que FBD; Semántica queda para el lunes con el material presencial.",
+      "title": "Domingo 27 · IntroPLN — Sintaxis + Semántica + simulacro",
+      "details": "Terminar Sintaxis: caps. 18–19 (ene. 2025) o 19–20 (ago. 2026). Hacer P3: GLC, constituyentes, sobregeneración y árboles de dependencias. Repasar Semántica solo con clases/material presencial. Luego hacer un simulacro mixto sin apuntes usando ejercicios de P1–P3 (no apareció un parcial viejo identificable en Drive), corregirlo y anotar errores para el lunes. Cerrar con una hoja breve de conceptos y procedimientos.",
       "periodLabel": "27/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
-      "priority": "high",
-      "order": 1270,
+      "priority": "critical",
+      "order": 1260,
       "focus": true
     },
     {
@@ -1603,14 +1696,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-28",
       "subject": "fbd",
       "type": "study",
-      "title": "Lunes 28 · FBD — repaso corto pre-parcial",
-      "details": "Nada nuevo. Revisar la hoja de errores del simulacro y los procedimientos que todavía cuesten: MER→modelo relacional, consultas en álgebra/cálculo/SQL, cierres y claves, cubrimiento y normalización. Hacer solo 1–2 ejercicios cortos de los temas fallados; no abrir prácticos completos antes del parcial.",
+      "title": "Lunes 28 · FBD — bloque fuerte después de IntroPLN",
+      "details": "Después de rendir IntroPLN, FBD pasa a prioridad total. Hacer un repaso integrado P1/P8→P2→P3→P4: modelar un MER y pasarlo a relacional; resolver consultas equivalentes en álgebra, cálculo y SQL; practicar “todos/ninguno”, joins, subconsultas y EXISTS/NOT EXISTS. Terminar con un mini-simulacro sin apuntes y reparar solo los errores.",
       "periodLabel": "28/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1280,
+      "order": 1290,
       "focus": true
     },
     {
@@ -1619,14 +1712,14 @@ window.PLAN_DATA = {
       "eventDate": "2026-09-28",
       "subject": "pln",
       "type": "study",
-      "title": "Lunes 28 · IntroPLN — bloque fuerte después de FBD",
-      "details": "Después de rendir FBD, IntroPLN pasa a prioridad total. P3 ejercicios 3–4: árboles de dependencias y análisis de ambigüedades/adjunción. Repasar Semántica únicamente con clases/material presencial. Integrar Introducción, Gramática, cap. 2 y Sintaxis en una hoja final; volver a P1/P2 solo donde aparezcan dudas concretas.",
+      "title": "Lunes 28 · IntroPLN — repaso corto pre-parcial",
+      "details": "Nada nuevo. Revisar únicamente la hoja del domingo y errores del simulacro: Gramática/P1, cap. 2 y DME/P2, Sintaxis/P3 y Semántica de clase. Rehacer solo un procedimiento corto si todavía falla (por ejemplo DME, GLC o árbol de dependencias). No abrir capítulos completos ni OpenFing antes del parcial.",
       "periodLabel": "28/09",
-      "source": "Plan de parciales · FBD + IntroPLN · 24–29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
       "fixed": false,
       "important": true,
       "priority": "critical",
-      "order": 1290,
+      "order": 1280,
       "focus": true
     },
     {
@@ -1643,17 +1736,33 @@ window.PLAN_DATA = {
       "important": true,
       "priority": "critical",
       "order": 1300,
+      "focus": false
+    },
+    {
+      "id": "plan-fbd-dia-20260929-final",
+      "week": "2026-09-28",
+      "eventDate": "2026-09-29",
+      "subject": "fbd",
+      "type": "study",
+      "title": "Martes 29 · FBD — repaso corto pre-parcial",
+      "details": "Nada nuevo. Revisar errores del mini-simulacro y una hoja final con: MER/cardinalidades/RNE, pasaje a modelo relacional, operadores de álgebra, cuantificadores de cálculo y patrones SQL (JOIN, EXISTS/NOT EXISTS, GROUP BY/HAVING). Rehacer como máximo 1–2 ejercicios cortos de lo que aún falle. No abrir prácticos completos.",
+      "periodLabel": "29/09",
+      "source": "Plan de parciales · IntroPLN + FBD · 26–29/09",
+      "fixed": false,
+      "important": true,
+      "priority": "critical",
+      "order": 1300,
       "focus": true
     }
   ],
   "focus": {
     "active": true,
-    "label": "Preparación parciales FBD + IntroPLN · 24–29/09/2026",
+    "label": "Preparación parciales IntroPLN + FBD · 26–29/09/2026",
     "subjects": [
-      "fbd",
-      "pln"
+      "pln",
+      "fbd"
     ],
-    "start": "2026-09-24",
+    "start": "2026-09-26",
     "end": "2026-09-29"
   }
 };
